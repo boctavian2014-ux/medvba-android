@@ -1,0 +1,953 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { X, Clock, CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Colors from '@/constants/colors';
+import GlassCard from '@/components/GlassCard';
+import type { Question } from '@/mocks/questions';
+
+import {
+  generalVertebraeQuestions,
+  regionalVertebraeQuestions,
+  thoracicVertebraeQuestions,
+  lumbarVertebraeQuestions,
+  sacrumQuestions,
+  atlasAxisVertebraeQuestions,
+  ribsGeneralQuestions,
+  sternumQuestions
+} from '@/mocks/questions_bones_axial';
+
+import {
+  clavicleQuestions,
+  humerusQuestions,
+  radiusAndUlnaQuestions,
+  carpalBonesQuestions,
+  hipBoneQuestions,
+  femurQuestions,
+  patellaQuestions,
+  tibiaQuestions,
+  fibulaQuestions,
+  tibiaFibulaQuestions,
+  talusQuestions,
+  calcaneusQuestions,
+  tarsalBonesQuestions,
+  upperLimbBonesQuestions
+} from '@/mocks/questions_bones_appendicular';
+
+import {
+  shoulderMusclesQuestions,
+  armMusclesQuestions,
+  forearmMusclesQuestions,
+  anteriorThighMusclesQuestions,
+  hamstringMusclesQuestions,
+  medialThighMusclesQuestions,
+  legMusclesQuestions,
+  halluxMusclesQuestions,
+  midplantarMusclesQuestions
+} from '@/mocks/questions_muscles';
+
+import {
+  brachialArteryQuestions
+} from '@/mocks/questions_vessels';
+
+import {
+  medianNerveQuestions,
+  musculocutaneousNerveQuestions,
+  radialNerveQuestions
+} from '@/mocks/questions_nerves';
+
+import {
+  brachialPlexusQuestions,
+  lumbarPlexusQuestions,
+  sacralPlexusQuestions,
+  sensoryInnervationQuestions
+} from '@/mocks/questions_plexuses';
+
+import {
+  shoulderJointQuestions,
+  elbowJointQuestions,
+  wristJointQuestions,
+  hipJointQuestions,
+  kneeJointQuestions,
+  ankleJointQuestions
+} from '@/mocks/questions_joints';
+
+import {
+  internalOrgansQuestions,
+  headNeckQuestions,
+  neuroanatomyQuestions,
+  pulmonaryAndBronchialCirculationQuestions,
+  systemicAndPortalCirculationQuestions,
+  fetalCirculationQuestions,
+  microcirculationAndCapillaryExchangeQuestions,
+  hemodynamicsAndFlowQuestions,
+  baroreflexChemoreflexAutoregulationQuestions,
+  coronaryCirculationQuestions,
+  cerebralAutoregulationAndBBBQuestions,
+  lymphaticSystemOverviewQuestions
+} from '@/mocks/questions_internal_organs';
+
+import {
+  perforatingAndWatershedQuestions
+} from '@/mocks/questions_neuro';
+
+const QUESTION_COUNTS = {
+  quick: 10,
+  practice: 25,
+  exam: 100,
+} as const;
+
+const bonesQuestions: Question[] = [
+  ...generalVertebraeQuestions,
+  ...regionalVertebraeQuestions,
+  ...thoracicVertebraeQuestions,
+  ...lumbarVertebraeQuestions,
+  ...sacrumQuestions,
+  ...atlasAxisVertebraeQuestions,
+  ...ribsGeneralQuestions,
+  ...sternumQuestions,
+  ...clavicleQuestions,
+  ...humerusQuestions,
+  ...radiusAndUlnaQuestions,
+  ...carpalBonesQuestions,
+  ...hipBoneQuestions,
+  ...femurQuestions,
+  ...patellaQuestions,
+  ...tibiaQuestions,
+  ...fibulaQuestions,
+  ...tibiaFibulaQuestions,
+  ...talusQuestions,
+  ...calcaneusQuestions,
+  ...tarsalBonesQuestions,
+  ...upperLimbBonesQuestions,
+];
+
+const musclesQuestions: Question[] = [
+  ...shoulderMusclesQuestions,
+  ...armMusclesQuestions,
+  ...forearmMusclesQuestions,
+  ...anteriorThighMusclesQuestions,
+  ...hamstringMusclesQuestions,
+  ...medialThighMusclesQuestions,
+  ...legMusclesQuestions,
+  ...halluxMusclesQuestions,
+  ...midplantarMusclesQuestions,
+];
+
+const vesselsQuestions: Question[] = [
+  ...brachialArteryQuestions,
+];
+
+const nervesQuestions: Question[] = [
+  ...medianNerveQuestions,
+  ...musculocutaneousNerveQuestions,
+  ...radialNerveQuestions,
+];
+
+const plexusesQuestions: Question[] = [
+  ...brachialPlexusQuestions,
+  ...lumbarPlexusQuestions,
+  ...sacralPlexusQuestions,
+  ...sensoryInnervationQuestions,
+];
+
+const jointsQuestions: Question[] = [
+  ...shoulderJointQuestions,
+  ...elbowJointQuestions,
+  ...wristJointQuestions,
+  ...hipJointQuestions,
+  ...kneeJointQuestions,
+  ...ankleJointQuestions,
+];
+
+const internalOrgansAllQuestions: Question[] = [
+  ...internalOrgansQuestions,
+  ...pulmonaryAndBronchialCirculationQuestions,
+  ...systemicAndPortalCirculationQuestions,
+  ...fetalCirculationQuestions,
+  ...microcirculationAndCapillaryExchangeQuestions,
+  ...hemodynamicsAndFlowQuestions,
+  ...baroreflexChemoreflexAutoregulationQuestions,
+  ...coronaryCirculationQuestions,
+  ...cerebralAutoregulationAndBBBQuestions,
+  ...lymphaticSystemOverviewQuestions,
+];
+
+const headNeckAllQuestions: Question[] = [
+  ...headNeckQuestions,
+];
+
+const neuroanatomyAllQuestions: Question[] = [
+  ...neuroanatomyQuestions,
+  ...perforatingAndWatershedQuestions,
+];
+
+const upperLowerLimbsSubcategories = {
+  bones: bonesQuestions,
+  muscles: musclesQuestions,
+  vessels: vesselsQuestions,
+  nerves: nervesQuestions,
+  plexuses: plexusesQuestions,
+  joints: jointsQuestions,
+};
+
+const allUpperLowerLimbsQuestions: Question[] = [
+  ...bonesQuestions,
+  ...musclesQuestions,
+  ...vesselsQuestions,
+  ...nervesQuestions,
+  ...plexusesQuestions,
+  ...jointsQuestions,
+];
+
+const allQuestions: Question[] = [
+  ...allUpperLowerLimbsQuestions,
+  ...internalOrgansAllQuestions,
+  ...headNeckAllQuestions,
+  ...neuroanatomyAllQuestions,
+];
+
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+async function getSeenQuestionIds(category: string): Promise<Set<string>> {
+  try {
+    const key = `user_seen_questions_${category}`;
+    const stored = await AsyncStorage.getItem(key);
+    if (stored) {
+      const ids = JSON.parse(stored) as string[];
+      return new Set(ids);
+    }
+  } catch (error) {
+    console.log('Error loading seen questions:', error);
+  }
+  return new Set();
+}
+
+async function markQuestionsAsSeen(category: string, questionIds: string[]): Promise<void> {
+  try {
+    const key = `user_seen_questions_${category}`;
+    const existingIds = await getSeenQuestionIds(category);
+    questionIds.forEach(id => existingIds.add(id));
+    await AsyncStorage.setItem(key, JSON.stringify([...existingIds]));
+    console.log(`Marked ${questionIds.length} questions as seen for category: ${category}`);
+  } catch (error) {
+    console.log('Error saving seen questions:', error);
+  }
+}
+
+async function resetSeenQuestions(category: string): Promise<void> {
+  try {
+    const key = `user_seen_questions_${category}`;
+    await AsyncStorage.removeItem(key);
+    console.log(`Reset seen questions for category: ${category}`);
+  } catch (error) {
+    console.log('Error resetting seen questions:', error);
+  }
+}
+
+function filterUnseenQuestions(questions: Question[], seenIds: Set<string>): Question[] {
+  return questions.filter(q => !seenIds.has(q.id));
+}
+
+function selectBalancedFromSubcategories(
+  subcategories: Record<string, Question[]>,
+  totalCount: number,
+  seenIds: Set<string>
+): Question[] {
+  const subcatKeys = Object.keys(subcategories);
+  const basePerSubcat = Math.floor(totalCount / subcatKeys.length);
+  const remainder = totalCount % subcatKeys.length;
+  
+  const selected: Question[] = [];
+  
+  subcatKeys.forEach((key, index) => {
+    const count = basePerSubcat + (index < remainder ? 1 : 0);
+    const unseenInSubcat = filterUnseenQuestions(subcategories[key], seenIds);
+    const shuffled = fisherYatesShuffle(unseenInSubcat);
+    selected.push(...shuffled.slice(0, count));
+  });
+  
+  return fisherYatesShuffle(selected);
+}
+
+async function selectQuestionsForQuiz(
+  category: string,
+  mode: string,
+  count: number
+): Promise<{ questions: Question[]; resetHistory: boolean }> {
+  console.log(`Selecting ${count} questions for category: ${category}, mode: ${mode}`);
+  
+  const seenIds = await getSeenQuestionIds(category);
+  console.log(`Previously seen questions: ${seenIds.size}`);
+  
+  let availableQuestions: Question[];
+  let selectedQuestions: Question[];
+  let resetHistory = false;
+  
+  if (category === 'upper-lower-limbs') {
+    const unseenSubcats: Record<string, Question[]> = {};
+    let totalUnseen = 0;
+    
+    Object.entries(upperLowerLimbsSubcategories).forEach(([key, questions]) => {
+      unseenSubcats[key] = filterUnseenQuestions(questions, seenIds);
+      totalUnseen += unseenSubcats[key].length;
+    });
+    
+    console.log(`Total unseen upper-lower-limbs questions: ${totalUnseen}`);
+    
+    if (totalUnseen < count) {
+      console.log('Not enough unseen questions, resetting history');
+      await resetSeenQuestions(category);
+      resetHistory = true;
+      Object.entries(upperLowerLimbsSubcategories).forEach(([key, questions]) => {
+        unseenSubcats[key] = [...questions];
+      });
+    }
+    
+    selectedQuestions = selectBalancedFromSubcategories(
+      unseenSubcats,
+      count,
+      resetHistory ? new Set() : seenIds
+    );
+  } else if (category === 'internal-organs') {
+    availableQuestions = filterUnseenQuestions(internalOrgansAllQuestions, seenIds);
+    
+    if (availableQuestions.length < count) {
+      console.log('Not enough unseen questions, resetting history');
+      await resetSeenQuestions(category);
+      resetHistory = true;
+      availableQuestions = [...internalOrgansAllQuestions];
+    }
+    
+    selectedQuestions = fisherYatesShuffle(availableQuestions).slice(0, count);
+  } else if (category === 'head-neck') {
+    availableQuestions = filterUnseenQuestions(headNeckAllQuestions, seenIds);
+    
+    if (availableQuestions.length < count) {
+      console.log('Not enough unseen questions, resetting history');
+      await resetSeenQuestions(category);
+      resetHistory = true;
+      availableQuestions = [...headNeckAllQuestions];
+    }
+    
+    selectedQuestions = fisherYatesShuffle(availableQuestions).slice(0, count);
+  } else if (category === 'neuroanatomy') {
+    availableQuestions = filterUnseenQuestions(neuroanatomyAllQuestions, seenIds);
+    
+    if (availableQuestions.length < count) {
+      console.log('Not enough unseen questions, resetting history');
+      await resetSeenQuestions(category);
+      resetHistory = true;
+      availableQuestions = [...neuroanatomyAllQuestions];
+    }
+    
+    selectedQuestions = fisherYatesShuffle(availableQuestions).slice(0, count);
+  } else {
+    availableQuestions = filterUnseenQuestions(allQuestions, seenIds);
+    
+    if (availableQuestions.length < count) {
+      console.log('Not enough unseen questions, resetting history');
+      await resetSeenQuestions(category);
+      resetHistory = true;
+      availableQuestions = [...allQuestions];
+    }
+    
+    selectedQuestions = fisherYatesShuffle(availableQuestions).slice(0, count);
+  }
+  
+  console.log(`Selected ${selectedQuestions.length} questions`);
+  return { questions: selectedQuestions, resetHistory };
+}
+
+export default function QuizSessionScreen() {
+  const router = useRouter();
+  const { category, mode } = useLocalSearchParams<{ category: string; mode: string }>();
+  
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(mode === 'exam' ? 180 * 60 : 0);
+  const [quizComplete, setQuizComplete] = useState(false);
+  
+  const fadeAnim = useState(new Animated.Value(1))[0];
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      setIsLoading(true);
+      const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
+      const { questions: selectedQuestions } = await selectQuestionsForQuiz(
+        category || 'mixed',
+        mode || 'quick',
+        questionCount
+      );
+      setQuestions(selectedQuestions);
+      
+      // Mark questions as seen immediately to prevent repetition
+      if (selectedQuestions.length > 0) {
+        const questionIds = selectedQuestions.map(q => q.id);
+        await markQuestionsAsSeen(category || 'mixed', questionIds);
+        console.log(`Marked ${questionIds.length} questions as seen on load`);
+      }
+      
+      setIsLoading(false);
+    };
+    
+    loadQuestions();
+  }, [category, mode]);
+
+
+
+  const currentQuestion = questions[currentIndex];
+
+  useEffect(() => {
+    if (mode === 'exam' && timeLeft > 0 && !quizComplete) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [mode, timeLeft, quizComplete]);
+
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAnswerSelect = useCallback((index: number) => {
+    if (showResult || !currentQuestion) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedAnswer(index);
+    setShowResult(true);
+    
+    if (index === currentQuestion.correctAnswer) {
+      setScore(prev => prev + 1);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  }, [showResult, currentQuestion]);
+
+  const handleNext = useCallback(() => {
+    if (currentIndex < questions.length - 1) {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentIndex(prev => prev + 1);
+        setSelectedAnswer(null);
+        setShowResult(false);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }).start();
+      });
+    } else {
+      setQuizComplete(true);
+    }
+  }, [currentIndex, questions.length, fadeAnim]);
+
+  const handleClose = () => {
+    router.back();
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.background, Colors.backgroundLight]}
+          style={StyleSheet.absoluteFill}
+        />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading questions...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.background, Colors.backgroundLight]}
+          style={StyleSheet.absoluteFill}
+        />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>No questions available for this category.</Text>
+            <TouchableOpacity style={styles.backButton} onPress={handleClose}>
+              <Text style={styles.backButtonText}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (quizComplete) {
+    const percentage = (score / questions.length) * 100;
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.background, Colors.backgroundLight]}
+          style={StyleSheet.absoluteFill}
+        />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.resultContainer}>
+            <GlassCard style={styles.resultCard} variant="accent">
+              <View style={styles.resultIconContainer}>
+                {percentage >= 70 ? (
+                  <CheckCircle color={Colors.success} size={64} />
+                ) : (
+                  <XCircle color={Colors.error} size={64} />
+                )}
+              </View>
+              <Text style={styles.resultTitle}>
+                {percentage >= 70 ? 'Great Job!' : 'Keep Practicing!'}
+              </Text>
+              <Text style={styles.resultScore}>{score}/{questions.length}</Text>
+              <Text style={styles.resultPercentage}>{percentage.toFixed(0)}% Correct</Text>
+              
+              <View style={styles.resultStats}>
+                <View style={styles.resultStat}>
+                  <Text style={styles.resultStatValue}>{score}</Text>
+                  <Text style={styles.resultStatLabel}>Correct</Text>
+                </View>
+                <View style={styles.resultStatDivider} />
+                <View style={styles.resultStat}>
+                  <Text style={styles.resultStatValue}>{questions.length - score}</Text>
+                  <Text style={styles.resultStatLabel}>Wrong</Text>
+                </View>
+              </View>
+              
+              <TouchableOpacity style={styles.finishButton} onPress={handleClose}>
+                <LinearGradient
+                  colors={[Colors.primary, Colors.primaryDark]}
+                  style={styles.finishButtonGradient}
+                >
+                  <Text style={styles.finishButtonText}>Back to Quiz</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </GlassCard>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!currentQuestion) {
+    return null;
+  }
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[Colors.background, Colors.backgroundLight]}
+        style={StyleSheet.absoluteFill}
+      />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <X color={Colors.text} size={24} />
+          </TouchableOpacity>
+          
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${((currentIndex + 1) / questions.length) * 100}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {currentIndex + 1}/{questions.length}
+            </Text>
+          </View>
+          
+          {mode === 'exam' && (
+            <View style={styles.timerContainer}>
+              <Clock color={Colors.warning} size={16} />
+              <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            </View>
+          )}
+        </View>
+
+        <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContentContainer}>
+          <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+            <View style={styles.questionContainer}>
+              <View style={styles.difficultyBadge}>
+                <Text style={styles.difficultyText}>{currentQuestion.difficulty}</Text>
+              </View>
+              <Text style={styles.questionText}>{currentQuestion.question}</Text>
+            </View>
+
+            <View style={styles.optionsContainer}>
+              {currentQuestion.options.map((option, index) => {
+                const isSelected = selectedAnswer === index;
+                const isCorrect = index === currentQuestion.correctAnswer;
+                const showCorrect = showResult && isCorrect;
+                const showWrong = showResult && isSelected && !isCorrect;
+                
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleAnswerSelect(index)}
+                    disabled={showResult}
+                  >
+                    <GlassCard
+                      style={[
+                        styles.optionCard,
+                        isSelected && styles.optionSelected,
+                        showCorrect && styles.optionCorrect,
+                        showWrong && styles.optionWrong,
+                      ]}
+                      variant={isSelected ? 'light' : 'default'}
+                    >
+                      <View style={[
+                        styles.optionLetter,
+                        showCorrect && styles.optionLetterCorrect,
+                        showWrong && styles.optionLetterWrong,
+                      ]}>
+                        <Text style={styles.optionLetterText}>
+                          {String.fromCharCode(65 + index)}
+                        </Text>
+                      </View>
+                      <Text style={styles.optionText}>{option}</Text>
+                      {showCorrect && <CheckCircle color={Colors.success} size={20} />}
+                      {showWrong && <XCircle color={Colors.error} size={20} />}
+                    </GlassCard>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {showResult && (
+              <GlassCard style={styles.explanationCard}>
+                <Text style={styles.explanationTitle}>Explanation</Text>
+                <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
+              </GlassCard>
+            )}
+          </Animated.View>
+        </ScrollView>
+
+        {showResult && (
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+              <LinearGradient
+                colors={[Colors.primary, Colors.primaryDark]}
+                style={styles.nextButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Text style={styles.nextButtonText}>
+                  {currentIndex < questions.length - 1 ? 'Next Question' : 'See Results'}
+                </Text>
+                <ChevronRight color={Colors.text} size={20} />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: Colors.text,
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.cardBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  progressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: Colors.cardBgLight,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.primary,
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  timerText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.warning,
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 20,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  questionContainer: {
+    marginBottom: 24,
+  },
+  difficultyBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.cardBgLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  difficultyText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    textTransform: 'capitalize',
+  },
+  questionText: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    lineHeight: 28,
+  },
+  optionsContainer: {
+    gap: 12,
+    marginBottom: 20,
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  optionSelected: {
+    borderColor: Colors.primary,
+    borderWidth: 2,
+  },
+  optionCorrect: {
+    borderColor: Colors.success,
+    borderWidth: 2,
+    backgroundColor: 'rgba(0, 196, 140, 0.1)',
+  },
+  optionWrong: {
+    borderColor: Colors.error,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 71, 87, 0.1)',
+  },
+  optionLetter: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.cardBgLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  optionLetterCorrect: {
+    backgroundColor: Colors.success,
+  },
+  optionLetterWrong: {
+    backgroundColor: Colors.error,
+  },
+  optionLetterText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  optionText: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.text,
+    lineHeight: 22,
+  },
+  explanationCard: {
+    backgroundColor: 'rgba(0, 180, 216, 0.1)',
+    borderColor: Colors.primary,
+  },
+  explanationTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 8,
+  },
+  explanationText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  nextButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  nextButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
+  },
+  nextButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  resultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  resultCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  resultIconContainer: {
+    marginBottom: 20,
+  },
+  resultTitle: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  resultScore: {
+    fontSize: 48,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  resultPercentage: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+  },
+  resultStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  resultStat: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  resultStatDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.glassBorder,
+  },
+  resultStatValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  resultStatLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  finishButton: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  finishButtonGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  finishButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+});

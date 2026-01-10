@@ -1,0 +1,34 @@
+export default {
+  primary: '#00B4D8',
+  primaryDark: '#0096C7',
+  primaryLight: '#48CAE4',
+  secondary: '#023E8A',
+  accent: '#00F5D4',
+  accentPink: '#FF6B9D',
+  success: '#00C48C',
+  warning: '#FFB800',
+  error: '#FF4757',
+  
+  background: '#0A1628',
+  backgroundLight: '#0F2139',
+  cardBg: 'rgba(255, 255, 255, 0.08)',
+  cardBgLight: 'rgba(255, 255, 255, 0.12)',
+  glassBorder: 'rgba(255, 255, 255, 0.15)',
+  
+  text: '#FFFFFF',
+  textSecondary: '#A0B4C8',
+  textMuted: '#5A7A96',
+  
+  gradientStart: '#00B4D8',
+  gradientEnd: '#023E8A',
+  
+  streakOrange: '#FF9500',
+  streakYellow: '#FFCC00',
+  
+  categoryAnatomy: '#FF6B6B',
+  categoryPhysiology: '#4ECDC4',
+  categoryBiochemistry: '#45B7D1',
+  categoryPharmacology: '#96CEB4',
+  categoryPathology: '#DDA0DD',
+  categoryMicrobiology: '#98D8C8',
+};

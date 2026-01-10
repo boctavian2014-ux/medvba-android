@@ -1,0 +1,437 @@
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  Send, 
+  Bot, 
+  User, 
+  Sparkles,
+  BookOpen,
+  Lightbulb,
+  HelpCircle
+} from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import Colors from '@/constants/colors';
+import GlassCard from '@/components/GlassCard';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+const suggestedQuestions = [
+  { icon: BookOpen, text: "Explain the cardiac cycle", category: "Physiology" },
+  { icon: Lightbulb, text: "What causes diabetes mellitus?", category: "Pathology" },
+  { icon: HelpCircle, text: "Mechanism of beta-blockers", category: "Pharmacology" },
+];
+
+export default function TutorScreen() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: "Hello! I'm your AI medical tutor 🩺 I'm here to help you understand complex medical concepts, explain mechanisms, and answer any questions about your coursework. What would you like to learn about today?",
+      timestamp: new Date(),
+    }
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputText.trim(),
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+    
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: generateResponse(userMessage.content),
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+      
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 1500);
+  };
+
+  const generateResponse = (question: string): string => {
+    const lowerQ = question.toLowerCase();
+    
+    if (lowerQ.includes('cardiac') || lowerQ.includes('heart')) {
+      return "The cardiac cycle consists of two main phases:\n\n**Systole (Contraction):**\n• Ventricles contract, ejecting blood\n• Aortic and pulmonary valves open\n• AV valves close (S1 heart sound)\n\n**Diastole (Relaxation):**\n• Ventricles relax and fill with blood\n• AV valves open\n• Semilunar valves close (S2 heart sound)\n\nThe cycle is regulated by the SA node (pacemaker), AV node, and the His-Purkinje system. Would you like me to explain the electrical conduction system in more detail?";
+    }
+    
+    if (lowerQ.includes('diabetes')) {
+      return "Diabetes mellitus has two main types:\n\n**Type 1 (5-10%):**\n• Autoimmune destruction of pancreatic β-cells\n• Results in absolute insulin deficiency\n• Usually presents in childhood/adolescence\n\n**Type 2 (90-95%):**\n• Insulin resistance + relative insulin deficiency\n• Associated with obesity, sedentary lifestyle\n• Often develops gradually in adults\n\n**Key pathophysiology:**\n• Hyperglycemia damages blood vessels (micro/macrovascular)\n• Leads to retinopathy, nephropathy, neuropathy\n• Increases cardiovascular disease risk\n\nShall I explain the diagnostic criteria or treatment approaches?";
+    }
+    
+    if (lowerQ.includes('beta-blocker') || lowerQ.includes('beta blocker')) {
+      return "Beta-blockers work by blocking β-adrenergic receptors:\n\n**Mechanism:**\n• Block catecholamine binding to β receptors\n• Reduce heart rate (negative chronotropy)\n• Decrease myocardial contractility (negative inotropy)\n• Lower blood pressure\n\n**β1 selective (cardioselective):**\n• Metoprolol, Atenolol, Bisoprolol\n• Primarily affect the heart\n\n**Non-selective (β1 + β2):**\n• Propranolol, Nadolol\n• Can cause bronchospasm (contraindicated in asthma)\n\n**Clinical uses:**\n• Hypertension, heart failure, arrhythmias\n• Angina, post-MI, migraine prophylaxis\n\nWould you like to know about the side effects or contraindications?";
+    }
+    
+    return "That's a great question! In medical education, it's important to approach complex topics systematically.\n\nTo give you the most helpful answer, could you please:\n1. Specify which aspect you'd like to focus on\n2. Mention if this relates to a specific exam topic\n3. Let me know your current understanding\n\nThis way, I can tailor my explanation to your level and help reinforce your learning effectively. Remember, understanding mechanisms is key to long-term retention! 📚";
+  };
+
+  const handleSuggestion = (text: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setInputText(text);
+  };
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[Colors.background, Colors.backgroundLight]}
+        style={StyleSheet.absoluteFill}
+      />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          <View style={styles.header}>
+            <View style={styles.headerIcon}>
+              <Bot color={Colors.primary} size={24} />
+            </View>
+            <View>
+              <Text style={styles.title}>AI Medical Tutor</Text>
+              <View style={styles.statusRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.status}>Always available</Text>
+              </View>
+            </View>
+            <View style={styles.premiumBadge}>
+              <Sparkles color={Colors.warning} size={14} />
+              <Text style={styles.premiumText}>Premium</Text>
+            </View>
+          </View>
+
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {messages.length === 1 && (
+              <View style={styles.suggestions}>
+                <Text style={styles.suggestionsTitle}>Try asking:</Text>
+                {suggestedQuestions.map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleSuggestion(suggestion.text)}
+                  >
+                    <GlassCard style={styles.suggestionCard}>
+                      <suggestion.icon color={Colors.primary} size={20} />
+                      <View style={styles.suggestionContent}>
+                        <Text style={styles.suggestionText}>{suggestion.text}</Text>
+                        <Text style={styles.suggestionCategory}>{suggestion.category}</Text>
+                      </View>
+                    </GlassCard>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {messages.map((message) => (
+              <View
+                key={message.id}
+                style={[
+                  styles.messageRow,
+                  message.role === 'user' && styles.messageRowUser
+                ]}
+              >
+                {message.role === 'assistant' && (
+                  <View style={styles.avatarContainer}>
+                    <Bot color={Colors.primary} size={18} />
+                  </View>
+                )}
+                <View
+                  style={[
+                    styles.messageBubble,
+                    message.role === 'user' ? styles.userBubble : styles.assistantBubble
+                  ]}
+                >
+                  <Text style={[
+                    styles.messageText,
+                    message.role === 'user' && styles.userMessageText
+                  ]}>
+                    {message.content}
+                  </Text>
+                </View>
+                {message.role === 'user' && (
+                  <View style={[styles.avatarContainer, styles.userAvatar]}>
+                    <User color={Colors.text} size={18} />
+                  </View>
+                )}
+              </View>
+            ))}
+
+            {isTyping && (
+              <View style={styles.messageRow}>
+                <View style={styles.avatarContainer}>
+                  <Bot color={Colors.primary} size={18} />
+                </View>
+                <View style={[styles.messageBubble, styles.assistantBubble, styles.typingBubble]}>
+                  <View style={styles.typingIndicator}>
+                    <View style={[styles.typingDot, styles.typingDot1]} />
+                    <View style={[styles.typingDot, styles.typingDot2]} />
+                    <View style={[styles.typingDot, styles.typingDot3]} />
+                  </View>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.inputContainer}>
+            <GlassCard style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Ask me anything about medicine..."
+                placeholderTextColor={Colors.textMuted}
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={!inputText.trim()}
+              >
+                <Send color={inputText.trim() ? Colors.text : Colors.textMuted} size={20} />
+              </TouchableOpacity>
+            </GlassCard>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.cardBgLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  onlineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.success,
+  },
+  status: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 'auto',
+    gap: 4,
+  },
+  premiumText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.warning,
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: 20,
+    paddingBottom: 10,
+  },
+  suggestions: {
+    marginBottom: 20,
+  },
+  suggestionsTitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 12,
+  },
+  suggestionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 12,
+  },
+  suggestionContent: {
+    flex: 1,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: Colors.text,
+    fontWeight: '500' as const,
+  },
+  suggestionCategory: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    alignItems: 'flex-end',
+  },
+  messageRowUser: {
+    justifyContent: 'flex-end',
+  },
+  avatarContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.cardBgLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  userAvatar: {
+    backgroundColor: Colors.primary,
+    marginRight: 0,
+    marginLeft: 8,
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    borderRadius: 18,
+    padding: 14,
+  },
+  assistantBubble: {
+    backgroundColor: Colors.cardBgLight,
+    borderBottomLeftRadius: 4,
+  },
+  userBubble: {
+    backgroundColor: Colors.primary,
+    borderBottomRightRadius: 4,
+  },
+  messageText: {
+    fontSize: 15,
+    color: Colors.text,
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: Colors.text,
+  },
+  typingBubble: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  typingIndicator: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.textMuted,
+  },
+  typingDot1: {
+    opacity: 0.4,
+  },
+  typingDot2: {
+    opacity: 0.6,
+  },
+  typingDot3: {
+    opacity: 0.8,
+  },
+  inputContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingTop: 10,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: Colors.text,
+    maxHeight: 100,
+    paddingVertical: 8,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: Colors.cardBgLight,
+  },
+});
