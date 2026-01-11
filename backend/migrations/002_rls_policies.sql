@@ -61,6 +61,7 @@ CREATE POLICY "study_rooms_delete_host" ON study_rooms
 
 -- =============================================================================
 -- STUDY_SESSIONS TABLE POLICIES
+-- Note: study_sessions references host via room_id -> study_rooms.host_id
 -- =============================================================================
 
 -- Anyone can view study sessions
@@ -68,21 +69,24 @@ CREATE POLICY "study_sessions_select_all" ON study_sessions
   FOR SELECT
   USING (true);
 
--- Authenticated users can create sessions (must be host)
+-- Authenticated users can create sessions (must be host of the room)
 CREATE POLICY "study_sessions_insert_host" ON study_sessions
   FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL AND auth.uid() = host_id);
+  WITH CHECK (
+    auth.uid() IS NOT NULL 
+    AND auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id)
+  );
 
--- Only the host can update their session
+-- Only the room host can update the session
 CREATE POLICY "study_sessions_update_host" ON study_sessions
   FOR UPDATE
-  USING (auth.uid() = host_id)
-  WITH CHECK (auth.uid() = host_id);
+  USING (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id))
+  WITH CHECK (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id));
 
--- Only the host can delete their session
+-- Only the room host can delete the session
 CREATE POLICY "study_sessions_delete_host" ON study_sessions
   FOR DELETE
-  USING (auth.uid() = host_id);
+  USING (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id));
 
 -- =============================================================================
 -- SERVICE ROLE BYPASS
