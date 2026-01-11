@@ -18,6 +18,100 @@ import {
 } from './questions_neuro';
 
 import {
+  spinalCordExternalQuestions,
+  brainstemExternalQuestions,
+  cerebellumExternalQuestions,
+  cerebellumLobulationQuestions
+} from './questions_neuro_spinal_brainstem';
+
+import {
+  thalamusExternalQuestions,
+  thalamusNucleiQuestions,
+  hypothalamusQuestions,
+  epithalamMetathalamQuestions,
+  pinealGlandQuestions,
+  pituitaryGlandQuestions,
+  perforatedSpacesQuestions
+} from './questions_neuro_diencephalon';
+
+import {
+  cerebralHemisphereSulciGyriQuestions,
+  inferiorSurfaceQuestions,
+  lateralSurfaceQuestions,
+  medialSurfaceQuestions,
+  occipitalLobeQuestions,
+  frontalLobeQuestions,
+  parietalLobeQuestions,
+  temporalLobeQuestions,
+  orbitalLobeQuestions,
+  temporoOccipitalLobeQuestions
+} from './questions_neuro_cerebral_hemispheres';
+
+import {
+  sensoryCorticalAreasQuestions,
+  motorCorticalAreasQuestions,
+  somestheticAreasQuestions,
+  basalNucleiQuestions,
+  internalCapsuleQuestions,
+  externalExtremeCapsuleQuestions,
+  corpusCallosumQuestions,
+  fornixQuestions,
+  anteriorPosteriorCommissuresQuestions,
+  hippocampalFormationQuestions
+} from './questions_neuro_cortical_basal';
+
+import {
+  internalCarotidIntracranialQuestions,
+  internalCarotidBranchesQuestions,
+  vertebrobasilarTrunkQuestions,
+  spinalCordVascularizationQuestions,
+  cerebellumBrainstemVascularizationQuestions,
+  diencephalonVascularizationQuestions,
+  circleOfWillisQuestions,
+  anteriorCerebralArteryQuestions,
+  middleCerebralArteryQuestions,
+  posteriorCerebralArteryQuestions
+} from './questions_neuro_vascular';
+
+import {
+  duralVenousSinusesQuestions,
+  greatCerebralVeinQuestions,
+  spinalMeningesQuestions,
+  sagittalDuralReflectionsQuestions,
+  horizontalDuralReflectionsQuestions,
+  arachnoidPiaMaterQuestions,
+  csfCirculationQuestions,
+  choroidPlexusQuestions
+} from './questions_neuro_meninges_venous';
+
+import {
+  fourthVentricleRoofQuestions,
+  fourthVentricleFloorQuestions,
+  thirdVentricleRoofQuestions,
+  thirdVentricleFloorQuestions,
+  anteriorHornLateralVentricleQuestions,
+  inferiorHornLateralVentricleQuestions,
+  posteriorHornLateralVentricleQuestions
+} from './questions_neuro_ventricular';
+
+import {
+  orbitWallsQuestions,
+  eyelidsConjunctivaQuestions,
+  lacrimalApparatusQuestions,
+  extraocularMusclesQuestions,
+  eyeAnatomyQuestions
+} from './questions_neuro_eye_orbit';
+
+import {
+  externalEarQuestions,
+  middleEarContentsQuestions,
+  middleEarWallsQuestions,
+  auditorTubeQuestions,
+  innerEarQuestions,
+  tasteReceptorsQuestions
+} from './questions_neuro_ear';
+
+import {
   generalVertebraeQuestions,
   regionalVertebraeQuestions,
   thoracicVertebraeQuestions,
@@ -118,6 +212,15 @@ export * from './questions_plexuses';
 export * from './questions_joints';
 export * from './questions_internal_organs';
 export * from './questions_neuro';
+export * from './questions_neuro_spinal_brainstem';
+export * from './questions_neuro_diencephalon';
+export * from './questions_neuro_cerebral_hemispheres';
+export * from './questions_neuro_cortical_basal';
+export * from './questions_neuro_vascular';
+export * from './questions_neuro_meninges_venous';
+export * from './questions_neuro_ventricular';
+export * from './questions_neuro_eye_orbit';
+export * from './questions_neuro_ear';
 
 export const sampleQuestions: Question[] = [
   // Axial skeleton
@@ -187,4 +290,80 @@ export const sampleQuestions: Question[] = [
   ...lymphaticSystemOverviewQuestions,
   // Neuro-vasculature
   ...perforatingAndWatershedQuestions,
+  // Neuroanatomy - Spinal cord & Brainstem
+  ...spinalCordExternalQuestions,
+  ...brainstemExternalQuestions,
+  ...cerebellumExternalQuestions,
+  ...cerebellumLobulationQuestions,
+  // Neuroanatomy - Diencephalon
+  ...thalamusExternalQuestions,
+  ...thalamusNucleiQuestions,
+  ...hypothalamusQuestions,
+  ...epithalamMetathalamQuestions,
+  ...pinealGlandQuestions,
+  ...pituitaryGlandQuestions,
+  ...perforatedSpacesQuestions,
+  // Neuroanatomy - Cerebral Hemispheres
+  ...cerebralHemisphereSulciGyriQuestions,
+  ...inferiorSurfaceQuestions,
+  ...lateralSurfaceQuestions,
+  ...medialSurfaceQuestions,
+  ...occipitalLobeQuestions,
+  ...frontalLobeQuestions,
+  ...parietalLobeQuestions,
+  ...temporalLobeQuestions,
+  ...orbitalLobeQuestions,
+  ...temporoOccipitalLobeQuestions,
+  // Neuroanatomy - Cortical & Basal
+  ...sensoryCorticalAreasQuestions,
+  ...motorCorticalAreasQuestions,
+  ...somestheticAreasQuestions,
+  ...basalNucleiQuestions,
+  ...internalCapsuleQuestions,
+  ...externalExtremeCapsuleQuestions,
+  ...corpusCallosumQuestions,
+  ...fornixQuestions,
+  ...anteriorPosteriorCommissuresQuestions,
+  ...hippocampalFormationQuestions,
+  // Neuroanatomy - Vascular
+  ...internalCarotidIntracranialQuestions,
+  ...internalCarotidBranchesQuestions,
+  ...vertebrobasilarTrunkQuestions,
+  ...spinalCordVascularizationQuestions,
+  ...cerebellumBrainstemVascularizationQuestions,
+  ...diencephalonVascularizationQuestions,
+  ...circleOfWillisQuestions,
+  ...anteriorCerebralArteryQuestions,
+  ...middleCerebralArteryQuestions,
+  ...posteriorCerebralArteryQuestions,
+  // Neuroanatomy - Meninges & Venous
+  ...duralVenousSinusesQuestions,
+  ...greatCerebralVeinQuestions,
+  ...spinalMeningesQuestions,
+  ...sagittalDuralReflectionsQuestions,
+  ...horizontalDuralReflectionsQuestions,
+  ...arachnoidPiaMaterQuestions,
+  ...csfCirculationQuestions,
+  ...choroidPlexusQuestions,
+  // Neuroanatomy - Ventricular System
+  ...fourthVentricleRoofQuestions,
+  ...fourthVentricleFloorQuestions,
+  ...thirdVentricleRoofQuestions,
+  ...thirdVentricleFloorQuestions,
+  ...anteriorHornLateralVentricleQuestions,
+  ...inferiorHornLateralVentricleQuestions,
+  ...posteriorHornLateralVentricleQuestions,
+  // Neuroanatomy - Eye & Orbit
+  ...orbitWallsQuestions,
+  ...eyelidsConjunctivaQuestions,
+  ...lacrimalApparatusQuestions,
+  ...extraocularMusclesQuestions,
+  ...eyeAnatomyQuestions,
+  // Neuroanatomy - Ear & Taste
+  ...externalEarQuestions,
+  ...middleEarContentsQuestions,
+  ...middleEarWallsQuestions,
+  ...auditorTubeQuestions,
+  ...innerEarQuestions,
+  ...tasteReceptorsQuestions,
 ];
