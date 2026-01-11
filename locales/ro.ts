@@ -55,4 +55,8 @@ export const ro: Record<string, string> = {
   // Common
   'common.questions': 'întrebări',
   'common.of': 'din',
+
+  // Profile
+  'profile': 'Profil',
+  'language': 'Limbă',
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,10 +22,18 @@ import {
   Calendar
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { t, getCurrentLanguage, setCurrentLanguage, Language } from '@/lib/i18n';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
 import { currentUser, leaderboard } from '@/mocks/users';
+
+const languages: { code: Language; label: string; flag: string }[] = [
+  { code: 'en', label: 'EN', flag: '🇬🇧' },
+  { code: 'ro', label: 'RO', flag: '🇷🇴' },
+  { code: 'es', label: 'ES', flag: '🇪🇸' },
+  { code: 'pt', label: 'PT', flag: '🇵🇹' },
+];
 
 const badges = [
   { id: 'early_bird', name: 'Early Bird', icon: '🌅', description: 'Complete 10 quizzes before 8 AM' },
@@ -35,6 +43,13 @@ const badges = [
 ];
 
 export default function ProfileScreen() {
+  const [activeLanguage, setActiveLanguage] = useState<Language>(getCurrentLanguage());
+
+  const handleLanguageChange = useCallback((lang: Language) => {
+    setCurrentLanguage(lang);
+    setActiveLanguage(lang);
+  }, []);
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -47,7 +62,7 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Profile</Text>
+            <Text style={styles.title}>{t('profile')}</Text>
             <TouchableOpacity style={styles.settingsButton}>
               <Settings color={Colors.textSecondary} size={24} />
             </TouchableOpacity>
@@ -84,6 +99,42 @@ export default function ProfileScreen() {
               </LinearGradient>
             </TouchableOpacity>
           </GlassCard>
+
+          <View style={styles.languageSection}>
+            <Text style={styles.languageSectionTitle}>{t('language')}</Text>
+            <View style={styles.languageSelector}>
+              {languages.map((lang) => {
+                const isActive = activeLanguage === lang.code;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[
+                      styles.languageButton,
+                      isActive && styles.languageButtonActive,
+                    ]}
+                    onPress={() => handleLanguageChange(lang.code)}
+                    activeOpacity={0.7}
+                  >
+                    {isActive && (
+                      <LinearGradient
+                        colors={[Colors.primary, Colors.secondary]}
+                        style={StyleSheet.absoluteFill}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                      />
+                    )}
+                    <Text style={styles.languageFlag}>{lang.flag}</Text>
+                    <Text style={[
+                      styles.languageLabel,
+                      isActive && styles.languageLabelActive,
+                    ]}>
+                      {lang.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
           <View style={styles.statsGrid}>
             <GlassCard style={styles.statCard}>
@@ -525,5 +576,54 @@ const styles = StyleSheet.create({
   weeklyStatLabel: {
     fontSize: 11,
     color: Colors.textSecondary,
+  },
+  languageSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  languageSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+    marginBottom: 12,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    backgroundColor: Colors.cardBg,
+    borderRadius: 16,
+    padding: 4,
+    gap: 4,
+  },
+  languageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    gap: 6,
+    overflow: 'hidden',
+  },
+  languageButtonActive: {
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  languageFlag: {
+    fontSize: 18,
+  },
+  languageLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  languageLabelActive: {
+    color: Colors.text,
+    fontWeight: '700' as const,
   },
 });

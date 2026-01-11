@@ -55,4 +55,8 @@ export const pt: Record<string, string> = {
   // Common
   'common.questions': 'perguntas',
   'common.of': 'de',
+
+  // Profile
+  'profile': 'Perfil',
+  'language': 'Idioma',
 };
