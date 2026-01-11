@@ -16,22 +16,26 @@ ALTER TABLE study_sessions ENABLE ROW LEVEL SECURITY;
 -- Anyone can read user profiles (needed for leaderboard, host info, etc.)
 CREATE POLICY "users_select_all" ON users
   FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 -- Users can only update their own profile
 CREATE POLICY "users_update_own" ON users
   FOR UPDATE
+  TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Users can only delete their own account
 CREATE POLICY "users_delete_own" ON users
   FOR DELETE
+  TO authenticated
   USING (auth.uid() = id);
 
 -- Users can insert their own profile (for registration)
 CREATE POLICY "users_insert_own" ON users
   FOR INSERT
+  TO authenticated
   WITH CHECK (auth.uid() = id);
 
 -- =============================================================================
@@ -41,22 +45,26 @@ CREATE POLICY "users_insert_own" ON users
 -- Anyone can view study rooms
 CREATE POLICY "study_rooms_select_all" ON study_rooms
   FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 -- Authenticated users can create study rooms
 CREATE POLICY "study_rooms_insert_authenticated" ON study_rooms
   FOR INSERT
+  TO authenticated
   WITH CHECK (auth.uid() IS NOT NULL AND auth.uid() = host_id);
 
 -- Only the host can update their room
 CREATE POLICY "study_rooms_update_host" ON study_rooms
   FOR UPDATE
+  TO authenticated
   USING (auth.uid() = host_id)
   WITH CHECK (auth.uid() = host_id);
 
 -- Only the host can delete their room
 CREATE POLICY "study_rooms_delete_host" ON study_rooms
   FOR DELETE
+  TO authenticated
   USING (auth.uid() = host_id);
 
 -- =============================================================================
@@ -67,11 +75,13 @@ CREATE POLICY "study_rooms_delete_host" ON study_rooms
 -- Anyone can view study sessions
 CREATE POLICY "study_sessions_select_all" ON study_sessions
   FOR SELECT
+  TO anon, authenticated
   USING (true);
 
 -- Authenticated users can create sessions (must be host of the room)
 CREATE POLICY "study_sessions_insert_host" ON study_sessions
   FOR INSERT
+  TO authenticated
   WITH CHECK (
     auth.uid() IS NOT NULL 
     AND auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id)
@@ -80,13 +90,31 @@ CREATE POLICY "study_sessions_insert_host" ON study_sessions
 -- Only the room host can update the session
 CREATE POLICY "study_sessions_update_host" ON study_sessions
   FOR UPDATE
+  TO authenticated
   USING (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id))
   WITH CHECK (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id));
 
 -- Only the room host can delete the session
 CREATE POLICY "study_sessions_delete_host" ON study_sessions
   FOR DELETE
+  TO authenticated
   USING (auth.uid() = (SELECT host_id FROM study_rooms WHERE id = study_sessions.room_id));
+
+-- =============================================================================
+-- ENSURE FK + INDEX ON study_sessions.room_id
+-- =============================================================================
+
+-- Add FK constraint if not exists (ensures subquery returns at most one row)
+ALTER TABLE study_sessions
+  DROP CONSTRAINT IF EXISTS study_sessions_room_id_fkey;
+
+ALTER TABLE study_sessions
+  ADD CONSTRAINT study_sessions_room_id_fkey
+  FOREIGN KEY (room_id) REFERENCES study_rooms(id) ON DELETE CASCADE;
+
+-- Index for performance on subquery lookups
+CREATE INDEX IF NOT EXISTS idx_study_sessions_room_id
+  ON study_sessions(room_id);
 
 -- =============================================================================
 -- SERVICE ROLE BYPASS
