@@ -37,10 +37,10 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
-import { activities, studyRooms as initialStudyRooms, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
+import { activities, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
 import { trpc } from '@/lib/trpc';
 
-const CURRENT_USER_ID = 'current_user';
+const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001';
 const CURRENT_USER_NAME = 'You';
 const CURRENT_USER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop';
 
@@ -106,7 +106,7 @@ const isSessionStartable = (scheduledFor: string): boolean => {
 export default function SocialScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
-  const [studyRooms, setStudyRooms] = useState<StudyRoom[]>(initialStudyRooms);
+  const [localRoomUpdates, setLocalRoomUpdates] = useState<Record<string, Partial<StudyRoom>>>({});
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<StudyRoom | null>(null);
   const [sessionTitle, setSessionTitle] = useState('');
@@ -121,23 +121,42 @@ export default function SocialScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  const studyRoomsQuery = trpc.studyRooms.list.useQuery({});
   const upcomingSessionsQuery = trpc.sessions.listUpcoming.useQuery({});
+
+  const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map(room => ({
+    ...room,
+    host: room.host,
+    ...localRoomUpdates[room.id],
+  }));
+
+  const updateZoomInfoMutation = trpc.studyRooms.updateZoomInfo.useMutation({
+    onSuccess: () => {
+      studyRoomsQuery.refetch();
+    },
+  });
 
   const createMeetingMutation = trpc.zoom.createMeeting.useMutation({
     onSuccess: (data, variables) => {
       console.log('Zoom meeting created successfully:', data);
-      setStudyRooms(prev => prev.map(room => 
-        room.id === variables.studyRoomId 
-          ? { 
-              ...room, 
-              zoomMeetingId: data.zoomMeetingId,
-              joinUrl: data.joinUrl,
-              startUrl: data.startUrl,
-              zoomStatus: data.zoomStatus,
-              isLive: true,
-            }
-          : room
-      ));
+      setLocalRoomUpdates(prev => ({
+        ...prev,
+        [variables.studyRoomId]: {
+          zoomMeetingId: data.zoomMeetingId,
+          joinUrl: data.joinUrl,
+          startUrl: data.startUrl,
+          zoomStatus: data.zoomStatus,
+          isLive: true,
+        },
+      }));
+      updateZoomInfoMutation.mutate({
+        roomId: variables.studyRoomId,
+        zoomMeetingId: data.zoomMeetingId,
+        joinUrl: data.joinUrl,
+        startUrl: data.startUrl,
+        zoomStatus: data.zoomStatus,
+        isLive: true,
+      });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
     onError: (error) => {
@@ -149,18 +168,24 @@ export default function SocialScreen() {
   const endMeetingMutation = trpc.zoom.endMeeting.useMutation({
     onSuccess: (_, variables) => {
       console.log('Zoom meeting ended');
-      setStudyRooms(prev => prev.map(room => 
-        room.zoomMeetingId === variables.zoomMeetingId
-          ? { 
-              ...room, 
-              zoomStatus: 'ENDED' as ZoomStatus,
-              isLive: false,
-              zoomMeetingId: undefined,
-              joinUrl: undefined,
-              startUrl: undefined,
-            }
-          : room
-      ));
+      const room = studyRooms.find(r => r.zoomMeetingId === variables.zoomMeetingId);
+      if (room) {
+        setLocalRoomUpdates(prev => ({
+          ...prev,
+          [room.id]: {
+            zoomStatus: 'ENDED' as ZoomStatus,
+            isLive: false,
+            zoomMeetingId: undefined,
+            joinUrl: undefined,
+            startUrl: undefined,
+          },
+        }));
+        updateZoomInfoMutation.mutate({
+          roomId: room.id,
+          zoomStatus: 'ENDED',
+          isLive: false,
+        });
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     },
     onError: (error) => {
@@ -205,8 +230,12 @@ export default function SocialScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    upcomingSessionsQuery.refetch().finally(() => setRefreshing(false));
-  }, [upcomingSessionsQuery]);
+    setLocalRoomUpdates({});
+    Promise.all([
+      studyRoomsQuery.refetch(),
+      upcomingSessionsQuery.refetch(),
+    ]).finally(() => setRefreshing(false));
+  }, [studyRoomsQuery, upcomingSessionsQuery]);
 
   const handleReaction = (activityId: string, emoji: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
