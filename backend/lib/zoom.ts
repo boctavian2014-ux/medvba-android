@@ -19,6 +19,9 @@ export interface ZoomMeetingResponse {
 export interface CreateMeetingPayload {
   topic: string;
   type?: number;
+  startTime?: string;
+  duration?: number;
+  timezone?: string;
   settings?: {
     join_before_host?: boolean;
     waiting_room?: boolean;
@@ -77,7 +80,7 @@ export async function createZoomMeetingForAppHost(
 ): Promise<ZoomMeetingResponse> {
   const accessToken = await getZoomAccessToken();
 
-  const meetingBody = {
+  const meetingBody: Record<string, unknown> = {
     topic: payload.topic,
     type: payload.type ?? 1,
     settings: {
@@ -89,6 +92,12 @@ export async function createZoomMeetingForAppHost(
       audio: payload.settings?.audio ?? "both",
     },
   };
+
+  if (payload.type === 2 && payload.startTime) {
+    meetingBody.start_time = payload.startTime;
+    meetingBody.duration = payload.duration ?? 60;
+    meetingBody.timezone = payload.timezone ?? "UTC";
+  }
 
   console.log("Creating Zoom meeting with payload:", JSON.stringify(meetingBody));
 

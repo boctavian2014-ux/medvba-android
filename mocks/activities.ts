@@ -13,6 +13,26 @@ export interface Activity {
 
 export type ZoomStatus = 'IDLE' | 'LIVE' | 'ENDED';
 
+export type SessionStatus = 'SCHEDULED' | 'LIVE' | 'ENDED';
+
+export interface StudySession {
+  id: string;
+  roomId: string;
+  title: string;
+  description?: string;
+  scheduledFor: string;
+  durationMinutes: number;
+  hostId: string;
+  hostName: string;
+  hostAvatar: string;
+  zoomMeetingId?: string;
+  joinUrl?: string;
+  startUrl?: string;
+  status: SessionStatus;
+  attendees: string[];
+  category: string;
+}
+
 export interface StudyRoom {
   id: string;
   name: string;
@@ -99,6 +119,37 @@ export const activities: Activity[] = [
     timestamp: new Date(Date.now() - 1000 * 60 * 240),
     reactions: [{ emoji: '🎖️', count: 78 }, { emoji: '🔬', count: 45 }, { emoji: '🙌', count: 32 }],
     category: 'pathology',
+  },
+];
+
+export let studySessions: StudySession[] = [
+  {
+    id: 'session_1',
+    roomId: '1',
+    title: 'Anatomy Review - Upper Limbs',
+    description: 'Deep dive into brachial plexus and arm muscles',
+    scheduledFor: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    durationMinutes: 60,
+    hostId: 'user_3',
+    hostName: 'Andrei P.',
+    hostAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop',
+    status: 'SCHEDULED',
+    attendees: ['user_1', 'user_2'],
+    category: 'anatomy',
+  },
+  {
+    id: 'session_2',
+    roomId: '2',
+    title: 'Biochemistry Crash Course',
+    description: 'Metabolic pathways and enzyme kinetics',
+    scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    durationMinutes: 90,
+    hostId: 'user_2',
+    hostName: 'Elena R.',
+    hostAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop',
+    status: 'SCHEDULED',
+    attendees: ['user_1'],
+    category: 'biochemistry',
   },
 ];
 
