@@ -28,14 +28,8 @@ export const sessionsRouter = createTRPCRouter({
         topic: `Medix Session - ${input.title}`,
         type: 2,
         startTime: input.scheduledFor,
-        duration: input.durationMinutes,
-        settings: {
-          join_before_host: true,
-          waiting_room: false,
-          host_video: true,
-          participant_video: true,
-          mute_upon_entry: true,
-        },
+        durationMinutes: input.durationMinutes,
+        agenda: input.description,
       });
 
       const newSession: StudySession = {

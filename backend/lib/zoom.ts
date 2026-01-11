@@ -16,12 +16,9 @@ export interface ZoomMeetingResponse {
   status: string;
 }
 
-export interface CreateMeetingPayload {
+export interface CreateInstantMeetingPayload {
   topic: string;
-  type?: number;
-  startTime?: string;
-  duration?: number;
-  timezone?: string;
+  type?: 1;
   settings?: {
     join_before_host?: boolean;
     waiting_room?: boolean;
@@ -31,6 +28,27 @@ export interface CreateMeetingPayload {
     audio?: string;
   };
 }
+
+export interface CreateScheduledMeetingPayload {
+  topic: string;
+  type: 2;
+  startTime: string;
+  durationMinutes: number;
+  timezone?: string;
+  agenda?: string;
+  settings?: {
+    host_video?: boolean;
+    participant_video?: boolean;
+    join_before_host?: boolean;
+    mute_upon_entry?: boolean;
+    waiting_room?: boolean;
+    approval_type?: number;
+    audio?: string;
+    auto_recording?: 'none' | 'local' | 'cloud';
+  };
+}
+
+export type CreateMeetingPayload = CreateInstantMeetingPayload | CreateScheduledMeetingPayload;
 
 export async function getZoomAccessToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) {
@@ -80,23 +98,41 @@ export async function createZoomMeetingForAppHost(
 ): Promise<ZoomMeetingResponse> {
   const accessToken = await getZoomAccessToken();
 
-  const meetingBody: Record<string, unknown> = {
-    topic: payload.topic,
-    type: payload.type ?? 1,
-    settings: {
-      join_before_host: payload.settings?.join_before_host ?? true,
-      waiting_room: payload.settings?.waiting_room ?? false,
-      host_video: payload.settings?.host_video ?? true,
-      participant_video: payload.settings?.participant_video ?? true,
-      mute_upon_entry: payload.settings?.mute_upon_entry ?? true,
-      audio: payload.settings?.audio ?? "both",
-    },
-  };
+  let meetingBody: Record<string, unknown>;
 
-  if (payload.type === 2 && payload.startTime) {
-    meetingBody.start_time = payload.startTime;
-    meetingBody.duration = payload.duration ?? 60;
-    meetingBody.timezone = payload.timezone ?? "UTC";
+  if (payload.type === 2) {
+    const scheduledPayload = payload as CreateScheduledMeetingPayload;
+    meetingBody = {
+      topic: scheduledPayload.topic,
+      type: 2,
+      start_time: scheduledPayload.startTime,
+      duration: scheduledPayload.durationMinutes,
+      timezone: scheduledPayload.timezone ?? 'UTC',
+      agenda: scheduledPayload.agenda ?? '',
+      settings: {
+        host_video: scheduledPayload.settings?.host_video ?? true,
+        participant_video: scheduledPayload.settings?.participant_video ?? false,
+        join_before_host: scheduledPayload.settings?.join_before_host ?? false,
+        mute_upon_entry: scheduledPayload.settings?.mute_upon_entry ?? true,
+        waiting_room: scheduledPayload.settings?.waiting_room ?? true,
+        approval_type: scheduledPayload.settings?.approval_type ?? 2,
+        audio: scheduledPayload.settings?.audio ?? 'both',
+        auto_recording: scheduledPayload.settings?.auto_recording ?? 'none',
+      },
+    };
+  } else {
+    meetingBody = {
+      topic: payload.topic,
+      type: 1,
+      settings: {
+        join_before_host: payload.settings?.join_before_host ?? true,
+        waiting_room: payload.settings?.waiting_room ?? false,
+        host_video: payload.settings?.host_video ?? true,
+        participant_video: payload.settings?.participant_video ?? true,
+        mute_upon_entry: payload.settings?.mute_upon_entry ?? true,
+        audio: payload.settings?.audio ?? 'both',
+      },
+    };
   }
 
   console.log("Creating Zoom meeting with payload:", JSON.stringify(meetingBody));
