@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
+import { t, getModuleName } from '@/lib/i18n';
 
 const categoryIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   'upper-lower-limbs': Bone,
@@ -65,12 +66,12 @@ export default function QuizScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Quiz</Text>
-            <Text style={styles.subtitle}>Choose a category and start learning</Text>
+            <Text style={styles.title}>{t('quiz.title')}</Text>
+            <Text style={styles.subtitle}>{t('quiz.subtitle')}</Text>
           </View>
 
           <View style={styles.modesSection}>
-            <Text style={styles.sectionTitle}>Quiz Modes</Text>
+            <Text style={styles.sectionTitle}>{t('quiz.quizModes')}</Text>
             <View style={styles.modesGrid}>
               <TouchableOpacity 
                 style={styles.modeCard}
@@ -83,8 +84,8 @@ export default function QuizScreen() {
                   end={{ x: 1, y: 1 }}
                 >
                   <Zap color={Colors.text} size={28} />
-                  <Text style={styles.modeTitle}>Quick Quiz</Text>
-                  <Text style={styles.modeSubtitle}>10 questions</Text>
+                  <Text style={styles.modeTitle}>{t('quiz.quickQuiz')}</Text>
+                  <Text style={styles.modeSubtitle}>{t('quiz.quickQuizCount')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -99,8 +100,8 @@ export default function QuizScreen() {
                   end={{ x: 1, y: 1 }}
                 >
                   <Clock color={Colors.text} size={28} />
-                  <Text style={styles.modeTitle}>Practice</Text>
-                  <Text style={styles.modeSubtitle}>25 questions</Text>
+                  <Text style={styles.modeTitle}>{t('quiz.practice')}</Text>
+                  <Text style={styles.modeSubtitle}>{t('quiz.practiceCount')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -116,8 +117,8 @@ export default function QuizScreen() {
                 >
                   <Trophy color={Colors.warning} size={32} />
                   <View style={styles.examContent}>
-                    <Text style={styles.modeTitle}>Exam Simulation</Text>
-                    <Text style={styles.modeSubtitle}>100 questions • 3 hours • Realistic exam conditions</Text>
+                    <Text style={styles.modeTitle}>{t('quiz.examSimulation')}</Text>
+                    <Text style={styles.modeSubtitle}>{t('quiz.examDetails')}</Text>
                   </View>
                   <ChevronRight color={Colors.text} size={24} />
                 </LinearGradient>
@@ -126,9 +127,9 @@ export default function QuizScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Categories</Text>
+            <Text style={styles.sectionTitle}>{t('quiz.categories')}</Text>
             <Text style={styles.sectionSubtitle}>
-              {selectedCategory ? 'Tap again to deselect' : 'Select a category or start with mixed'}
+              {selectedCategory ? t('quiz.tapToDeselect') : t('quiz.selectCategory')}
             </Text>
             
             <View style={styles.categoriesGrid}>
@@ -153,7 +154,7 @@ export default function QuizScreen() {
                       <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '25' }]}>
                         <IconComponent color={category.color} size={28} />
                       </View>
-                      <Text style={styles.categoryName}>{category.name}</Text>
+                      <Text style={styles.categoryName}>{getModuleName(category.id)}</Text>
                       <Text style={styles.categoryCount}>
                         {category.questionCount.toLocaleString()} Q
                       </Text>
@@ -176,22 +177,22 @@ export default function QuizScreen() {
           <GlassCard style={styles.statsCard}>
             <View style={styles.statsHeader}>
               <Text style={styles.statsTitle}>28,055+</Text>
-              <Text style={styles.statsSubtitle}>Total Questions Available</Text>
+              <Text style={styles.statsSubtitle}>{t('quiz.totalQuestions')}</Text>
             </View>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Text style={styles.statItemValue}>4</Text>
-                <Text style={styles.statItemLabel}>Languages</Text>
+                <Text style={styles.statItemLabel}>{t('quiz.languages')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statItemValue}>3</Text>
-                <Text style={styles.statItemLabel}>Difficulty Levels</Text>
+                <Text style={styles.statItemLabel}>{t('quiz.difficultyLevels')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statItemValue}>∞</Text>
-                <Text style={styles.statItemLabel}>Practice</Text>
+                <Text style={styles.statItemLabel}>{t('quiz.practiceUnlimited')}</Text>
               </View>
             </View>
           </GlassCard>

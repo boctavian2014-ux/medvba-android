@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
+import { t, getChapterTitle } from '@/lib/i18n';
 import { getAllQuestionsWithChapters } from '@/mocks/chapters';
 
 import {
@@ -112,6 +113,7 @@ const QUESTION_COUNTS = {
 
 interface QuestionWithChapter {
   question: Question;
+  chapterId: string;
   chapterName: string;
 }
 
@@ -503,7 +505,7 @@ export default function QuizSessionScreen() {
         />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading questions...</Text>
+            <Text style={styles.loadingText}>{t('session.loading')}</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -519,9 +521,9 @@ export default function QuizSessionScreen() {
         />
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>No questions available for this category.</Text>
+            <Text style={styles.loadingText}>{t('session.noQuestions')}</Text>
             <TouchableOpacity style={styles.backButton} onPress={handleClose}>
-              <Text style={styles.backButtonText}>Go Back</Text>
+              <Text style={styles.backButtonText}>{t('session.goBack')}</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -548,7 +550,7 @@ export default function QuizSessionScreen() {
                 )}
               </View>
               <Text style={styles.resultTitle}>
-                {percentage >= 70 ? 'Great Job!' : 'Keep Practicing!'}
+                {percentage >= 70 ? t('session.greatJob') : t('session.keepPracticing')}
               </Text>
               <Text style={styles.resultScore}>{score}/{questions.length}</Text>
               <Text style={styles.resultPercentage}>{percentage.toFixed(0)}% Correct</Text>
@@ -556,12 +558,12 @@ export default function QuizSessionScreen() {
               <View style={styles.resultStats}>
                 <View style={styles.resultStat}>
                   <Text style={styles.resultStatValue}>{score}</Text>
-                  <Text style={styles.resultStatLabel}>Correct</Text>
+                  <Text style={styles.resultStatLabel}>{t('session.correct')}</Text>
                 </View>
                 <View style={styles.resultStatDivider} />
                 <View style={styles.resultStat}>
                   <Text style={styles.resultStatValue}>{questions.length - score}</Text>
-                  <Text style={styles.resultStatLabel}>Wrong</Text>
+                  <Text style={styles.resultStatLabel}>{t('session.wrong')}</Text>
                 </View>
               </View>
               
@@ -570,7 +572,7 @@ export default function QuizSessionScreen() {
                   colors={[Colors.primary, Colors.primaryDark]}
                   style={styles.finishButtonGradient}
                 >
-                  <Text style={styles.finishButtonText}>Back to Quiz</Text>
+                  <Text style={styles.finishButtonText}>{t('session.backToQuiz')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </GlassCard>
@@ -623,7 +625,7 @@ export default function QuizSessionScreen() {
             <View style={styles.questionContainer}>
               {mode === 'sequential' && questionsWithChapters[currentIndex] && (
                 <View style={styles.chapterBadge}>
-                  <Text style={styles.chapterText}>Capitol: {questionsWithChapters[currentIndex].chapterName}</Text>
+                  <Text style={styles.chapterText}>{t('session.chapter')}: {getChapterTitle(questionsWithChapters[currentIndex].chapterId)}</Text>
                 </View>
               )}
               <View style={styles.difficultyBadge}>
@@ -674,7 +676,7 @@ export default function QuizSessionScreen() {
 
             {showResult && (
               <GlassCard style={styles.explanationCard}>
-                <Text style={styles.explanationTitle}>Explanation</Text>
+                <Text style={styles.explanationTitle}>{t('session.explanation')}</Text>
                 <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
               </GlassCard>
             )}
@@ -691,7 +693,7 @@ export default function QuizSessionScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Text style={styles.nextButtonText}>
-                  {currentIndex < questions.length - 1 ? 'Next Question' : 'See Results'}
+                  {currentIndex < questions.length - 1 ? t('session.nextQuestion') : t('session.seeResults')}
                 </Text>
                 <ChevronRight color={Colors.text} size={20} />
               </LinearGradient>

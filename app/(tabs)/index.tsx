@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
+import { t, getModuleName } from '@/lib/i18n';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
@@ -40,7 +41,7 @@ export default function HomeScreen() {
         >
           <View style={styles.header}>
             <View>
-              <Text style={styles.greeting}>Good morning,</Text>
+              <Text style={styles.greeting}>{t('home.greeting')}</Text>
               <Text style={styles.userName}>{currentUser.name.split(' ')[0]} 👋</Text>
             </View>
             <View style={styles.headerRight}>
@@ -54,9 +55,9 @@ export default function HomeScreen() {
           <GlassCard style={styles.heroCard} variant="accent">
             <View style={styles.heroContent}>
               <View style={styles.heroLeft}>
-                <Text style={styles.heroTitle}>Continue Learning</Text>
+                <Text style={styles.heroTitle}>{t('home.continueLearning')}</Text>
                 <Text style={styles.heroSubtitle}>
-                  You have completed {todayProgress}/{todayGoal} questions today
+                  {t('home.questionsToday').replace('{current}', String(todayProgress)).replace('{goal}', String(todayGoal))}
                 </Text>
                 <TouchableOpacity 
                   style={styles.heroButton}
@@ -69,7 +70,7 @@ export default function HomeScreen() {
                     end={{ x: 1, y: 0 }}
                   >
                     <Play color={Colors.text} size={18} fill={Colors.text} />
-                    <Text style={styles.heroButtonText}>Start Quiz</Text>
+                    <Text style={styles.heroButtonText}>{t('home.startQuiz')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -78,7 +79,7 @@ export default function HomeScreen() {
                 size={90} 
                 strokeWidth={10}
                 color={Colors.accent}
-                label="today"
+                label={t('home.today')}
               />
             </View>
           </GlassCard>
@@ -87,24 +88,24 @@ export default function HomeScreen() {
             <GlassCard style={styles.statCard}>
               <TrendingUp color={Colors.success} size={24} />
               <Text style={styles.statValue}>{currentUser.accuracy}%</Text>
-              <Text style={styles.statLabel}>Accuracy</Text>
+              <Text style={styles.statLabel}>{t('home.accuracy')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
               <Target color={Colors.accentPink} size={24} />
               <Text style={styles.statValue}>{(currentUser.questionsAnswered / 1000).toFixed(1)}k</Text>
-              <Text style={styles.statLabel}>Questions</Text>
+              <Text style={styles.statLabel}>{t('home.questions')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
               <Clock color={Colors.warning} size={24} />
               <Text style={styles.statValue}>{currentUser.studyHours}h</Text>
-              <Text style={styles.statLabel}>Study Time</Text>
+              <Text style={styles.statLabel}>{t('home.studyTime')}</Text>
             </GlassCard>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Your Progress</Text>
-              <Text style={styles.sectionSubtitle}>{overallProgress.toFixed(1)}% complete</Text>
+              <Text style={styles.sectionTitle}>{t('home.yourProgress')}</Text>
+              <Text style={styles.sectionSubtitle}>{overallProgress.toFixed(1)}% {t('home.complete')}</Text>
             </View>
             <GlassCard>
               <View style={styles.progressBar}>
@@ -117,7 +118,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.progressStats}>
                 <Text style={styles.progressText}>
-                  <Text style={styles.progressHighlight}>{completedQuestions.toLocaleString()}</Text> of {totalQuestions.toLocaleString()} questions
+                  <Text style={styles.progressHighlight}>{completedQuestions.toLocaleString()}</Text> {t('home.ofQuestions').replace('{total}', totalQuestions.toLocaleString())}
                 </Text>
               </View>
             </GlassCard>
@@ -125,9 +126,9 @@ export default function HomeScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Quick Start - Anatomy</Text>
+              <Text style={styles.sectionTitle}>{t('home.quickStartAnatomy')}</Text>
               <TouchableOpacity onPress={() => router.push('/quiz')}>
-                <Text style={styles.seeAll}>See all</Text>
+                <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
               </TouchableOpacity>
             </View>
             {categories.map((category) => {
@@ -151,7 +152,7 @@ export default function HomeScreen() {
                       <IconComponent color={category.color} size={20} />
                     </View>
                     <View style={styles.categoryInfo}>
-                      <Text style={styles.categoryName}>{category.name}</Text>
+                      <Text style={styles.categoryName}>{getModuleName(category.id)}</Text>
                       <Text style={styles.categoryProgress}>
                         {category.completedCount.toLocaleString()} / {category.questionCount.toLocaleString()} questions
                       </Text>

@@ -640,13 +640,13 @@ export function getChaptersForModule(moduleId: string): Chapter[] {
   return moduleChapters ? moduleChapters.chapters : [];
 }
 
-export function getAllQuestionsWithChapters(moduleId: string): { question: Question; chapterName: string }[] {
+export function getAllQuestionsWithChapters(moduleId: string): { question: Question; chapterId: string; chapterName: string }[] {
   const chapters = getChaptersForModule(moduleId);
-  const result: { question: Question; chapterName: string }[] = [];
+  const result: { question: Question; chapterId: string; chapterName: string }[] = [];
   
   for (const chapter of chapters) {
     for (const question of chapter.questions) {
-      result.push({ question, chapterName: chapter.name });
+      result.push({ question, chapterId: chapter.id, chapterName: chapter.name });
     }
   }
   
