@@ -11,15 +11,22 @@ export interface Activity {
   category?: string;
 }
 
+export type ZoomStatus = 'IDLE' | 'LIVE' | 'ENDED';
+
 export interface StudyRoom {
   id: string;
   name: string;
   host: string;
+  hostId: string;
   hostAvatar: string;
   participants: number;
   maxParticipants: number;
   category: string;
   isLive: boolean;
+  zoomMeetingId?: string;
+  joinUrl?: string;
+  startUrl?: string;
+  zoomStatus: ZoomStatus;
 }
 
 export const activities: Activity[] = [
@@ -96,7 +103,7 @@ export const activities: Activity[] = [
 ];
 
 export const studyRooms: StudyRoom[] = [
-  { id: '1', name: 'Anatomy Night Owls', host: 'Andrei P.', hostAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop', participants: 12, maxParticipants: 20, category: 'anatomy', isLive: true },
-  { id: '2', name: 'Biochemistry Basics', host: 'Elena R.', hostAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop', participants: 8, maxParticipants: 15, category: 'biochemistry', isLive: true },
-  { id: '3', name: 'Exam Prep Sprint', host: 'Mihai D.', hostAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', participants: 18, maxParticipants: 25, category: 'mixed', isLive: true },
+  { id: '1', name: 'Anatomy Night Owls', host: 'Andrei P.', hostId: 'user_3', hostAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop', participants: 12, maxParticipants: 20, category: 'anatomy', isLive: false, zoomStatus: 'IDLE' },
+  { id: '2', name: 'Biochemistry Basics', host: 'Elena R.', hostId: 'user_2', hostAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop', participants: 8, maxParticipants: 15, category: 'biochemistry', isLive: false, zoomStatus: 'IDLE' },
+  { id: '3', name: 'Exam Prep Sprint', host: 'Mihai D.', hostId: 'current_user', hostAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop', participants: 18, maxParticipants: 25, category: 'mixed', isLive: false, zoomStatus: 'IDLE' },
 ];

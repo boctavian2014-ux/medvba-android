@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
+  Linking,
+  Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,12 +22,17 @@ import {
   Trophy,
   BookOpen,
   Star,
-  Target
+  Target,
+  Video,
+  ExternalLink,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
-import { activities, studyRooms } from '@/mocks/activities';
+import { activities, studyRooms as initialStudyRooms, StudyRoom, ZoomStatus } from '@/mocks/activities';
+import { trpc } from '@/lib/trpc';
+
+const CURRENT_USER_ID = 'current_user';
 
 const activityIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   achievement: Trophy,
@@ -48,6 +57,52 @@ const formatTimeAgo = (date: Date): string => {
 export default function SocialScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
+  const [studyRooms, setStudyRooms] = useState<StudyRoom[]>(initialStudyRooms);
+
+  const createMeetingMutation = trpc.zoom.createMeeting.useMutation({
+    onSuccess: (data, variables) => {
+      console.log('Zoom meeting created successfully:', data);
+      setStudyRooms(prev => prev.map(room => 
+        room.id === variables.studyRoomId 
+          ? { 
+              ...room, 
+              zoomMeetingId: data.zoomMeetingId,
+              joinUrl: data.joinUrl,
+              startUrl: data.startUrl,
+              zoomStatus: data.zoomStatus,
+              isLive: true,
+            }
+          : room
+      ));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    onError: (error) => {
+      console.error('Failed to create Zoom meeting:', error);
+      Alert.alert('Error', 'Failed to start Zoom session. Please try again.');
+    },
+  });
+
+  const endMeetingMutation = trpc.zoom.endMeeting.useMutation({
+    onSuccess: (_, variables) => {
+      console.log('Zoom meeting ended');
+      setStudyRooms(prev => prev.map(room => 
+        room.zoomMeetingId === variables.zoomMeetingId
+          ? { 
+              ...room, 
+              zoomStatus: 'ENDED' as ZoomStatus,
+              isLive: false,
+              zoomMeetingId: undefined,
+              joinUrl: undefined,
+              startUrl: undefined,
+            }
+          : room
+      ));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    },
+    onError: (error) => {
+      console.error('Failed to end Zoom meeting:', error);
+    },
+  });
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -61,6 +116,76 @@ export default function SocialScreen() {
       [activityId]: prev[activityId] === emoji ? '' : emoji
     }));
   };
+
+  const handleStartZoom = (room: StudyRoom) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('Starting Zoom for room:', room.id, room.name);
+    createMeetingMutation.mutate({
+      studyRoomId: room.id,
+      roomName: room.name,
+    });
+  };
+
+  const handleEndZoom = (room: StudyRoom) => {
+    if (!room.zoomMeetingId) return;
+    
+    Alert.alert(
+      'End Session',
+      'Are you sure you want to end this Zoom session?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'End', 
+          style: 'destructive',
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            endMeetingMutation.mutate({ zoomMeetingId: room.zoomMeetingId! });
+          }
+        },
+      ]
+    );
+  };
+
+  const handleJoinZoom = async (room: StudyRoom) => {
+    if (!room.joinUrl) {
+      Alert.alert('Not Available', 'This session is not live yet.');
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log('Joining Zoom meeting:', room.joinUrl);
+    
+    const zoomAppUrl = room.joinUrl.replace('https://zoom.us/j/', 'zoomus://zoom.us/join?confno=');
+    
+    try {
+      const canOpenZoom = await Linking.canOpenURL(zoomAppUrl);
+      if (canOpenZoom && Platform.OS !== 'web') {
+        await Linking.openURL(zoomAppUrl);
+      } else {
+        await Linking.openURL(room.joinUrl);
+      }
+    } catch (error) {
+      console.error('Failed to open Zoom:', error);
+      await Linking.openURL(room.joinUrl);
+    }
+  };
+
+  const handleHostJoinZoom = async (room: StudyRoom) => {
+    if (!room.startUrl) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log('Host joining Zoom meeting:', room.startUrl);
+    
+    try {
+      await Linking.openURL(room.startUrl);
+    } catch (error) {
+      console.error('Failed to open Zoom as host:', error);
+      Alert.alert('Error', 'Failed to open Zoom. Please try again.');
+    }
+  };
+
+  const isCurrentUserHost = (room: StudyRoom) => room.hostId === CURRENT_USER_ID;
+  const isRoomLive = (room: StudyRoom) => room.zoomStatus === 'LIVE' && room.joinUrl;
 
   return (
     <View style={styles.container}>
@@ -95,30 +220,89 @@ export default function SocialScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.roomsScroll}
             >
-              {studyRooms.map((room) => (
-                <TouchableOpacity key={room.id}>
-                  <GlassCard style={styles.roomCard} variant="light">
-                    <View style={styles.roomHeader}>
-                      <View style={styles.liveIndicator}>
-                        <View style={styles.liveDot} />
-                        <Text style={styles.liveText}>LIVE</Text>
+              {studyRooms.map((room) => {
+                const isHost = isCurrentUserHost(room);
+                const isLive = isRoomLive(room);
+                const isLoading = createMeetingMutation.isPending && 
+                  createMeetingMutation.variables?.studyRoomId === room.id;
+
+                return (
+                  <TouchableOpacity key={room.id} activeOpacity={0.9}>
+                    <GlassCard style={styles.roomCard} variant="light">
+                      <View style={styles.roomHeader}>
+                        {isLive ? (
+                          <View style={styles.liveIndicator}>
+                            <View style={styles.liveDot} />
+                            <Text style={styles.liveText}>LIVE</Text>
+                          </View>
+                        ) : (
+                          <View style={styles.idleIndicator}>
+                            <Text style={styles.idleText}>OFFLINE</Text>
+                          </View>
+                        )}
                       </View>
-                    </View>
-                    <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
-                    <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
-                    <Text style={styles.roomHost}>Hosted by {room.host}</Text>
-                    <View style={styles.roomFooter}>
-                      <Users color={Colors.textSecondary} size={14} />
-                      <Text style={styles.roomParticipants}>
-                        {room.participants}/{room.maxParticipants}
+                      <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
+                      <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
+                      <Text style={styles.roomHost}>
+                        {isHost ? 'You are hosting' : `Hosted by ${room.host}`}
                       </Text>
-                    </View>
-                    <TouchableOpacity style={styles.joinButton}>
-                      <Text style={styles.joinButtonText}>Join</Text>
-                    </TouchableOpacity>
-                  </GlassCard>
-                </TouchableOpacity>
-              ))}
+                      <View style={styles.roomFooter}>
+                        <Users color={Colors.textSecondary} size={14} />
+                        <Text style={styles.roomParticipants}>
+                          {room.participants}/{room.maxParticipants}
+                        </Text>
+                      </View>
+                      
+                      {isHost ? (
+                        <View style={styles.hostButtons}>
+                          {!isLive ? (
+                            <TouchableOpacity 
+                              style={[styles.goLiveButton, isLoading && styles.buttonDisabled]}
+                              onPress={() => handleStartZoom(room)}
+                              disabled={isLoading}
+                            >
+                              {isLoading ? (
+                                <ActivityIndicator size="small" color={Colors.text} />
+                              ) : (
+                                <>
+                                  <Video color={Colors.text} size={14} />
+                                  <Text style={styles.goLiveButtonText}>Go Live</Text>
+                                </>
+                              )}
+                            </TouchableOpacity>
+                          ) : (
+                            <View style={styles.liveHostButtons}>
+                              <TouchableOpacity 
+                                style={styles.hostJoinButton}
+                                onPress={() => handleHostJoinZoom(room)}
+                              >
+                                <ExternalLink color={Colors.text} size={14} />
+                                <Text style={styles.hostJoinButtonText}>Open</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity 
+                                style={styles.endButton}
+                                onPress={() => handleEndZoom(room)}
+                              >
+                                <Text style={styles.endButtonText}>End</Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                        </View>
+                      ) : (
+                        <TouchableOpacity 
+                          style={[styles.joinButton, !isLive && styles.joinButtonDisabled]}
+                          onPress={() => handleJoinZoom(room)}
+                          disabled={!isLive}
+                        >
+                          <Text style={[styles.joinButtonText, !isLive && styles.joinButtonTextDisabled]}>
+                            {isLive ? 'Join' : 'Not Live'}
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </GlassCard>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
 
@@ -227,7 +411,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   roomCard: {
-    width: 160,
+    width: 170,
     alignItems: 'center',
     paddingTop: 12,
   },
@@ -255,6 +439,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700' as const,
     color: Colors.error,
+  },
+  idleIndicator: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  idleText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
   },
   roomHostAvatar: {
     width: 48,
@@ -293,9 +488,70 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 12,
   },
+  joinButtonDisabled: {
+    backgroundColor: Colors.cardBgLight,
+  },
   joinButtonText: {
     color: Colors.text,
     fontSize: 13,
+    fontWeight: '600' as const,
+  },
+  joinButtonTextDisabled: {
+    color: Colors.textMuted,
+  },
+  hostButtons: {
+    marginTop: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  goLiveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.error,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+    minWidth: 100,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  goLiveButtonText: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '600' as const,
+  },
+  liveHostButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  hostJoinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
+  },
+  hostJoinButtonText: {
+    color: Colors.text,
+    fontSize: 12,
+    fontWeight: '600' as const,
+  },
+  endButton: {
+    backgroundColor: 'rgba(255, 71, 87, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  endButtonText: {
+    color: Colors.error,
+    fontSize: 12,
     fontWeight: '600' as const,
   },
   activityCard: {
