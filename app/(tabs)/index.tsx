@@ -143,7 +143,7 @@ export default function HomeScreen() {
                   key={category.id}
                   onPress={() => router.push({
                     pathname: '/quiz-session',
-                    params: { category: category.id, mode: 'quick' }
+                    params: { category: category.id, mode: 'sequential' }
                   })}
                 >
                   <GlassCard style={styles.categoryCard}>

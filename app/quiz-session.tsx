@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
+import { getAllQuestionsWithChapters } from '@/mocks/chapters';
 
 import {
   generalVertebraeQuestions,
@@ -106,7 +107,13 @@ const QUESTION_COUNTS = {
   quick: 10,
   practice: 25,
   exam: 100,
+  sequential: 9999,
 } as const;
+
+interface QuestionWithChapter {
+  question: Question;
+  chapterName: string;
+}
 
 const bonesQuestions: Question[] = [
   ...generalVertebraeQuestions,
@@ -382,6 +389,7 @@ export default function QuizSessionScreen() {
   const { category, mode } = useLocalSearchParams<{ category: string; mode: string }>();
   
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionsWithChapters, setQuestionsWithChapters] = useState<QuestionWithChapter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -395,19 +403,26 @@ export default function QuizSessionScreen() {
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoading(true);
-      const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
-      const { questions: selectedQuestions } = await selectQuestionsForQuiz(
-        category || 'mixed',
-        mode || 'quick',
-        questionCount
-      );
-      setQuestions(selectedQuestions);
       
-      // Mark questions as seen immediately to prevent repetition
-      if (selectedQuestions.length > 0) {
-        const questionIds = selectedQuestions.map(q => q.id);
-        await markQuestionsAsSeen(category || 'mixed', questionIds);
-        console.log(`Marked ${questionIds.length} questions as seen on load`);
+      if (mode === 'sequential') {
+        const allWithChapters = getAllQuestionsWithChapters(category || 'upper-lower-limbs');
+        console.log(`Sequential mode: loaded ${allWithChapters.length} questions for ${category}`);
+        setQuestionsWithChapters(allWithChapters);
+        setQuestions(allWithChapters.map(qc => qc.question));
+      } else {
+        const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
+        const { questions: selectedQuestions } = await selectQuestionsForQuiz(
+          category || 'mixed',
+          mode || 'quick',
+          questionCount
+        );
+        setQuestions(selectedQuestions);
+        
+        if (selectedQuestions.length > 0) {
+          const questionIds = selectedQuestions.map(q => q.id);
+          await markQuestionsAsSeen(category || 'mixed', questionIds);
+          console.log(`Marked ${questionIds.length} questions as seen on load`);
+        }
       }
       
       setIsLoading(false);
@@ -606,6 +621,11 @@ export default function QuizSessionScreen() {
         <ScrollView style={styles.scrollContent} contentContainerStyle={styles.scrollContentContainer}>
           <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
             <View style={styles.questionContainer}>
+              {mode === 'sequential' && questionsWithChapters[currentIndex] && (
+                <View style={styles.chapterBadge}>
+                  <Text style={styles.chapterText}>Capitol: {questionsWithChapters[currentIndex].chapterName}</Text>
+                </View>
+              )}
               <View style={styles.difficultyBadge}>
                 <Text style={styles.difficultyText}>{currentQuestion.difficulty}</Text>
               </View>
@@ -777,6 +797,21 @@ const styles = StyleSheet.create({
   },
   questionContainer: {
     marginBottom: 24,
+  },
+  chapterBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary + '25',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + '40',
+  },
+  chapterText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
   difficultyBadge: {
     alignSelf: 'flex-start',
