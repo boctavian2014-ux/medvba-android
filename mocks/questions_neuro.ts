@@ -96,5 +96,69 @@ export const perforatingAndWatershedQuestions: Question[] = [
     correctAnswer: 1,
     explanation:
       'Deep internal watershed infarcts characteristically occur in the corona radiata and centrum semiovale where territories of deep perforating arteries and superficial cortical branches overlap and are vulnerable to hypoperfusion.[web:192][web:195][web:198]'
+  },
+  {
+    id: 'pw7',
+    category: 'neuro-vasculature',
+    difficulty: 'medium',
+    question: 'Which perforating arteries arise from the posterior cerebral artery to supply the thalamus?',
+    options: [
+      'Lenticulostriate arteries',
+      'Thalamoperforating (posterior thalamic) arteries',
+      'Recurrent artery of Heubner',
+      'Anterior choroidal artery branches',
+      'Pontine perforators'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Thalamoperforating arteries (also called posterior thalamic perforators) arise from the P1 segment of the posterior cerebral artery and supply the medial and posterior thalamus.'
+  },
+  {
+    id: 'pw8',
+    category: 'neuro-vasculature',
+    difficulty: 'medium',
+    question: 'The recurrent artery of Heubner is a perforating branch of which artery?',
+    options: [
+      'Middle cerebral artery (M1 segment)',
+      'Anterior cerebral artery (A1 or A2 segment)',
+      'Posterior cerebral artery (P1 segment)',
+      'Basilar artery',
+      'Anterior choroidal artery'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'The recurrent artery of Heubner (medial striate artery) typically arises from the A1 or proximal A2 segment of the anterior cerebral artery and supplies the head of the caudate nucleus and anterior limb of the internal capsule.'
+  },
+  {
+    id: 'pw9',
+    category: 'neuro-vasculature',
+    difficulty: 'hard',
+    question: 'Which clinical presentation is classically associated with lacunar infarcts affecting the posterior limb of the internal capsule?',
+    options: [
+      'Homonymous hemianopia',
+      'Pure motor hemiparesis',
+      'Global aphasia',
+      'Cortical blindness',
+      'Cerebellar ataxia'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Lacunar infarcts in the posterior limb of the internal capsule classically cause pure motor hemiparesis, as the corticospinal tract fibers are densely packed in this region.'
+  },
+  {
+    id: 'pw10',
+    category: 'neuro-vasculature',
+    difficulty: 'hard',
+    question: 'External (cortical) watershed infarcts between ACA and MCA territories typically present with which pattern of weakness?',
+    options: [
+      'Face and hand weakness with leg sparing (MCA pattern)',
+      'Proximal arm and shoulder weakness ("man-in-a-barrel" syndrome)',
+      'Isolated leg weakness (ACA pattern)',
+      'Complete hemiplegia with sensory loss',
+      'Bilateral facial weakness'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Bilateral ACA-MCA watershed infarcts can cause "man-in-a-barrel" syndrome with proximal arm weakness and shoulder girdle involvement, sparing the face and legs which are supplied by the core territories.'
   }
 ];
