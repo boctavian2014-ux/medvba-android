@@ -46,6 +46,8 @@ export const pt: Record<string, string> = {
   'quiz.languages': 'Idioma das questões',
   'quiz.difficultyLevels': 'Níveis de dificuldade',
   'quiz.practiceUnlimited': 'Treino ilimitado',
+  'quiz.freeQuizzesRemaining': '{remaining}/{total} testes gratuitos restantes hoje',
+  'quiz.dailyLimitReached': 'Limite diário de testes atingido',
 
   // Quiz Session
   'session.loading': 'A carregar questões…',
@@ -60,6 +62,7 @@ export const pt: Record<string, string> = {
   'session.correct': 'Certa',
   'session.wrong': 'Errada',
   'session.backToQuiz': 'Voltar aos modos de teste',
+  'session.percentCorrect': '{percent}% Certas',
 
   // Module Names
   'module.upperLowerLimbs': 'Membros superiores/inferiores',

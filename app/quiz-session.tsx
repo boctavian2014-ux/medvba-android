@@ -19,7 +19,8 @@ import Colors from '@/constants/colors';
 import { useQuizProgress, type SessionState } from '@/providers/QuizProgressProvider';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
-import { t, getChapterTitle } from '@/lib/i18n';
+import { getChapterTitle } from '@/lib/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 import { getAllQuestionsWithChapters } from '@/mocks/chapters';
 
 import {
@@ -391,6 +392,7 @@ async function selectQuestionsForQuiz(
 
 export default function QuizSessionScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
   const insets = useSafeAreaInsets();
   
@@ -655,7 +657,7 @@ export default function QuizSessionScreen() {
                 {percentage >= 70 ? t('session.greatJob') : t('session.keepPracticing')}
               </Text>
               <Text style={styles.resultScore}>{score}/{questions.length}</Text>
-              <Text style={styles.resultPercentage}>{percentage.toFixed(0)}% Correct</Text>
+              <Text style={styles.resultPercentage}>{t('session.percentCorrect').replace('{percent}', percentage.toFixed(0))}</Text>
               
               <View style={styles.resultStats}>
                 <View style={styles.resultStat}>

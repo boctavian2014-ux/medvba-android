@@ -46,6 +46,8 @@ export const ro: Record<string, string> = {
   'quiz.languages': 'Limba itemilor',
   'quiz.difficultyLevels': 'Nivel de dificultate',
   'quiz.practiceUnlimited': 'Antrenament nelimitat',
+  'quiz.freeQuizzesRemaining': '{remaining}/{total} teste gratuite rămase azi',
+  'quiz.dailyLimitReached': 'Limita zilnică de teste atinsă',
 
   // Quiz Session
   'session.loading': 'Se încarcă întrebările…',
@@ -60,6 +62,7 @@ export const ro: Record<string, string> = {
   'session.correct': 'Corect',
   'session.wrong': 'Greșit',
   'session.backToQuiz': 'Înapoi la modurile de testare',
+  'session.percentCorrect': '{percent}% Corect',
 
   // Module Names
   'module.upperLowerLimbs': 'Membre superioare/inferioare',

@@ -25,7 +25,8 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
-import { t, getModuleName } from '@/lib/i18n';
+import { getModuleName } from '@/lib/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 
 const categoryIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
@@ -39,6 +40,7 @@ type QuizMode = 'practice' | 'exam' | 'quick';
 
 export default function QuizScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { 
     isPremium, 
@@ -110,8 +112,8 @@ export default function QuizScreen() {
               <View style={styles.freeLimitContent}>
                 <Text style={styles.freeLimitText}>
                   {remainingQuizzes > 0 
-                    ? `${remainingQuizzes}/${FREE_QUIZ_LIMIT} free quizzes remaining today`
-                    : 'Daily quiz limit reached'}
+                    ? t('quiz.freeQuizzesRemaining').replace('{remaining}', String(remainingQuizzes)).replace('{total}', String(FREE_QUIZ_LIMIT))
+                    : t('quiz.dailyLimitReached')}
                 </Text>
                 {remainingQuizzes === 0 && (
                   <TouchableOpacity 
