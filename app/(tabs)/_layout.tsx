@@ -16,8 +16,11 @@ export default function TabLayout() {
           backgroundColor: Colors.backgroundLight,
           borderTopColor: Colors.glassBorder,
           borderTopWidth: 1,
-          paddingTop: 8,
-          paddingBottom: insets.bottom + 10,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -51,7 +54,7 @@ export default function TabLayout() {
         name="tutor"
         options={{
           title: "AI Tutor",
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size + 2} strokeWidth={2.2} />,
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
