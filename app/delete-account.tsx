@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { 
   X, 
   AlertTriangle,
@@ -205,13 +205,19 @@ export default function DeleteAccountScreen() {
                 </View>
                 <Text style={styles.deletionItemText}>Study rooms you host and their sessions</Text>
               </View>
-              <View style={styles.deletionItem}>
+              <View style={[styles.deletionItem, styles.deletionItemLast]}>
                 <View style={styles.deletionIconWrapper}>
                   <Flag color={Colors.textSecondary} size={20} />
                 </View>
                 <Text style={styles.deletionItemText}>Reports you sent and reports about you</Text>
               </View>
             </View>
+            <Text style={styles.retentionNote}>
+              Note: Certain non-identifiable or legally required records (for example, payment or tax records, or aggregated analytics that cannot be linked back to you) may be retained by Dev AI LTD for compliance and auditing purposes, as described in our{' '}
+              <Link href="/legal/privacy-policy" asChild>
+                <Text style={styles.retentionNoteLink}>Privacy Policy</Text>
+              </Link>.
+            </Text>
           </View>
 
           <View style={styles.section}>
@@ -361,6 +367,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: Colors.text,
+  },
+  deletionItemLast: {
+    borderBottomWidth: 0,
+  },
+  retentionNote: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    lineHeight: 18,
+    marginTop: 12,
+    marginHorizontal: 4,
+  },
+  retentionNoteLink: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    textDecorationLine: 'underline' as const,
   },
   confirmInstructions: {
     fontSize: 14,
