@@ -41,7 +41,7 @@ import GlassCard from '@/components/GlassCard';
 import { activities, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
 import { trpc } from '@/lib/trpc';
 
-const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001';
+const CURRENT_USER_ID = '00000000-0000-4000-8000-000000000001';
 const CURRENT_USER_NAME = 'You';
 const CURRENT_USER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop';
 
