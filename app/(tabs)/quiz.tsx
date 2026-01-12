@@ -16,7 +16,9 @@ import {
   Clock,
   Zap,
   Trophy,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Lock
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -24,6 +26,7 @@ import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
 import { t, getModuleName } from '@/lib/i18n';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 
 const categoryIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   'upper-lower-limbs': Bone,
@@ -37,14 +40,46 @@ type QuizMode = 'practice' | 'exam' | 'quick';
 export default function QuizScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { 
+    isPremium, 
+    canStartQuiz, 
+    incrementQuizCount, 
+    getRemainingQuizzes,
+    FREE_QUIZ_LIMIT 
+  } = useSubscription();
+
+  const remainingQuizzes = getRemainingQuizzes();
 
   const handleCategorySelect = (categoryId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
   };
 
-  const handleStartQuiz = (mode: QuizMode) => {
+  const handleStartQuiz = async (mode: QuizMode) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Free users can only use Quick Quiz mode
+    if (!isPremium && mode !== 'quick') {
+      console.log('[Quiz] Free user tried to access premium mode:', mode);
+      router.push('/paywall');
+      return;
+    }
+
+    // Check if free user has remaining quizzes
+    if (!canStartQuiz()) {
+      console.log('[Quiz] Free quiz limit reached');
+      router.push('/paywall');
+      return;
+    }
+
+    // Increment quiz count for free users
+    const success = await incrementQuizCount();
+    if (!success && !isPremium) {
+      console.log('[Quiz] Failed to increment quiz count');
+      router.push('/paywall');
+      return;
+    }
+
     router.push({
       pathname: '/quiz-session',
       params: { 
@@ -69,6 +104,27 @@ export default function QuizScreen() {
             <Text style={styles.title}>{t('quiz.title')}</Text>
             <Text style={styles.subtitle}>{t('quiz.subtitle')}</Text>
           </View>
+
+          {!isPremium && (
+            <GlassCard style={styles.freeLimitBanner}>
+              <View style={styles.freeLimitContent}>
+                <Text style={styles.freeLimitText}>
+                  {remainingQuizzes > 0 
+                    ? `${remainingQuizzes}/${FREE_QUIZ_LIMIT} free quizzes remaining today`
+                    : 'Daily quiz limit reached'}
+                </Text>
+                {remainingQuizzes === 0 && (
+                  <TouchableOpacity 
+                    style={styles.upgradeMiniButton}
+                    onPress={() => router.push('/paywall')}
+                  >
+                    <Crown color={Colors.warning} size={14} />
+                    <Text style={styles.upgradeMiniText}>Upgrade</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </GlassCard>
+          )}
 
           <View style={styles.modesSection}>
             <Text style={styles.sectionTitle}>{t('quiz.quizModes')}</Text>
@@ -102,6 +158,11 @@ export default function QuizScreen() {
                   <Clock color={Colors.text} size={28} />
                   <Text style={styles.modeTitle}>{t('quiz.practice')}</Text>
                   <Text style={styles.modeSubtitle}>{t('quiz.practiceCount')}</Text>
+                  {!isPremium && (
+                    <View style={styles.premiumBadge}>
+                      <Lock color={Colors.warning} size={12} />
+                    </View>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
 
@@ -120,7 +181,13 @@ export default function QuizScreen() {
                     <Text style={styles.modeTitle}>{t('quiz.examSimulation')}</Text>
                     <Text style={styles.modeSubtitle}>{t('quiz.examDetails')}</Text>
                   </View>
-                  <ChevronRight color={Colors.text} size={24} />
+                  {!isPremium ? (
+                    <View style={styles.premiumBadge}>
+                      <Lock color={Colors.warning} size={12} />
+                    </View>
+                  ) : (
+                    <ChevronRight color={Colors.text} size={24} />
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -364,5 +431,44 @@ const styles = StyleSheet.create({
     width: 1,
     height: 40,
     backgroundColor: Colors.glassBorder,
+  },
+  freeLimitBanner: {
+    marginBottom: 16,
+    backgroundColor: 'rgba(255, 184, 0, 0.1)',
+    borderColor: 'rgba(255, 184, 0, 0.3)',
+    borderWidth: 1,
+  },
+  freeLimitContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  freeLimitText: {
+    fontSize: 14,
+    color: Colors.warning,
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  upgradeMiniButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  upgradeMiniText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.warning,
+  },
+  premiumBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

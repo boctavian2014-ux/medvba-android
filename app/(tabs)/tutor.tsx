@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,12 +18,16 @@ import {
   Sparkles,
   BookOpen,
   Lightbulb,
-  HelpCircle
+  HelpCircle,
+  Crown,
+  Lock
 } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { generateText } from '@rork-ai/toolkit-sdk';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 
 interface Message {
   id: string;
@@ -50,6 +54,16 @@ export default function TutorScreen() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const router = useRouter();
+  const { 
+    isPremium, 
+    canAskAiQuestion, 
+    incrementAiQuestionCount, 
+    getRemainingAiQuestions,
+    FREE_AI_LIMIT 
+  } = useSubscription();
+
+  const remainingAiQuestions = getRemainingAiQuestions();
 
   const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
     const systemPrompt = `You are an expert AI medical tutor helping students prepare for medical exams (USMLE, MBBS, anatomy exams, etc.).
@@ -96,6 +110,21 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
     if (!inputText.trim() || isTyping) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Check if free user can ask AI question
+    if (!canAskAiQuestion()) {
+      console.log('[Tutor] Free AI question limit reached');
+      router.push('/paywall');
+      return;
+    }
+
+    // Increment AI question count for free users
+    const success = await incrementAiQuestionCount();
+    if (!success && !isPremium) {
+      console.log('[Tutor] Failed to increment AI question count');
+      router.push('/paywall');
+      return;
+    }
     
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -168,10 +197,20 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 <Text style={styles.status}>Always available</Text>
               </View>
             </View>
-            <View style={styles.premiumBadge}>
-              <Sparkles color={Colors.warning} size={14} />
-              <Text style={styles.premiumText}>Premium</Text>
-            </View>
+            {isPremium ? (
+              <View style={styles.premiumBadge}>
+                <Sparkles color={Colors.warning} size={14} />
+                <Text style={styles.premiumText}>Premium</Text>
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.upgradeButton}
+                onPress={() => router.push('/paywall')}
+              >
+                <Crown color={Colors.warning} size={14} />
+                <Text style={styles.upgradeButtonText}>Upgrade</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <ScrollView 
@@ -180,6 +219,21 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
           >
+            {!isPremium && (
+              <View style={styles.freeLimitBanner}>
+                <View style={styles.freeLimitContent}>
+                  <Text style={styles.freeLimitText}>
+                    {remainingAiQuestions > 0 
+                      ? `${remainingAiQuestions}/${FREE_AI_LIMIT} free question remaining today`
+                      : 'Daily AI question limit reached'}
+                  </Text>
+                  {remainingAiQuestions === 0 && (
+                    <Lock color={Colors.error} size={16} />
+                  )}
+                </View>
+              </View>
+            )}
+
             {messages.length === 1 && (
               <View style={styles.suggestions}>
                 <Text style={styles.suggestionsTitle}>Try asking:</Text>
@@ -469,5 +523,39 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: Colors.cardBgLight,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 'auto',
+    gap: 4,
+  },
+  upgradeButtonText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.warning,
+  },
+  freeLimitBanner: {
+    backgroundColor: 'rgba(255, 184, 0, 0.1)',
+    borderColor: 'rgba(255, 184, 0, 0.3)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  freeLimitContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  freeLimitText: {
+    fontSize: 14,
+    color: Colors.warning,
+    fontWeight: '500' as const,
+    flex: 1,
   },
 });

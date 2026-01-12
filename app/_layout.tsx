@@ -9,6 +9,7 @@ import { trpc, trpcClient } from "@/lib/trpc";
 import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
+import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
@@ -78,6 +79,13 @@ function RootLayoutNav() {
           animation: 'slide_from_bottom'
         }} 
       />
+      <Stack.Screen 
+        name="paywall" 
+        options={{ 
+          presentation: 'modal',
+          animation: 'slide_from_bottom'
+        }} 
+      />
     </Stack>
   );
 }
@@ -101,12 +109,14 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <LanguageProvider>
-            <QuizProgressProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <StatusBar style="light" />
-                <RootLayoutNav />
-              </GestureHandlerRootView>
-            </QuizProgressProvider>
+            <SubscriptionProvider>
+              <QuizProgressProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <StatusBar style="light" />
+                  <RootLayoutNav />
+                </GestureHandlerRootView>
+              </QuizProgressProvider>
+            </SubscriptionProvider>
           </LanguageProvider>
         </AuthProvider>
       </QueryClientProvider>
