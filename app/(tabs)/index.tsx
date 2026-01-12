@@ -22,7 +22,7 @@ import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { dailyProgress, hasActiveSession, sessionState } = useQuizProgress();
+  const { dailyProgress, hasActiveSession, sessionState, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
   const completedQuestions = categories.reduce((sum, cat) => sum + cat.completedCount, 0);
@@ -114,17 +114,17 @@ export default function HomeScreen() {
           <View style={styles.statsRow}>
             <GlassCard style={styles.statCard}>
               <TrendingUp color={Colors.success} size={24} />
-              <Text style={styles.statValue}>{currentUser.accuracy}%</Text>
+              <Text style={styles.statValue}>{accuracy.toFixed(1)}%</Text>
               <Text style={styles.statLabel}>{t('home.accuracy')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
               <Target color={Colors.accentPink} size={24} />
-              <Text style={styles.statValue}>{(currentUser.questionsAnswered / 1000).toFixed(1)}k</Text>
+              <Text style={styles.statValue}>{formattedQuestionsCount}</Text>
               <Text style={styles.statLabel}>{t('home.questions')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
               <Clock color={Colors.warning} size={24} />
-              <Text style={styles.statValue}>{currentUser.studyHours}h</Text>
+              <Text style={styles.statValue}>{formattedStudyTime}</Text>
               <Text style={styles.statLabel}>{t('home.studyTime')}</Text>
             </GlassCard>
           </View>

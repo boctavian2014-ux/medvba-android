@@ -5,6 +5,7 @@ import type { Question } from '@/mocks/questions';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
 const SESSION_STATE_KEY = 'quiz_session_state';
+const ALL_TIME_STATS_KEY = 'quiz_all_time_stats';
 
 interface DailyProgress {
   date: string;
@@ -24,9 +25,24 @@ interface SessionState {
   startedAt: string;
 }
 
+interface AllTimeStats {
+  totalQuestionsAnswered: number;
+  totalCorrectAnswers: number;
+  totalStudyTimeSeconds: number;
+}
+
+function getDefaultAllTimeStats(): AllTimeStats {
+  return {
+    totalQuestionsAnswered: 0,
+    totalCorrectAnswers: 0,
+    totalStudyTimeSeconds: 0,
+  };
+}
+
 interface QuizProgressContextValue {
   dailyProgress: DailyProgress;
   sessionState: SessionState | null;
+  allTimeStats: AllTimeStats;
   isLoading: boolean;
   updateDailyProgress: (correct: boolean, questionId: string) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
@@ -34,6 +50,10 @@ interface QuizProgressContextValue {
   loadSessionState: () => Promise<SessionState | null>;
   hasActiveSession: boolean;
   resetDailyProgress: () => Promise<void>;
+  addStudyTime: (seconds: number) => Promise<void>;
+  accuracy: number;
+  formattedQuestionsCount: string;
+  formattedStudyTime: string;
 }
 
 function getTodayDateString(): string {
@@ -53,6 +73,7 @@ function getDefaultDailyProgress(): DailyProgress {
 export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizProgressContextValue>(() => {
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(getDefaultDailyProgress());
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
+  const [allTimeStats, setAllTimeStats] = useState<AllTimeStats>(getDefaultAllTimeStats());
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -92,6 +113,15 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             await AsyncStorage.removeItem(SESSION_STATE_KEY);
           }
         }
+
+        const allTimeStored = await AsyncStorage.getItem(ALL_TIME_STATS_KEY);
+        if (allTimeStored) {
+          const parsedAllTime = JSON.parse(allTimeStored) as AllTimeStats;
+          console.log('[QuizProgress] Loaded all-time stats:', parsedAllTime);
+          setAllTimeStats(parsedAllTime);
+        } else {
+          console.log('[QuizProgress] No all-time stats, using default');
+        }
       } catch (error) {
         console.error('[QuizProgress] Error loading progress:', error);
       } finally {
@@ -122,6 +152,22 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         
         AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(updated)).catch(err => {
           console.error('[QuizProgress] Error saving daily progress:', err);
+        });
+
+        return updated;
+      });
+
+      setAllTimeStats(prev => {
+        const updated: AllTimeStats = {
+          ...prev,
+          totalQuestionsAnswered: prev.totalQuestionsAnswered + 1,
+          totalCorrectAnswers: correct ? prev.totalCorrectAnswers + 1 : prev.totalCorrectAnswers,
+        };
+
+        console.log('[QuizProgress] Updated all-time stats:', updated.totalQuestionsAnswered, 'questions,', updated.totalCorrectAnswers, 'correct');
+        
+        AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(updated)).catch(err => {
+          console.error('[QuizProgress] Error saving all-time stats:', err);
         });
 
         return updated;
@@ -185,9 +231,53 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     return sessionState !== null && sessionState.currentIndex < sessionState.questions.length;
   }, [sessionState]);
 
+  const addStudyTime = useCallback(async (seconds: number) => {
+    try {
+      setAllTimeStats(prev => {
+        const updated: AllTimeStats = {
+          ...prev,
+          totalStudyTimeSeconds: prev.totalStudyTimeSeconds + seconds,
+        };
+
+        console.log('[QuizProgress] Added', seconds, 'seconds. Total study time:', updated.totalStudyTimeSeconds, 'seconds');
+        
+        AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(updated)).catch(err => {
+          console.error('[QuizProgress] Error saving study time:', err);
+        });
+
+        return updated;
+      });
+    } catch (error) {
+      console.error('[QuizProgress] Error adding study time:', error);
+    }
+  }, []);
+
+  const accuracy = useMemo(() => {
+    if (allTimeStats.totalQuestionsAnswered === 0) return 0;
+    return (allTimeStats.totalCorrectAnswers / allTimeStats.totalQuestionsAnswered) * 100;
+  }, [allTimeStats.totalQuestionsAnswered, allTimeStats.totalCorrectAnswers]);
+
+  const formattedQuestionsCount = useMemo(() => {
+    const count = allTimeStats.totalQuestionsAnswered;
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}k`;
+    }
+    return String(count);
+  }, [allTimeStats.totalQuestionsAnswered]);
+
+  const formattedStudyTime = useMemo(() => {
+    const hours = Math.floor(allTimeStats.totalStudyTimeSeconds / 3600);
+    if (hours > 0) {
+      return `${hours}h`;
+    }
+    const minutes = Math.floor(allTimeStats.totalStudyTimeSeconds / 60);
+    return `${minutes}m`;
+  }, [allTimeStats.totalStudyTimeSeconds]);
+
   return {
     dailyProgress,
     sessionState,
+    allTimeStats,
     isLoading,
     updateDailyProgress,
     saveSessionState,
@@ -195,7 +285,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     loadSessionState,
     hasActiveSession,
     resetDailyProgress,
+    addStudyTime,
+    accuracy,
+    formattedQuestionsCount,
+    formattedStudyTime,
   };
 });
 
-export type { DailyProgress, SessionState };
+export type { DailyProgress, SessionState, AllTimeStats };

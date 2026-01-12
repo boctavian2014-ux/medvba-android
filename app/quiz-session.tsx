@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -395,8 +395,11 @@ export default function QuizSessionScreen() {
     updateDailyProgress, 
     saveSessionState, 
     clearSessionState, 
-    sessionState: savedSession 
+    sessionState: savedSession,
+    addStudyTime 
   } = useQuizProgress();
+  
+  const sessionStartTimeRef = useRef<number>(Date.now());
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsWithChapters, setQuestionsWithChapters] = useState<QuestionWithChapter[]>([]);
@@ -423,6 +426,7 @@ export default function QuizSessionScreen() {
         setScore(savedSession.score);
         setAnsweredInSession(savedSession.answeredInSession);
         setSessionStartedAt(savedSession.startedAt);
+        sessionStartTimeRef.current = Date.now();
         setIsLoading(false);
         return;
       }
@@ -544,16 +548,24 @@ export default function QuizSessionScreen() {
         }).start();
       });
     } else {
+      const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
+      await addStudyTime(elapsedSeconds);
+      console.log('[QuizSession] Session complete. Time spent:', elapsedSeconds, 'seconds');
       await clearSessionState();
       console.log('[QuizSession] Quiz complete, cleared session state');
       setQuizComplete(true);
     }
-  }, [currentIndex, questions.length, fadeAnim, clearSessionState]);
+  }, [currentIndex, questions.length, fadeAnim, clearSessionState, addStudyTime]);
 
-  const handleClose = useCallback(() => {
+  const handleClose = useCallback(async () => {
+    const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
+    if (elapsedSeconds > 5) {
+      await addStudyTime(elapsedSeconds);
+      console.log('[QuizSession] Session closed. Time spent:', elapsedSeconds, 'seconds');
+    }
     console.log('[QuizSession] Closing quiz, session state preserved for resume');
     router.back();
-  }, [router]);
+  }, [router, addStudyTime]);
 
   if (isLoading) {
     return (
