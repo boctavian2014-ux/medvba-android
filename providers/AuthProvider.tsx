@@ -69,8 +69,26 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         setProfile(userProfile);
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
-    } catch (error) {
-      console.error('[Auth] Error fetching profile:', error);
+    } catch (error: any) {
+      console.error('[Auth] Error fetching profile:', error?.message || error);
+      
+      if (error?.message?.includes('ENOTFOUND') || error?.message?.includes('network')) {
+        console.warn('[Auth] Database connection failed - using local fallback profile');
+      }
+      
+      setProfile({
+        id: userId,
+        name: 'Student',
+        avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
+        rank: 0,
+        points: 0,
+        streak: 0,
+        questionsAnswered: 0,
+        accuracy: 0,
+        studyHours: 0,
+        badges: [],
+        joinedAt: new Date().toISOString(),
+      });
     }
   }, []);
 
