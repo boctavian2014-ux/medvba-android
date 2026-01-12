@@ -38,9 +38,9 @@ interface Message {
 }
 
 const getSuggestedQuestions = (t: (key: string) => string) => [
-  { icon: BookOpen, text: "Explain the cardiac cycle", category: t('subject.physiology') },
-  { icon: Lightbulb, text: "What causes diabetes mellitus?", category: t('subject.pathology') },
-  { icon: HelpCircle, text: "Mechanism of beta-blockers", category: t('subject.pharmacology') },
+  { icon: BookOpen, text: t('tutor.suggestion1'), category: t('subject.physiology') },
+  { icon: Lightbulb, text: t('tutor.suggestion2'), category: t('subject.pathology') },
+  { icon: HelpCircle, text: t('tutor.suggestion3'), category: t('subject.pharmacology') },
 ];
 
 export default function TutorScreen() {
@@ -165,7 +165,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment. If the issue persists, check your internet connection.",
+        content: t('tutor.errorMessage'),
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);

@@ -112,4 +112,8 @@ export const ro: Record<string, string> = {
   'tutor.dailyLimitReached': 'Limită zilnică AI atinsă',
   'tutor.tryAsking': 'Încearcă să întrebi:',
   'tutor.welcomeMessage': 'Salut! Sunt tutorul tău medical AI 🩺 Sunt aici să te ajut să înțelegi concepte medicale complexe, să explic mecanisme și să răspund la orice întrebări despre materia ta. Ce ai vrea să înveți azi?',
+  'tutor.suggestion1': 'Explică ciclul cardiac',
+  'tutor.suggestion2': 'Care sunt cauzele diabetului zaharat?',
+  'tutor.suggestion3': 'Mecanismul de acțiune al beta-blocantelor',
+  'tutor.errorMessage': 'Îmi pare rău, dar am probleme de conectare în acest moment. Te rog să încerci din nou. Dacă problema persistă, verifică conexiunea la internet.',
 };

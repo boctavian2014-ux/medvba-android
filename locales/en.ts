@@ -112,4 +112,8 @@ export const en: Record<string, string> = {
   'tutor.dailyLimitReached': 'Daily AI question limit reached',
   'tutor.tryAsking': 'Try asking:',
   'tutor.welcomeMessage': "Hello! I'm your AI medical tutor 🩺 I'm here to help you understand complex medical concepts, explain mechanisms, and answer any questions about your coursework. What would you like to learn about today?",
+  'tutor.suggestion1': 'Explain the cardiac cycle',
+  'tutor.suggestion2': 'What causes diabetes mellitus?',
+  'tutor.suggestion3': 'Mechanism of beta-blockers',
+  'tutor.errorMessage': "I apologize, but I'm having trouble connecting right now. Please try again in a moment. If the issue persists, check your internet connection.",
 };

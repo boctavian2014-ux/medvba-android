@@ -112,4 +112,8 @@ export const pt: Record<string, string> = {
   'tutor.dailyLimitReached': 'Limite diário de IA atingido',
   'tutor.tryAsking': 'Experimente perguntar:',
   'tutor.welcomeMessage': 'Olá! Sou o teu tutor médico com IA 🩺 Estou aqui para te ajudar a compreender conceitos médicos complexos, explicar mecanismos e responder a qualquer pergunta sobre a tua matéria. O que gostarias de aprender hoje?',
+  'tutor.suggestion1': 'Explica o ciclo cardíaco',
+  'tutor.suggestion2': 'Quais são as causas da diabetes mellitus?',
+  'tutor.suggestion3': 'Mecanismo de ação dos betabloqueadores',
+  'tutor.errorMessage': 'Peço desculpa, mas estou com problemas de ligação neste momento. Por favor, tenta novamente. Se o problema persistir, verifica a tua ligação à internet.',
 };
