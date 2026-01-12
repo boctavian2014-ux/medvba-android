@@ -33,6 +33,7 @@ import {
   X,
   ChevronRight,
   Play,
+  Plus,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -115,6 +116,10 @@ export default function SocialScreen() {
   const [sessionDate, setSessionDate] = useState('');
   const [sessionTime, setSessionTime] = useState('');
   const [, forceUpdate] = useState(0);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomCategory, setNewRoomCategory] = useState('anatomy');
+  const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState('20');
 
   useEffect(() => {
     const interval = setInterval(() => forceUpdate(n => n + 1), 30000);
@@ -218,6 +223,42 @@ export default function SocialScreen() {
       upcomingSessionsQuery.refetch();
     },
   });
+
+  const createRoomMutation = trpc.studyRooms.create.useMutation({
+    onSuccess: () => {
+      console.log('Study room created successfully');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setShowCreateRoomModal(false);
+      resetCreateRoomForm();
+      studyRoomsQuery.refetch();
+    },
+    onError: (error) => {
+      console.error('Failed to create study room:', error);
+      Alert.alert('Error', 'Failed to create study room. Please try again.');
+    },
+  });
+
+  const resetCreateRoomForm = () => {
+    setNewRoomName('');
+    setNewRoomCategory('anatomy');
+    setNewRoomMaxParticipants('20');
+  };
+
+  const handleCreateRoom = () => {
+    if (!newRoomName.trim()) {
+      Alert.alert('Missing Info', 'Please enter a room name.');
+      return;
+    }
+
+    createRoomMutation.mutate({
+      name: newRoomName.trim(),
+      hostId: CURRENT_USER_ID,
+      hostName: CURRENT_USER_NAME,
+      hostAvatar: CURRENT_USER_AVATAR,
+      category: newRoomCategory,
+      maxParticipants: parseInt(newRoomMaxParticipants, 10),
+    });
+  };
 
   const resetScheduleForm = () => {
     setSessionTitle('');
@@ -410,6 +451,16 @@ export default function SocialScreen() {
             <View style={styles.sectionHeader}>
               <Radio color={Colors.error} size={18} />
               <Text style={styles.sectionTitle}>Live Study Rooms</Text>
+              <TouchableOpacity 
+                style={styles.createRoomButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowCreateRoomModal(true);
+                }}
+              >
+                <Plus color={Colors.text} size={16} />
+                <Text style={styles.createRoomButtonText}>Create</Text>
+              </TouchableOpacity>
             </View>
             <ScrollView 
               horizontal 
@@ -806,6 +857,123 @@ export default function SocialScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <Modal
+        visible={showCreateRoomModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowCreateRoomModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalContent}>
+            <LinearGradient
+              colors={[Colors.cardBg, Colors.background]}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Study Room</Text>
+              <TouchableOpacity 
+                style={styles.modalClose}
+                onPress={() => {
+                  setShowCreateRoomModal(false);
+                  resetCreateRoomForm();
+                }}
+              >
+                <X color={Colors.textSecondary} size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Room Name *</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={newRoomName}
+                  onChangeText={setNewRoomName}
+                  placeholder="e.g. Anatomy Study Group"
+                  placeholderTextColor={Colors.textMuted}
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Category</Text>
+                <View style={styles.categoryOptions}>
+                  {['anatomy', 'physiology', 'pathology', 'pharmacology', 'general'].map(cat => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.categoryOption,
+                        newRoomCategory === cat && styles.categoryOptionActive
+                      ]}
+                      onPress={() => setNewRoomCategory(cat)}
+                    >
+                      <Text style={[
+                        styles.categoryOptionText,
+                        newRoomCategory === cat && styles.categoryOptionTextActive
+                      ]}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Max Participants</Text>
+                <View style={styles.durationOptions}>
+                  {['5', '10', '20', '50', '100'].map(num => (
+                    <TouchableOpacity
+                      key={num}
+                      style={[
+                        styles.durationOption,
+                        newRoomMaxParticipants === num && styles.durationOptionActive
+                      ]}
+                      onPress={() => setNewRoomMaxParticipants(num)}
+                    >
+                      <Text style={[
+                        styles.durationOptionText,
+                        newRoomMaxParticipants === num && styles.durationOptionTextActive
+                      ]}>
+                        {num}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowCreateRoomModal(false);
+                  resetCreateRoomForm();
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.createButton, createRoomMutation.isPending && styles.buttonDisabled]}
+                onPress={handleCreateRoom}
+                disabled={createRoomMutation.isPending}
+              >
+                {createRoomMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.text} />
+                ) : (
+                  <>
+                    <Plus color={Colors.text} size={16} />
+                    <Text style={styles.createButtonText}>Create Room</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -849,6 +1017,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
+    color: Colors.text,
+    flex: 1,
+  },
+  createRoomButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  createRoomButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
     color: Colors.text,
   },
   roomsScroll: {
@@ -1342,6 +1525,31 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   durationOptionTextActive: {
+    color: Colors.primary,
+  },
+  categoryOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  categoryOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: Colors.cardBgLight,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  categoryOptionActive: {
+    backgroundColor: 'rgba(0, 180, 216, 0.15)',
+    borderColor: Colors.primary,
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.textSecondary,
+  },
+  categoryOptionTextActive: {
     color: Colors.primary,
   },
   modalFooter: {
