@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -20,6 +24,8 @@ import {
   HelpCircle,
   Mail,
   Info,
+  Ban,
+  UserX,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
@@ -48,8 +54,52 @@ function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: Set
   );
 }
 
+const BLOCKED_USERS_KEY = '@medix_blocked_users';
+
+interface BlockedUser {
+  id: string;
+  name: string;
+  avatar: string;
+  blockedAt: string;
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+
+  useEffect(() => {
+    loadBlockedUsers();
+  }, []);
+
+  const loadBlockedUsers = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(BLOCKED_USERS_KEY);
+      if (stored) {
+        setBlockedUsers(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load blocked users:', error);
+    }
+  };
+
+  const handleUnblockUser = (user: BlockedUser) => {
+    Alert.alert(
+      'Unblock User',
+      `Unblock ${user.name}? They will be able to see your study rooms again.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unblock',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const updated = blockedUsers.filter(u => u.id !== user.id);
+            setBlockedUsers(updated);
+            await AsyncStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(updated));
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -94,6 +144,58 @@ export default function SettingsScreen() {
                 onPress={() => console.log('Appearance')}
                 showBorder={false}
               />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Privacy & Safety</Text>
+            <View style={styles.sectionCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.blockedUsersHeader}>
+                <View style={styles.blockedUsersIcon}>
+                  <Ban color={Colors.error} size={22} />
+                </View>
+                <View style={styles.blockedUsersInfo}>
+                  <Text style={styles.settingsItemTitle}>Blocked Users</Text>
+                  <Text style={styles.settingsItemSubtitle}>
+                    {blockedUsers.length === 0 
+                      ? 'No blocked users' 
+                      : `${blockedUsers.length} blocked user${blockedUsers.length > 1 ? 's' : ''}`}
+                  </Text>
+                </View>
+              </View>
+              
+              {blockedUsers.length > 0 && (
+                <View style={styles.blockedUsersList}>
+                  {blockedUsers.map((user, index) => (
+                    <View 
+                      key={user.id} 
+                      style={[
+                        styles.blockedUserItem,
+                        index < blockedUsers.length - 1 && styles.blockedUserItemBorder
+                      ]}
+                    >
+                      <Image source={{ uri: user.avatar }} style={styles.blockedUserAvatar} />
+                      <View style={styles.blockedUserInfo}>
+                        <Text style={styles.blockedUserName}>{user.name}</Text>
+                        <Text style={styles.blockedUserDate}>
+                          Blocked {new Date(user.blockedAt).toLocaleDateString()}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.unblockButton}
+                        onPress={() => handleUnblockUser(user)}
+                      >
+                        <UserX color={Colors.error} size={18} />
+                        <Text style={styles.unblockButtonText}>Unblock</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
 
@@ -277,5 +379,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
     marginTop: 4,
+  },
+  blockedUsersHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  blockedUsersIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 71, 87, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blockedUsersInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  blockedUsersList: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.glassBorder,
+  },
+  blockedUserItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    paddingLeft: 16,
+  },
+  blockedUserItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  blockedUserAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  blockedUserInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  blockedUserName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  blockedUserDate: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  unblockButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 71, 87, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 6,
+  },
+  unblockButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.error,
   },
 });

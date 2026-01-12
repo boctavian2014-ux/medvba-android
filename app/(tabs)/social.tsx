@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   Users, 
   Radio, 
@@ -34,6 +35,11 @@ import {
   ChevronRight,
   Play,
   Plus,
+  MoreVertical,
+  Ban,
+  Flag,
+  AlertTriangle,
+  CheckCircle,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -44,6 +50,32 @@ import { trpc } from '@/lib/trpc';
 const CURRENT_USER_ID = '00000000-0000-4000-8000-000000000001';
 const CURRENT_USER_NAME = 'You';
 const CURRENT_USER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop';
+
+const BLOCKED_USERS_KEY = '@medix_blocked_users';
+const USER_REPORTS_KEY = '@medix_user_reports';
+
+interface BlockedUser {
+  id: string;
+  name: string;
+  avatar: string;
+  blockedAt: string;
+}
+
+interface UserReport {
+  id: string;
+  reportedUserId: string;
+  reportedUserName: string;
+  reason: string;
+  details?: string;
+  reportedAt: string;
+}
+
+const REPORT_REASONS = [
+  { id: 'harassment', label: 'Harassment', icon: AlertTriangle },
+  { id: 'inappropriate', label: 'Inappropriate Behavior', icon: Ban },
+  { id: 'spam', label: 'Spam', icon: Flag },
+  { id: 'other', label: 'Other', icon: Flag },
+];
 
 const activityIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   achievement: Trophy,
@@ -120,11 +152,124 @@ export default function SocialScreen() {
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomCategory, setNewRoomCategory] = useState('anatomy');
   const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState('20');
+  
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [showUserActionsModal, setShowUserActionsModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; avatar: string } | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitted, setReportSubmitted] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => forceUpdate(n => n + 1), 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    loadBlockedUsers();
+  }, []);
+
+  const loadBlockedUsers = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(BLOCKED_USERS_KEY);
+      if (stored) {
+        setBlockedUsers(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load blocked users:', error);
+    }
+  };
+
+  const saveBlockedUsers = async (users: BlockedUser[]) => {
+    try {
+      await AsyncStorage.setItem(BLOCKED_USERS_KEY, JSON.stringify(users));
+      setBlockedUsers(users);
+    } catch (error) {
+      console.error('Failed to save blocked users:', error);
+    }
+  };
+
+  const handleBlockUser = (user: { id: string; name: string; avatar: string }) => {
+    Alert.alert(
+      'Block User',
+      `Block ${user.name}? They won't be able to join your future study rooms and you won't see their rooms.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const newBlockedUser: BlockedUser = {
+              id: user.id,
+              name: user.name,
+              avatar: user.avatar,
+              blockedAt: new Date().toISOString(),
+            };
+            await saveBlockedUsers([...blockedUsers, newBlockedUser]);
+            setShowUserActionsModal(false);
+            setSelectedUser(null);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleOpenReportModal = () => {
+    setShowUserActionsModal(false);
+    setSelectedReportReason('');
+    setReportDetails('');
+    setReportSubmitted(false);
+    setTimeout(() => setShowReportModal(true), 300);
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedUser || !selectedReportReason) {
+      Alert.alert('Missing Info', 'Please select a reason for your report.');
+      return;
+    }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const report: UserReport = {
+      id: Date.now().toString(),
+      reportedUserId: selectedUser.id,
+      reportedUserName: selectedUser.name,
+      reason: selectedReportReason,
+      details: reportDetails || undefined,
+      reportedAt: new Date().toISOString(),
+    };
+
+    try {
+      const stored = await AsyncStorage.getItem(USER_REPORTS_KEY);
+      const reports: UserReport[] = stored ? JSON.parse(stored) : [];
+      reports.push(report);
+      await AsyncStorage.setItem(USER_REPORTS_KEY, JSON.stringify(reports));
+      console.log('Report submitted:', report);
+    } catch (error) {
+      console.error('Failed to save report:', error);
+    }
+
+    setReportSubmitted(true);
+  };
+
+  const handleCloseReportModal = () => {
+    setShowReportModal(false);
+    setSelectedUser(null);
+    setSelectedReportReason('');
+    setReportDetails('');
+    setReportSubmitted(false);
+  };
+
+  const handleOpenUserActions = (user: { id: string; name: string; avatar: string }) => {
+    if (user.id === CURRENT_USER_ID) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedUser(user);
+    setShowUserActionsModal(true);
+  };
+
+  const isUserBlocked = (userId: string) => blockedUsers.some(u => u.id === userId);
 
   const studyRoomsQuery = trpc.studyRooms.list.useQuery({});
   const upcomingSessionsQuery = trpc.sessions.listUpcoming.useQuery({});
@@ -422,7 +567,10 @@ export default function SocialScreen() {
   const isSessionHost = (session: StudySession) => session.hostId === CURRENT_USER_ID;
   const isRoomLive = (room: StudyRoom) => room.zoomStatus === 'LIVE' && room.joinUrl;
 
-  const upcomingSessions = upcomingSessionsQuery.data ?? [];
+  const upcomingSessions: StudySession[] = upcomingSessionsQuery.data ?? [];
+  
+  const filteredStudyRooms = studyRooms.filter(room => !isUserBlocked(room.hostId));
+  const filteredUpcomingSessions = upcomingSessions.filter(session => !isUserBlocked(session.hostId));
 
   return (
     <View style={styles.container}>
@@ -467,7 +615,7 @@ export default function SocialScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.roomsScroll}
             >
-              {studyRooms.map((room) => {
+              {filteredStudyRooms.map((room) => {
                 const isHost = isCurrentUserHost(room);
                 const isLive = isRoomLive(room);
                 const isLoading = createMeetingMutation.isPending && 
@@ -499,6 +647,19 @@ export default function SocialScreen() {
                           {room.participants}/{room.maxParticipants}
                         </Text>
                       </View>
+                      
+                      {!isHost && (
+                        <TouchableOpacity
+                          style={styles.userActionsButton}
+                          onPress={() => handleOpenUserActions({
+                            id: room.hostId,
+                            name: room.host,
+                            avatar: room.hostAvatar,
+                          })}
+                        >
+                          <MoreVertical color={Colors.textMuted} size={18} />
+                        </TouchableOpacity>
+                      )}
                       
                       {isHost ? (
                         <View style={styles.hostButtons}>
@@ -561,14 +722,14 @@ export default function SocialScreen() {
             </ScrollView>
           </View>
 
-          {upcomingSessions.length > 0 && (
+          {filteredUpcomingSessions.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Calendar color={Colors.secondary} size={18} />
                 <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
               </View>
               
-              {upcomingSessions.map((session) => {
+              {filteredUpcomingSessions.map((session) => {
                 const isHost = isSessionHost(session);
                 const canStart = isSessionStartable(session.scheduledFor);
                 const isLive = session.status === 'LIVE';
@@ -583,6 +744,18 @@ export default function SocialScreen() {
                           {isHost ? 'You are hosting' : `by ${session.hostName}`}
                         </Text>
                       </View>
+                      {!isHost && (
+                        <TouchableOpacity
+                          style={styles.sessionUserActionsButton}
+                          onPress={() => handleOpenUserActions({
+                            id: session.hostId,
+                            name: session.hostName,
+                            avatar: session.hostAvatar,
+                          })}
+                        >
+                          <MoreVertical color={Colors.textMuted} size={18} />
+                        </TouchableOpacity>
+                      )}
                       {isLive ? (
                         <View style={styles.sessionLiveIndicator}>
                           <View style={styles.liveDot} />
@@ -971,6 +1144,195 @@ export default function SocialScreen() {
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showUserActionsModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowUserActionsModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.userActionsOverlay}
+          activeOpacity={1}
+          onPress={() => setShowUserActionsModal(false)}
+        >
+          <View style={styles.userActionsContent}>
+            <LinearGradient
+              colors={[Colors.cardBg, Colors.background]}
+              style={StyleSheet.absoluteFill}
+            />
+            {selectedUser && (
+              <>
+                <View style={styles.userActionsHeader}>
+                  <Image source={{ uri: selectedUser.avatar }} style={styles.userActionsAvatar} />
+                  <Text style={styles.userActionsName}>{selectedUser.name}</Text>
+                </View>
+                
+                <TouchableOpacity
+                  style={styles.userActionItem}
+                  onPress={() => handleBlockUser(selectedUser)}
+                >
+                  <View style={[styles.userActionIcon, { backgroundColor: 'rgba(255, 71, 87, 0.15)' }]}>
+                    <Ban color={Colors.error} size={20} />
+                  </View>
+                  <View style={styles.userActionTextContainer}>
+                    <Text style={styles.userActionTitle}>Block User</Text>
+                    <Text style={styles.userActionSubtitle}>They won&apos;t see your rooms</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.userActionItem}
+                  onPress={handleOpenReportModal}
+                >
+                  <View style={[styles.userActionIcon, { backgroundColor: 'rgba(255, 159, 67, 0.15)' }]}>
+                    <Flag color={Colors.warning} size={20} />
+                  </View>
+                  <View style={styles.userActionTextContainer}>
+                    <Text style={styles.userActionTitle}>Report User</Text>
+                    <Text style={styles.userActionSubtitle}>Report inappropriate behavior</Text>
+                  </View>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.userActionCancelButton}
+                  onPress={() => setShowUserActionsModal(false)}
+                >
+                  <Text style={styles.userActionCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={showReportModal}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseReportModal}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.reportModalContent}>
+            <LinearGradient
+              colors={[Colors.cardBg, Colors.background]}
+              style={StyleSheet.absoluteFill}
+            />
+            
+            {reportSubmitted ? (
+              <View style={styles.reportSuccessContainer}>
+                <View style={styles.reportSuccessIcon}>
+                  <CheckCircle color={Colors.success} size={48} />
+                </View>
+                <Text style={styles.reportSuccessTitle}>Report Submitted</Text>
+                <Text style={styles.reportSuccessText}>
+                  Thank you for helping keep our community safe. We&apos;ll review your report shortly.
+                </Text>
+                <TouchableOpacity
+                  style={styles.reportSuccessButton}
+                  onPress={handleCloseReportModal}
+                >
+                  <Text style={styles.reportSuccessButtonText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Report User</Text>
+                  <TouchableOpacity 
+                    style={styles.modalClose}
+                    onPress={handleCloseReportModal}
+                  >
+                    <X color={Colors.textSecondary} size={24} />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  {selectedUser && (
+                    <View style={styles.reportUserBadge}>
+                      <Image source={{ uri: selectedUser.avatar }} style={styles.reportUserAvatar} />
+                      <Text style={styles.reportUserName}>Reporting: {selectedUser.name}</Text>
+                    </View>
+                  )}
+
+                  <Text style={styles.inputLabel}>Reason for report *</Text>
+                  <View style={styles.reportReasonsList}>
+                    {REPORT_REASONS.map((reason) => {
+                      const IconComponent = reason.icon;
+                      const isSelected = selectedReportReason === reason.id;
+                      return (
+                        <TouchableOpacity
+                          key={reason.id}
+                          style={[
+                            styles.reportReasonItem,
+                            isSelected && styles.reportReasonItemActive
+                          ]}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setSelectedReportReason(reason.id);
+                          }}
+                        >
+                          <IconComponent 
+                            color={isSelected ? Colors.warning : Colors.textSecondary} 
+                            size={20} 
+                          />
+                          <Text style={[
+                            styles.reportReasonText,
+                            isSelected && styles.reportReasonTextActive
+                          ]}>
+                            {reason.label}
+                          </Text>
+                          {isSelected && (
+                            <View style={styles.reportReasonCheck}>
+                              <CheckCircle color={Colors.warning} size={18} />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Additional details (optional)</Text>
+                    <TextInput
+                      style={[styles.textInput, styles.textArea]}
+                      value={reportDetails}
+                      onChangeText={setReportDetails}
+                      placeholder="Provide any additional context..."
+                      placeholderTextColor={Colors.textMuted}
+                      multiline
+                      numberOfLines={4}
+                    />
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity 
+                    style={styles.cancelButton}
+                    onPress={handleCloseReportModal}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[
+                      styles.submitReportButton,
+                      !selectedReportReason && styles.submitReportButtonDisabled
+                    ]}
+                    onPress={handleSubmitReport}
+                    disabled={!selectedReportReason}
+                  >
+                    <Flag color={Colors.text} size={16} />
+                    <Text style={styles.submitReportButtonText}>Submit Report</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -1585,6 +1947,209 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  userActionsButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sessionUserActionsButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.cardBgLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  userActionsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  userActionsContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  userActionsHeader: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  userActionsAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    marginBottom: 10,
+  },
+  userActionsName: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  userActionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  userActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userActionTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  userActionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  userActionSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  userActionCancelButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  userActionCancelText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  reportModalContent: {
+    backgroundColor: Colors.cardBg,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+    overflow: 'hidden',
+  },
+  reportUserBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.cardBgLight,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 12,
+  },
+  reportUserAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  reportUserName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  reportReasonsList: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  reportReasonItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.cardBgLight,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    gap: 12,
+  },
+  reportReasonItemActive: {
+    backgroundColor: 'rgba(255, 159, 67, 0.1)',
+    borderColor: Colors.warning,
+  },
+  reportReasonText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: Colors.textSecondary,
+  },
+  reportReasonTextActive: {
+    color: Colors.warning,
+  },
+  reportReasonCheck: {
+    marginLeft: 'auto',
+  },
+  submitReportButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.warning,
+    gap: 8,
+  },
+  submitReportButtonDisabled: {
+    backgroundColor: Colors.cardBgLight,
+    opacity: 0.6,
+  },
+  submitReportButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  reportSuccessContainer: {
+    alignItems: 'center',
+    padding: 32,
+  },
+  reportSuccessIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(46, 213, 115, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  reportSuccessTitle: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 12,
+  },
+  reportSuccessText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  reportSuccessButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  reportSuccessButtonText: {
+    fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text,
   },
