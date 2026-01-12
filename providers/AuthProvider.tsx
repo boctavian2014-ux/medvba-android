@@ -70,10 +70,18 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
     } catch (error: any) {
-      console.error('[Auth] Error fetching profile:', error?.message || error);
+      const errorMessage = error?.message || String(error);
+      const isNetworkError = 
+        errorMessage.includes('ENOTFOUND') || 
+        errorMessage.includes('network') ||
+        errorMessage.includes('getaddrinfo') ||
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('NetworkError');
       
-      if (error?.message?.includes('ENOTFOUND') || error?.message?.includes('network')) {
-        console.warn('[Auth] Database connection failed - using local fallback profile');
+      if (isNetworkError) {
+        console.log('[Auth] Database unavailable - using offline profile');
+      } else {
+        console.warn('[Auth] Error fetching profile:', errorMessage);
       }
       
       setProfile({
