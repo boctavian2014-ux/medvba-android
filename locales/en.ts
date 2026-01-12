@@ -1,5 +1,16 @@
 export const en: Record<string, string> = {
+  // Auth Screens
+  'auth.welcome.title': 'Welcome back',
+  'auth.welcome.subtitle': 'Log in to continue your anatomy practice.',
+  'auth.login.email': 'Email',
+  'auth.login.password': 'Password',
+  'auth.login.button': 'Log in',
+  'auth.signup.title': 'Create account',
+  'auth.signup.subtitle': 'Join thousands of medical students.',
+  'auth.signup.button': 'Create account',
+
   // Home Screen
+  'home.title': 'What will you study today?',
   'home.greeting': 'Good morning,',
   'home.continueLearning': 'Continue Learning',
   'home.questionsToday': 'You have completed {current}/{goal} questions today',
@@ -20,6 +31,9 @@ export const en: Record<string, string> = {
   'quiz.subtitle': 'Choose a category and start learning',
   'quiz.quizModes': 'Quiz Modes',
   'quiz.quickQuiz': 'Quick Quiz',
+  'home.quickQuiz': 'Quick Quiz',
+  'home.practiceMode': 'Practice',
+  'home.examMode': 'Exam Simulation',
   'quiz.quickQuizCount': '10 questions',
   'quiz.practice': 'Practice',
   'quiz.practiceCount': '25 questions',

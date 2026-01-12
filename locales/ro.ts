@@ -1,5 +1,16 @@
 export const ro: Record<string, string> = {
+  // Auth Screens
+  'auth.welcome.title': 'Bine ai revenit',
+  'auth.welcome.subtitle': 'Autentifică-te pentru a continua pregătirea la anatomie.',
+  'auth.login.email': 'Email',
+  'auth.login.password': 'Parolă',
+  'auth.login.button': 'Autentificare',
+  'auth.signup.title': 'Creează cont',
+  'auth.signup.subtitle': 'Alătură-te miilor de studenți la medicină.',
+  'auth.signup.button': 'Creează cont',
+
   // Home Screen
+  'home.title': 'Ce vrei să înveți azi?',
   'home.greeting': 'Bună dimineața,',
   'home.continueLearning': 'Continuă să înveți',
   'home.questionsToday': 'Ai completat {current}/{goal} întrebări azi',
@@ -20,6 +31,9 @@ export const ro: Record<string, string> = {
   'quiz.subtitle': 'Alege o categorie și începe să înveți',
   'quiz.quizModes': 'Moduri Quiz',
   'quiz.quickQuiz': 'Quiz Rapid',
+  'home.quickQuiz': 'Quiz rapid',
+  'home.practiceMode': 'Antrenament',
+  'home.examMode': 'Simulare examen',
   'quiz.quickQuizCount': '10 întrebări',
   'quiz.practice': 'Practică',
   'quiz.practiceCount': '25 întrebări',
