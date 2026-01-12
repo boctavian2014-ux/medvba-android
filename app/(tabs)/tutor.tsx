@@ -28,6 +28,7 @@ import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { generateText } from '@rork-ai/toolkit-sdk';
 import { useSubscription } from '@/providers/SubscriptionProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 interface Message {
   id: string;
@@ -36,21 +37,14 @@ interface Message {
   timestamp: Date;
 }
 
-const suggestedQuestions = [
-  { icon: BookOpen, text: "Explain the cardiac cycle", category: "Physiology" },
-  { icon: Lightbulb, text: "What causes diabetes mellitus?", category: "Pathology" },
-  { icon: HelpCircle, text: "Mechanism of beta-blockers", category: "Pharmacology" },
+const getSuggestedQuestions = (t: (key: string) => string) => [
+  { icon: BookOpen, text: "Explain the cardiac cycle", category: t('subject.physiology') },
+  { icon: Lightbulb, text: "What causes diabetes mellitus?", category: t('subject.pathology') },
+  { icon: HelpCircle, text: "Mechanism of beta-blockers", category: t('subject.pharmacology') },
 ];
 
 export default function TutorScreen() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hello! I'm your AI medical tutor 🩺 I'm here to help you understand complex medical concepts, explain mechanisms, and answer any questions about your coursework. What would you like to learn about today?",
-      timestamp: new Date(),
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -64,6 +58,20 @@ export default function TutorScreen() {
   } = useSubscription();
 
   const remainingAiQuestions = getRemainingAiQuestions();
+  const { t } = useLanguage();
+
+  const suggestedQuestions = getSuggestedQuestions(t);
+
+  const getInitialMessage = useCallback((): Message => ({
+    id: '1',
+    role: 'assistant',
+    content: t('tutor.welcomeMessage'),
+    timestamp: new Date(),
+  }), [t]);
+
+  if (messages.length === 0) {
+    setMessages([getInitialMessage()]);
+  }
 
   const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
     const systemPrompt = `You are an expert AI medical tutor helping students prepare for medical exams (USMLE, MBBS, anatomy exams, etc.).
@@ -191,16 +199,16 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
               <Bot color={Colors.primary} size={24} />
             </View>
             <View>
-              <Text style={styles.title}>AI Medical Tutor</Text>
+              <Text style={styles.title}>{t('tutor.title')}</Text>
               <View style={styles.statusRow}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.status}>Always available</Text>
+                <Text style={styles.status}>{t('tutor.alwaysAvailable')}</Text>
               </View>
             </View>
             {isPremium ? (
               <View style={styles.premiumBadge}>
                 <Sparkles color={Colors.warning} size={14} />
-                <Text style={styles.premiumText}>Premium</Text>
+                <Text style={styles.premiumText}>{t('tutor.premium')}</Text>
               </View>
             ) : (
               <TouchableOpacity 
@@ -208,7 +216,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 onPress={() => router.push('/paywall')}
               >
                 <Crown color={Colors.warning} size={14} />
-                <Text style={styles.upgradeButtonText}>Upgrade</Text>
+                <Text style={styles.upgradeButtonText}>{t('tutor.upgrade')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -224,8 +232,8 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 <View style={styles.freeLimitContent}>
                   <Text style={styles.freeLimitText}>
                     {remainingAiQuestions > 0 
-                      ? `${remainingAiQuestions}/${FREE_AI_LIMIT} free question remaining today`
-                      : 'Daily AI question limit reached'}
+                      ? t('tutor.freeQuestionRemaining').replace('{remaining}', String(remainingAiQuestions)).replace('{total}', String(FREE_AI_LIMIT))
+                      : t('tutor.dailyLimitReached')}
                   </Text>
                   {remainingAiQuestions === 0 && (
                     <Lock color={Colors.error} size={16} />
@@ -236,7 +244,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
 
             {messages.length === 1 && (
               <View style={styles.suggestions}>
-                <Text style={styles.suggestionsTitle}>Try asking:</Text>
+                <Text style={styles.suggestionsTitle}>{t('tutor.tryAsking')}</Text>
                 {suggestedQuestions.map((suggestion, index) => (
                   <TouchableOpacity
                     key={index}
@@ -308,7 +316,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             <GlassCard style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Ask me anything about medicine..."
+                placeholder={t('tutor.inputPlaceholder')}
                 placeholderTextColor={Colors.textMuted}
                 value={inputText}
                 onChangeText={setInputText}
