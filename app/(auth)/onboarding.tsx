@@ -164,9 +164,9 @@ export default function OnboardingScreen() {
             (index + 1) * width,
           ];
 
-          const dotWidth = scrollX.interpolate({
+          const dotScale = scrollX.interpolate({
             inputRange,
-            outputRange: [8, 24, 8],
+            outputRange: [1, 3, 1],
             extrapolate: 'clamp',
           });
 
@@ -182,9 +182,9 @@ export default function OnboardingScreen() {
               style={[
                 styles.dot,
                 {
-                  width: dotWidth,
                   opacity: dotOpacity,
                   backgroundColor: slides[index].gradient[0],
+                  transform: [{ scaleX: dotScale }],
                 },
               ]}
             />
@@ -316,9 +316,10 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   dot: {
+    width: 8,
     height: 8,
     borderRadius: 4,
-    marginHorizontal: 4,
+    marginHorizontal: 6,
   },
   footer: {
     paddingHorizontal: 40,
