@@ -65,9 +65,15 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>{t('home.greeting')}</Text>
-              <Text style={styles.userName}>{currentUser.name.split(' ')[0]} 👋</Text>
+            <View style={styles.headerLeft}>
+              <Image 
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/zgrijzw7qzcug5rgiqbrr' }} 
+                style={styles.appIcon} 
+              />
+              <View>
+                <Text style={styles.greeting}>{t('home.greeting')}</Text>
+                <Text style={styles.userName}>{currentUser.name.split(' ')[0]} 👋</Text>
+              </View>
             </View>
             <View style={styles.headerRight}>
               <StreakBadge streak={currentUser.streak} />
@@ -225,6 +231,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700' as const,
     color: Colors.text,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  appIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   headerRight: {
     flexDirection: 'row',
