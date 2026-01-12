@@ -23,6 +23,14 @@ function RootLayoutNav() {
           animation: 'slide_from_bottom'
         }} 
       />
+      <Stack.Screen 
+        name="settings" 
+        options={{ 
+          presentation: 'modal',
+          animation: 'slide_from_bottom'
+        }} 
+      />
+      <Stack.Screen name="legal" options={{ headerShown: false }} />
     </Stack>
   );
 }

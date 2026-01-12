@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -74,6 +75,7 @@ function getLast7Days(): string[] {
 }
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const [activeLanguage, setActiveLanguage] = useState<Language>(getCurrentLanguage());
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
@@ -254,7 +256,11 @@ export default function ProfileScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.title}>{t('profile')}</Text>
-            <TouchableOpacity style={styles.settingsButton} activeOpacity={0.7}>
+            <TouchableOpacity 
+              style={styles.settingsButton} 
+              activeOpacity={0.7}
+              onPress={() => router.push('/settings')}
+            >
               <LinearGradient
                 colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
                 style={StyleSheet.absoluteFill}
