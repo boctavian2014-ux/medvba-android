@@ -448,9 +448,11 @@ export default function ProfileScreen() {
                           <Lock color={Colors.textMuted} size={16} />
                         </View>
                       )}
-                      <Text style={[styles.achievementIcon, !isUnlocked && styles.achievementIconLocked]}>
-                        {achievement.icon}
-                      </Text>
+                      <View style={styles.achievementIconContainer}>
+                        <Text style={[styles.achievementIcon, !isUnlocked && styles.achievementIconLocked]}>
+                          {achievement.icon}
+                        </Text>
+                      </View>
                       <Text style={[styles.achievementName, !isUnlocked && styles.achievementNameLocked]}>
                         {achievement.name}
                       </Text>
@@ -947,9 +949,15 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
   },
-  achievementIcon: {
-    fontSize: 36,
+  achievementIconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
+  },
+  achievementIcon: {
+    fontSize: 32,
   },
   achievementIconLocked: {
     opacity: 0.4,
