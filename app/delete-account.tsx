@@ -26,8 +26,7 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { trpc } from '@/lib/trpc';
-
-const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001';
+import { useAuth } from '@/providers/AuthProvider';
 
 const STORAGE_KEYS_TO_CLEAR = [
   'quiz_daily_progress',
@@ -44,6 +43,7 @@ type DeletionStep = 'confirm' | 'deleting' | 'success';
 
 export default function DeleteAccountScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [confirmText, setConfirmText] = useState('');
   const [step, setStep] = useState<DeletionStep>('confirm');
   
@@ -86,8 +86,13 @@ export default function DeleteAccountScreen() {
     setStep('deleting');
     
     console.log('[DeleteAccount] Initiating account deletion...');
-    deleteAccountMutation.mutate({ userId: CURRENT_USER_ID });
-  }, [confirmText, deleteAccountMutation]);
+    if (!user?.id) {
+      Alert.alert('Error', 'You must be logged in to delete your account.');
+      setStep('confirm');
+      return;
+    }
+    deleteAccountMutation.mutate({ userId: user.id });
+  }, [confirmText, deleteAccountMutation, user?.id]);
 
   const handleFinish = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

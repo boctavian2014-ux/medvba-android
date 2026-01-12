@@ -46,10 +46,7 @@ import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { activities, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
 import { trpc } from '@/lib/trpc';
-
-const CURRENT_USER_ID = '00000000-0000-4000-8000-000000000001';
-const CURRENT_USER_NAME = 'You';
-const CURRENT_USER_AVATAR = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop';
+import { useAuth } from '@/providers/AuthProvider';
 
 const BLOCKED_USERS_KEY = '@medix_blocked_users';
 const USER_REPORTS_KEY = '@medix_user_reports';
@@ -137,6 +134,7 @@ const isSessionStartable = (scheduledFor: string): boolean => {
 };
 
 export default function SocialScreen() {
+  const { user, profile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
   const [localRoomUpdates, setLocalRoomUpdates] = useState<Record<string, Partial<StudyRoom>>>({});
@@ -262,10 +260,10 @@ export default function SocialScreen() {
     setReportSubmitted(false);
   };
 
-  const handleOpenUserActions = (user: { id: string; name: string; avatar: string }) => {
-    if (user.id === CURRENT_USER_ID) return;
+  const handleOpenUserActions = (targetUser: { id: string; name: string; avatar: string }) => {
+    if (targetUser.id === user?.id) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedUser(user);
+    setSelectedUser(targetUser);
     setShowUserActionsModal(true);
   };
 
@@ -397,9 +395,9 @@ export default function SocialScreen() {
 
     createRoomMutation.mutate({
       name: newRoomName.trim(),
-      hostId: CURRENT_USER_ID,
-      hostName: CURRENT_USER_NAME,
-      hostAvatar: CURRENT_USER_AVATAR,
+      hostId: user?.id || '',
+      hostName: profile?.name || 'You',
+      hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
       category: newRoomCategory,
       maxParticipants: parseInt(newRoomMaxParticipants, 10),
     });
@@ -523,9 +521,9 @@ export default function SocialScreen() {
       description: sessionDescription || undefined,
       scheduledFor,
       durationMinutes: parseInt(sessionDuration, 10),
-      hostId: CURRENT_USER_ID,
-      hostName: CURRENT_USER_NAME,
-      hostAvatar: CURRENT_USER_AVATAR,
+      hostId: user?.id || '',
+      hostName: profile?.name || 'You',
+      hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
       category: selectedRoom.category,
     });
   };
@@ -563,8 +561,8 @@ export default function SocialScreen() {
     );
   };
 
-  const isCurrentUserHost = (room: StudyRoom) => room.hostId === CURRENT_USER_ID;
-  const isSessionHost = (session: StudySession) => session.hostId === CURRENT_USER_ID;
+  const isCurrentUserHost = (room: StudyRoom) => room.hostId === user?.id;
+  const isSessionHost = (session: StudySession) => session.hostId === user?.id;
   const isRoomLive = (room: StudyRoom) => room.zoomStatus === 'LIVE' && room.joinUrl;
 
   const upcomingSessions: StudySession[] = upcomingSessionsQuery.data ?? [];
