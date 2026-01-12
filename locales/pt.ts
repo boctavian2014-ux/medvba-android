@@ -4,6 +4,7 @@ export const pt: Record<string, string> = {
   'home.continueLearning': 'Continue Aprendendo',
   'home.questionsToday': 'Você completou {current}/{goal} perguntas hoje',
   'home.startQuiz': 'Iniciar Quiz',
+  'home.continueQuiz': 'Continuar',
   'home.today': 'hoje',
   'home.accuracy': 'Precisão',
   'home.questions': 'Perguntas',

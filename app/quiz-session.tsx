@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
+import { useQuizProgress, type SessionState } from '@/providers/QuizProgressProvider';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
 import { t, getChapterTitle } from '@/lib/i18n';
@@ -388,7 +389,14 @@ async function selectQuestionsForQuiz(
 
 export default function QuizSessionScreen() {
   const router = useRouter();
-  const { category, mode } = useLocalSearchParams<{ category: string; mode: string }>();
+  const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
+  
+  const { 
+    updateDailyProgress, 
+    saveSessionState, 
+    clearSessionState, 
+    sessionState: savedSession 
+  } = useQuizProgress();
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsWithChapters, setQuestionsWithChapters] = useState<QuestionWithChapter[]>([]);
@@ -399,12 +407,28 @@ export default function QuizSessionScreen() {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(mode === 'exam' ? 180 * 60 : 0);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [answeredInSession, setAnsweredInSession] = useState<string[]>([]);
+  const [sessionStartedAt, setSessionStartedAt] = useState<string>(new Date().toISOString());
   
   const fadeAnim = useState(new Animated.Value(1))[0];
 
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoading(true);
+      
+      if (resume === 'true' && savedSession) {
+        console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
+        setQuestions(savedSession.questions);
+        setCurrentIndex(savedSession.currentIndex);
+        setScore(savedSession.score);
+        setAnsweredInSession(savedSession.answeredInSession);
+        setSessionStartedAt(savedSession.startedAt);
+        setIsLoading(false);
+        return;
+      }
+      
+      const startedAt = new Date().toISOString();
+      setSessionStartedAt(startedAt);
       
       if (mode === 'sequential') {
         const allWithChapters = getAllQuestionsWithChapters(category || 'upper-lower-limbs');
@@ -424,6 +448,17 @@ export default function QuizSessionScreen() {
           const questionIds = selectedQuestions.map(q => q.id);
           await markQuestionsAsSeen(category || 'mixed', questionIds);
           console.log(`Marked ${questionIds.length} questions as seen on load`);
+          
+          const initialSessionState: SessionState = {
+            category: category || 'mixed',
+            mode: mode || 'quick',
+            questions: selectedQuestions,
+            currentIndex: 0,
+            score: 0,
+            answeredInSession: [],
+            startedAt,
+          };
+          await saveSessionState(initialSessionState);
         }
       }
       
@@ -431,7 +466,7 @@ export default function QuizSessionScreen() {
     };
     
     loadQuestions();
-  }, [category, mode]);
+  }, [category, mode, resume, savedSession, saveSessionState]);
 
 
 
@@ -456,22 +491,43 @@ export default function QuizSessionScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswerSelect = useCallback((index: number) => {
+  const handleAnswerSelect = useCallback(async (index: number) => {
     if (showResult || !currentQuestion) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswer(index);
     setShowResult(true);
     
-    if (index === currentQuestion.correctAnswer) {
+    const isCorrect = index === currentQuestion.correctAnswer;
+    
+    if (isCorrect) {
       setScore(prev => prev + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
-  }, [showResult, currentQuestion]);
+    
+    await updateDailyProgress(isCorrect, currentQuestion.id);
+    
+    const newAnsweredInSession = [...answeredInSession, currentQuestion.id];
+    setAnsweredInSession(newAnsweredInSession);
+    
+    if (mode !== 'sequential') {
+      const updatedSessionState: SessionState = {
+        category: category || 'mixed',
+        mode: mode || 'quick',
+        questions,
+        currentIndex: currentIndex + 1,
+        score: isCorrect ? score + 1 : score,
+        answeredInSession: newAnsweredInSession,
+        startedAt: sessionStartedAt,
+      };
+      await saveSessionState(updatedSessionState);
+      console.log('[QuizSession] Saved progress after question', currentIndex + 1);
+    }
+  }, [showResult, currentQuestion, updateDailyProgress, answeredInSession, mode, category, questions, currentIndex, score, sessionStartedAt, saveSessionState]);
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (currentIndex < questions.length - 1) {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -488,13 +544,16 @@ export default function QuizSessionScreen() {
         }).start();
       });
     } else {
+      await clearSessionState();
+      console.log('[QuizSession] Quiz complete, cleared session state');
       setQuizComplete(true);
     }
-  }, [currentIndex, questions.length, fadeAnim]);
+  }, [currentIndex, questions.length, fadeAnim, clearSessionState]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
+    console.log('[QuizSession] Closing quiz, session state preserved for resume');
     router.back();
-  };
+  }, [router]);
 
   if (isLoading) {
     return (

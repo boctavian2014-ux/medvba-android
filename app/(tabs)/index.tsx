@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,15 +18,40 @@ import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
 import { currentUser } from '@/mocks/users';
 import { categories } from '@/mocks/questions';
+import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { dailyProgress, hasActiveSession, sessionState } = useQuizProgress();
+  
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
   const completedQuestions = categories.reduce((sum, cat) => sum + cat.completedCount, 0);
   const overallProgress = (completedQuestions / totalQuestions) * 100;
 
-  const todayGoal = 50;
-  const todayProgress = 32;
+  const todayGoal = dailyProgress.goal;
+  const todayProgress = dailyProgress.questionsAnswered;
+  
+  const handleContinueLearning = useCallback(() => {
+    if (hasActiveSession && sessionState) {
+      console.log('[Home] Resuming session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
+      router.push({
+        pathname: '/quiz-session',
+        params: { 
+          category: sessionState.category,
+          mode: sessionState.mode,
+          resume: 'true'
+        }
+      });
+    } else {
+      router.push({
+        pathname: '/quiz-session',
+        params: { 
+          category: 'mixed',
+          mode: 'practice'
+        }
+      });
+    }
+  }, [hasActiveSession, sessionState, router]);
 
   return (
     <View style={styles.container}>
@@ -61,7 +86,7 @@ export default function HomeScreen() {
                 </Text>
                 <TouchableOpacity 
                   style={styles.heroButton}
-                  onPress={() => router.push('/quiz')}
+                  onPress={handleContinueLearning}
                 >
                   <LinearGradient
                     colors={[Colors.primary, Colors.primaryDark]}
@@ -70,7 +95,9 @@ export default function HomeScreen() {
                     end={{ x: 1, y: 0 }}
                   >
                     <Play color={Colors.text} size={18} fill={Colors.text} />
-                    <Text style={styles.heroButtonText}>{t('home.startQuiz')}</Text>
+                    <Text style={styles.heroButtonText}>
+                      {hasActiveSession ? t('home.continueQuiz') : t('home.startQuiz')}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
