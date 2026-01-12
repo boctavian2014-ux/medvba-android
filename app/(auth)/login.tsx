@@ -303,6 +303,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.text,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   errorText: {
     color: colors.error,

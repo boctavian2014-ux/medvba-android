@@ -51,7 +51,7 @@ export default function TabLayout() {
         name="tutor"
         options={{
           title: "AI Tutor",
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size + 2} strokeWidth={2.2} />,
         }}
       />
       <Tabs.Screen
