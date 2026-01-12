@@ -422,61 +422,86 @@ export default function QuizSessionScreen() {
   const fadeAnim = useState(new Animated.Value(1))[0];
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadQuestions = async () => {
-      setIsLoading(true);
+      console.log('[QuizSession] Starting loadQuestions - category:', category, 'mode:', mode, 'resume:', resume);
       
-      if (resume === 'true' && savedSession) {
-        console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
-        setQuestions(savedSession.questions);
-        setCurrentIndex(savedSession.currentIndex);
-        setScore(savedSession.score);
-        setAnsweredInSession(savedSession.answeredInSession);
-        setSessionStartedAt(savedSession.startedAt);
-        sessionStartTimeRef.current = Date.now();
-        setIsLoading(false);
-        return;
-      }
-      
-      const startedAt = new Date().toISOString();
-      setSessionStartedAt(startedAt);
-      
-      if (mode === 'sequential') {
-        const allWithChapters = getAllQuestionsWithChapters(category || 'upper-lower-limbs');
-        console.log(`Sequential mode: loaded ${allWithChapters.length} questions for ${category}`);
-        setQuestionsWithChapters(allWithChapters);
-        setQuestions(allWithChapters.map(qc => qc.question));
-      } else {
-        const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
-        const { questions: selectedQuestions } = await selectQuestionsForQuiz(
-          category || 'mixed',
-          mode || 'quick',
-          questionCount
-        );
-        setQuestions(selectedQuestions);
+      try {
+        if (resume === 'true' && savedSession) {
+          console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
+          if (isMounted) {
+            setQuestions(savedSession.questions);
+            setCurrentIndex(savedSession.currentIndex);
+            setScore(savedSession.score);
+            setAnsweredInSession(savedSession.answeredInSession);
+            setSessionStartedAt(savedSession.startedAt);
+            sessionStartTimeRef.current = Date.now();
+            setIsLoading(false);
+          }
+          return;
+        }
         
-        if (selectedQuestions.length > 0) {
-          const questionIds = selectedQuestions.map(q => q.id);
-          await markQuestionsAsSeen(category || 'mixed', questionIds);
-          console.log(`Marked ${questionIds.length} questions as seen on load`);
+        const startedAt = new Date().toISOString();
+        if (isMounted) setSessionStartedAt(startedAt);
+        
+        if (mode === 'sequential') {
+          const allWithChapters = getAllQuestionsWithChapters(category || 'upper-lower-limbs');
+          console.log(`[QuizSession] Sequential mode: loaded ${allWithChapters.length} questions for ${category}`);
+          if (isMounted) {
+            setQuestionsWithChapters(allWithChapters);
+            setQuestions(allWithChapters.map(qc => qc.question));
+            setIsLoading(false);
+          }
+        } else {
+          const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
+          console.log(`[QuizSession] Selecting ${questionCount} questions for mode: ${mode}`);
           
-          const initialSessionState: SessionState = {
-            category: category || 'mixed',
-            mode: mode || 'quick',
-            questions: selectedQuestions,
-            currentIndex: 0,
-            score: 0,
-            answeredInSession: [],
-            startedAt,
-          };
-          await saveSessionState(initialSessionState);
+          const { questions: selectedQuestions } = await selectQuestionsForQuiz(
+            category || 'mixed',
+            mode || 'quick',
+            questionCount
+          );
+          
+          console.log(`[QuizSession] Selected ${selectedQuestions.length} questions`);
+          
+          if (isMounted) {
+            setQuestions(selectedQuestions);
+            
+            if (selectedQuestions.length > 0) {
+              const questionIds = selectedQuestions.map(q => q.id);
+              await markQuestionsAsSeen(category || 'mixed', questionIds);
+              console.log(`[QuizSession] Marked ${questionIds.length} questions as seen on load`);
+              
+              const initialSessionState: SessionState = {
+                category: category || 'mixed',
+                mode: mode || 'quick',
+                questions: selectedQuestions,
+                currentIndex: 0,
+                score: 0,
+                answeredInSession: [],
+                startedAt,
+              };
+              await saveSessionState(initialSessionState);
+            }
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('[QuizSession] Error loading questions:', error);
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
-      
-      setIsLoading(false);
     };
     
     loadQuestions();
-  }, [category, mode, resume, savedSession, saveSessionState]);
+    
+    return () => {
+      isMounted = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, mode, resume]);
 
 
 
