@@ -71,6 +71,19 @@ export const en: Record<string, string> = {
   'common.questions': 'questions',
   'common.of': 'of',
 
+  // Medical Subjects
+  'subject.anatomy': 'Anatomy',
+  'subject.physiology': 'Physiology',
+  'subject.pathology': 'Pathology',
+  'subject.pharmacology': 'Pharmacology',
+  'subject.cardiovascular': 'Cardiovascular System',
+  'subject.nervous': 'Nervous System',
+
+  // Study Features
+  'study.session': 'Study Session',
+  'study.room': 'Study Room',
+  'study.mcq': 'MCQ',
+
   // Profile
   'profile': 'Profile',
   'language': 'Language',
