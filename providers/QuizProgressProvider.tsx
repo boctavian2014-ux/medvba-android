@@ -6,6 +6,8 @@ import type { Question } from '@/mocks/questions';
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
 const SESSION_STATE_KEY = 'quiz_session_state';
 const ALL_TIME_STATS_KEY = 'quiz_all_time_stats';
+const STREAK_KEY = 'quiz_streak_data';
+const WEEKLY_HISTORY_KEY = 'quiz_weekly_history';
 
 interface DailyProgress {
   date: string;
@@ -31,6 +33,19 @@ interface AllTimeStats {
   totalStudyTimeSeconds: number;
 }
 
+interface StreakData {
+  currentStreak: number;
+  lastActiveDate: string;
+  longestStreak: number;
+}
+
+interface DailyHistoryEntry {
+  date: string;
+  questionsAnswered: number;
+  correctAnswers: number;
+  studyTimeSeconds: number;
+}
+
 function getDefaultAllTimeStats(): AllTimeStats {
   return {
     totalQuestionsAnswered: 0,
@@ -39,10 +54,20 @@ function getDefaultAllTimeStats(): AllTimeStats {
   };
 }
 
+function getDefaultStreakData(): StreakData {
+  return {
+    currentStreak: 0,
+    lastActiveDate: '',
+    longestStreak: 0,
+  };
+}
+
 interface QuizProgressContextValue {
   dailyProgress: DailyProgress;
   sessionState: SessionState | null;
   allTimeStats: AllTimeStats;
+  streakData: StreakData;
+  weeklyHistory: DailyHistoryEntry[];
   isLoading: boolean;
   updateDailyProgress: (correct: boolean, questionId: string) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
@@ -54,10 +79,29 @@ interface QuizProgressContextValue {
   accuracy: number;
   formattedQuestionsCount: string;
   formattedStudyTime: string;
+  weeklyQuestionsTotal: number;
+  weeklyStudyTimeSeconds: number;
+  weeklyGoalProgress: number;
 }
 
 function getTodayDateString(): string {
   return new Date().toISOString().split('T')[0];
+}
+
+function getYesterdayDateString(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+function getLast7Days(): string[] {
+  const dates: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    dates.push(date.toISOString().split('T')[0]);
+  }
+  return dates;
 }
 
 function getDefaultDailyProgress(): DailyProgress {
@@ -74,7 +118,88 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(getDefaultDailyProgress());
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
   const [allTimeStats, setAllTimeStats] = useState<AllTimeStats>(getDefaultAllTimeStats());
+  const [streakData, setStreakData] = useState<StreakData>(getDefaultStreakData());
+  const [weeklyHistory, setWeeklyHistory] = useState<DailyHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const updateStreak = useCallback(async () => {
+    const today = getTodayDateString();
+    const yesterday = getYesterdayDateString();
+
+    setStreakData(prev => {
+      let newStreak = prev.currentStreak;
+      let newLongest = prev.longestStreak;
+
+      if (prev.lastActiveDate === today) {
+        return prev;
+      } else if (prev.lastActiveDate === yesterday) {
+        newStreak = prev.currentStreak + 1;
+      } else if (prev.lastActiveDate === '') {
+        newStreak = 1;
+      } else {
+        newStreak = 1;
+      }
+
+      if (newStreak > newLongest) {
+        newLongest = newStreak;
+      }
+
+      const updated: StreakData = {
+        currentStreak: newStreak,
+        lastActiveDate: today,
+        longestStreak: newLongest,
+      };
+
+      console.log('[QuizProgress] Updated streak:', updated.currentStreak, 'days');
+      
+      AsyncStorage.setItem(STREAK_KEY, JSON.stringify(updated)).catch(err => {
+        console.error('[QuizProgress] Error saving streak:', err);
+      });
+
+      return updated;
+    });
+  }, []);
+
+  const updateWeeklyHistory = useCallback(async (questionsAdded: number, correctAdded: number, studyTimeAdded: number = 0) => {
+    const today = getTodayDateString();
+
+    setWeeklyHistory(prev => {
+      const existingIndex = prev.findIndex(entry => entry.date === today);
+      let updated: DailyHistoryEntry[];
+
+      if (existingIndex >= 0) {
+        updated = prev.map((entry, idx) => {
+          if (idx === existingIndex) {
+            return {
+              ...entry,
+              questionsAnswered: entry.questionsAnswered + questionsAdded,
+              correctAnswers: entry.correctAnswers + correctAdded,
+              studyTimeSeconds: entry.studyTimeSeconds + studyTimeAdded,
+            };
+          }
+          return entry;
+        });
+      } else {
+        updated = [...prev, {
+          date: today,
+          questionsAnswered: questionsAdded,
+          correctAnswers: correctAdded,
+          studyTimeSeconds: studyTimeAdded,
+        }];
+      }
+
+      const last7Days = getLast7Days();
+      updated = updated.filter(entry => last7Days.includes(entry.date));
+
+      console.log('[QuizProgress] Updated weekly history:', updated.length, 'days tracked');
+      
+      AsyncStorage.setItem(WEEKLY_HISTORY_KEY, JSON.stringify(updated)).catch(err => {
+        console.error('[QuizProgress] Error saving weekly history:', err);
+      });
+
+      return updated;
+    });
+  }, []);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -121,6 +246,36 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           setAllTimeStats(parsedAllTime);
         } else {
           console.log('[QuizProgress] No all-time stats, using default');
+        }
+
+        const streakStored = await AsyncStorage.getItem(STREAK_KEY);
+        if (streakStored) {
+          const parsedStreak = JSON.parse(streakStored) as StreakData;
+          const today = getTodayDateString();
+          const yesterday = getYesterdayDateString();
+          
+          if (parsedStreak.lastActiveDate !== today && parsedStreak.lastActiveDate !== yesterday) {
+            console.log('[QuizProgress] Streak broken, resetting to 0');
+            const resetStreak: StreakData = {
+              currentStreak: 0,
+              lastActiveDate: parsedStreak.lastActiveDate,
+              longestStreak: parsedStreak.longestStreak,
+            };
+            setStreakData(resetStreak);
+            await AsyncStorage.setItem(STREAK_KEY, JSON.stringify(resetStreak));
+          } else {
+            console.log('[QuizProgress] Loaded streak:', parsedStreak.currentStreak, 'days');
+            setStreakData(parsedStreak);
+          }
+        }
+
+        const weeklyStored = await AsyncStorage.getItem(WEEKLY_HISTORY_KEY);
+        if (weeklyStored) {
+          const parsedWeekly = JSON.parse(weeklyStored) as DailyHistoryEntry[];
+          const last7Days = getLast7Days();
+          const filtered = parsedWeekly.filter(entry => last7Days.includes(entry.date));
+          console.log('[QuizProgress] Loaded weekly history:', filtered.length, 'days');
+          setWeeklyHistory(filtered);
         }
       } catch (error) {
         console.error('[QuizProgress] Error loading progress:', error);
@@ -172,10 +327,13 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
         return updated;
       });
+
+      await updateStreak();
+      await updateWeeklyHistory(1, correct ? 1 : 0, 0);
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
     }
-  }, []);
+  }, [updateStreak, updateWeeklyHistory]);
 
   const saveSessionState = useCallback(async (state: SessionState) => {
     try {
@@ -247,10 +405,12 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
         return updated;
       });
+
+      await updateWeeklyHistory(0, 0, seconds);
     } catch (error) {
       console.error('[QuizProgress] Error adding study time:', error);
     }
-  }, []);
+  }, [updateWeeklyHistory]);
 
   const accuracy = useMemo(() => {
     if (allTimeStats.totalQuestionsAnswered === 0) return 0;
@@ -274,10 +434,25 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     return `${minutes}m`;
   }, [allTimeStats.totalStudyTimeSeconds]);
 
+  const weeklyQuestionsTotal = useMemo(() => {
+    return weeklyHistory.reduce((sum, entry) => sum + entry.questionsAnswered, 0);
+  }, [weeklyHistory]);
+
+  const weeklyStudyTimeSeconds = useMemo(() => {
+    return weeklyHistory.reduce((sum, entry) => sum + entry.studyTimeSeconds, 0);
+  }, [weeklyHistory]);
+
+  const weeklyGoalProgress = useMemo(() => {
+    const weeklyGoal = 350;
+    return Math.min((weeklyQuestionsTotal / weeklyGoal) * 100, 100);
+  }, [weeklyQuestionsTotal]);
+
   return {
     dailyProgress,
     sessionState,
     allTimeStats,
+    streakData,
+    weeklyHistory,
     isLoading,
     updateDailyProgress,
     saveSessionState,
@@ -289,7 +464,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     accuracy,
     formattedQuestionsCount,
     formattedStudyTime,
+    weeklyQuestionsTotal,
+    weeklyStudyTimeSeconds,
+    weeklyGoalProgress,
   };
 });
 
-export type { DailyProgress, SessionState, AllTimeStats };
+export type { DailyProgress, SessionState, AllTimeStats, StreakData, DailyHistoryEntry };
