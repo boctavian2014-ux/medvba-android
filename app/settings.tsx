@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -28,8 +29,10 @@ import {
   UserX,
   Trash2,
   Globe,
+  LogOut,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface SettingsItemProps {
   icon: React.ReactNode;
@@ -67,6 +70,7 @@ interface BlockedUser {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
   useEffect(() => {
@@ -267,7 +271,7 @@ export default function SettingsScreen() {
                 onPress={() => router.push('/(tabs)/profile')}
               />
               <TouchableOpacity 
-                style={styles.deleteAccountItem} 
+                style={[styles.deleteAccountItem, styles.settingsItemBorder]} 
                 onPress={() => router.push('/delete-account')}
                 activeOpacity={0.7}
               >
@@ -279,6 +283,39 @@ export default function SettingsScreen() {
                   <Text style={styles.deleteAccountSubtitle}>Permanently delete your account and data</Text>
                 </View>
                 <ChevronRight color={Colors.error} size={20} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.signOutItem} 
+                onPress={() => {
+                  Alert.alert(
+                    'Sign Out',
+                    'Are you sure you want to sign out?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Sign Out',
+                        style: 'destructive',
+                        onPress: async () => {
+                          if (Platform.OS !== 'web') {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                          }
+                          await signOut();
+                          router.replace('/(auth)/login');
+                        },
+                      },
+                    ]
+                  );
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.signOutIcon}>
+                  <LogOut color={Colors.warning} size={22} />
+                </View>
+                <View style={styles.settingsItemContent}>
+                  <Text style={styles.signOutTitle}>Sign Out</Text>
+                  <Text style={styles.signOutSubtitle}>Sign out of your account</Text>
+                </View>
+                <ChevronRight color={Colors.warning} size={20} />
               </TouchableOpacity>
             </View>
           </View>
@@ -495,6 +532,29 @@ const styles = StyleSheet.create({
     color: Colors.error,
   },
   deleteAccountSubtitle: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  signOutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  signOutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signOutTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.warning,
+  },
+  signOutSubtitle: {
     fontSize: 13,
     color: Colors.textMuted,
     marginTop: 2,

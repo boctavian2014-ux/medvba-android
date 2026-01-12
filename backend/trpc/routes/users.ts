@@ -1,6 +1,7 @@
 import * as z from "zod";
 import { createTRPCRouter, publicProcedure } from "../create-context";
 import { db } from "../../db";
+import { TRPCError } from "@trpc/server";
 
 export const usersRouter = createTRPCRouter({
   me: publicProcedure
@@ -61,6 +62,54 @@ export const usersRouter = createTRPCRouter({
         points: user.points,
         streak: user.streak,
       }));
+    }),
+
+  create: publicProcedure
+    .input(z.object({
+      id: z.string().uuid(),
+      name: z.string().min(1).max(100),
+      avatar: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      console.log("Creating user:", input.id, input.name);
+
+      const existing = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('id', '=', input.id)
+        .executeTakeFirst();
+
+      if (existing) {
+        console.log("User already exists:", input.id);
+        return existing;
+      }
+
+      const newUser = await db
+        .insertInto('users')
+        .values({
+          id: input.id,
+          name: input.name,
+          avatar: input.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${input.id}`,
+          rank: 0,
+          points: 0,
+          streak: 0,
+          questions_answered: 0,
+          accuracy: 0,
+          study_hours: 0,
+          badges: [],
+        })
+        .returningAll()
+        .executeTakeFirst();
+
+      if (!newUser) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create user',
+        });
+      }
+
+      console.log("User created successfully:", newUser.id);
+      return newUser;
     }),
 
   updateStats: publicProcedure
