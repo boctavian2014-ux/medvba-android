@@ -26,6 +26,8 @@ import {
   Info,
   Ban,
   UserX,
+  Trash2,
+  Globe,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
@@ -252,6 +254,36 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account</Text>
+            <View style={styles.sectionCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <SettingsItem
+                icon={<Globe color={Colors.primary} size={22} />}
+                title="Change Language"
+                subtitle="Manage app language"
+                onPress={() => router.push('/(tabs)/profile')}
+              />
+              <TouchableOpacity 
+                style={styles.deleteAccountItem} 
+                onPress={() => router.push('/delete-account')}
+                activeOpacity={0.7}
+              >
+                <View style={styles.deleteAccountIcon}>
+                  <Trash2 color={Colors.error} size={22} />
+                </View>
+                <View style={styles.settingsItemContent}>
+                  <Text style={styles.deleteAccountTitle}>Delete Account</Text>
+                  <Text style={styles.deleteAccountSubtitle}>Permanently delete your account and data</Text>
+                </View>
+                <ChevronRight color={Colors.error} size={20} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionTitle}>About</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
@@ -443,5 +475,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600' as const,
     color: Colors.error,
+  },
+  deleteAccountItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  deleteAccountIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 71, 87, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteAccountTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.error,
+  },
+  deleteAccountSubtitle: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 2,
   },
 });

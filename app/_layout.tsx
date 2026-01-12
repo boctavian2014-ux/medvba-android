@@ -32,6 +32,13 @@ function RootLayoutNav() {
         }} 
       />
       <Stack.Screen name="legal" options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="delete-account" 
+        options={{ 
+          presentation: 'modal',
+          animation: 'slide_from_bottom'
+        }} 
+      />
     </Stack>
   );
 }
