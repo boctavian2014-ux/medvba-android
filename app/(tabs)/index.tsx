@@ -181,7 +181,9 @@ export default function HomeScreen() {
                     <View style={styles.categoryInfo}>
                       <Text style={styles.categoryName}>{getModuleName(category.id)}</Text>
                       <Text style={styles.categoryProgress}>
-                        {category.completedCount.toLocaleString()} / {category.questionCount.toLocaleString()} questions
+                        {t('home.categoryQuestions')
+                          .replace('{current}', category.completedCount.toLocaleString())
+                          .replace('{total}', category.questionCount.toLocaleString())}
                       </Text>
                     </View>
                     <ChevronRight color={Colors.textMuted} size={20} />
