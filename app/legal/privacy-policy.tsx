@@ -11,8 +11,8 @@ import { Shield, Database, Users, Lock, Mail, Globe } from 'lucide-react-native'
 import Colors from '@/constants/colors';
 
 const LAST_UPDATED = 'January 12, 2026';
-const COMPANY_NAME = '[YOUR COMPANY NAME]';
-const COMPANY_ADDRESS = '[YOUR COMPANY ADDRESS]';
+const COMPANY_NAME = 'Dev AI LTD';
+const COMPANY_ADDRESS = 'Bogdan Voivoda, № 1, Ruse 7002, Ruse Region, Ruse Municipality, Bulgaria';
 const CONTACT_EMAIL = 'support@medixstudyhub.com';
 
 interface SectionProps {

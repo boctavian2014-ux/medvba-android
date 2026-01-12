@@ -11,8 +11,8 @@ import { FileText, UserCheck, AlertTriangle, Scale, ShieldX, Ban } from 'lucide-
 import Colors from '@/constants/colors';
 
 const LAST_UPDATED = 'January 12, 2026';
-const COMPANY_NAME = '[YOUR COMPANY NAME]';
-const COMPANY_ADDRESS = '[YOUR COMPANY ADDRESS]';
+const COMPANY_NAME = 'Dev AI LTD';
+const COMPANY_ADDRESS = 'Bogdan Voivoda, № 1, Ruse 7002, Ruse Region, Ruse Municipality, Bulgaria';
 const CONTACT_EMAIL = 'support@medixstudyhub.com';
 
 interface SectionProps {
@@ -206,8 +206,8 @@ export default function TermsOfServiceScreen() {
             title="Governing Law"
           >
             <Text style={styles.paragraph}>
-              These Terms shall be governed by the laws of [YOUR JURISDICTION]. Any disputes 
-              shall be resolved in the courts of [YOUR JURISDICTION].
+              These Terms shall be governed by the laws of the Republic of Bulgaria. Any disputes 
+              shall be resolved in the courts of the Republic of Bulgaria.
             </Text>
             <Text style={styles.paragraph}>
               If any provision of these Terms is found unenforceable, the remaining provisions 
