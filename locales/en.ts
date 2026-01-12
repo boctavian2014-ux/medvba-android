@@ -118,5 +118,5 @@ export const en: Record<string, string> = {
   'tutor.suggestion1': 'Explain the cardiac cycle',
   'tutor.suggestion2': 'What causes diabetes mellitus?',
   'tutor.suggestion3': 'Mechanism of beta-blockers',
-  'tutor.errorMessage': "I apologize, but I'm having trouble connecting right now. Please try again in a moment. If the issue persists, check your internet connection.",
+  'tutor.errorMessage': 'Connection error. Please check your internet connection and try again.',
 };

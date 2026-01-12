@@ -118,5 +118,5 @@ export const es: Record<string, string> = {
   'tutor.suggestion1': 'Explica el ciclo cardíaco',
   'tutor.suggestion2': '¿Cuáles son las causas de la diabetes mellitus?',
   'tutor.suggestion3': 'Mecanismo de acción de los betabloqueantes',
-  'tutor.errorMessage': 'Lo siento, pero tengo problemas de conexión en este momento. Por favor, inténtalo de nuevo. Si el problema persiste, comprueba tu conexión a internet.',
+  'tutor.errorMessage': 'Error de conexión. Comprueba tu conexión a Internet e inténtalo de nuevo.',
 };

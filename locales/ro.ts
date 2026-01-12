@@ -118,5 +118,5 @@ export const ro: Record<string, string> = {
   'tutor.suggestion1': 'Explică ciclul cardiac',
   'tutor.suggestion2': 'Care sunt cauzele diabetului zaharat?',
   'tutor.suggestion3': 'Mecanismul de acțiune al beta-blocantelor',
-  'tutor.errorMessage': 'Îmi pare rău, dar am probleme de conectare în acest moment. Te rog să încerci din nou. Dacă problema persistă, verifică conexiunea la internet.',
+  'tutor.errorMessage': 'Eroare de conexiune. Verifică internetul și încearcă din nou.',
 };
