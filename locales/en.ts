@@ -25,6 +25,7 @@ export const en: Record<string, string> = {
   'home.ofQuestions': 'of {total} questions',
   'home.quickStartAnatomy': 'Quick Start - Anatomy',
   'home.seeAll': 'See all',
+  'home.categoryQuestions': '{current} / {total} questions',
 
   // Quiz Screen
   'quiz.title': 'Test prep',

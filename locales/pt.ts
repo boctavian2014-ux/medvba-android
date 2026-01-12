@@ -25,6 +25,7 @@ export const pt: Record<string, string> = {
   'home.ofQuestions': 'de {total} perguntas',
   'home.quickStartAnatomy': 'Início rápido - Anatomia',
   'home.seeAll': 'Ver tudo',
+  'home.categoryQuestions': '{current} / {total} questões',
   'home.quickQuiz': 'Teste rápido',
   'home.practiceMode': 'Prática',
   'home.examMode': 'Simulação de exame',

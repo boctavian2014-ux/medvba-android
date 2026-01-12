@@ -25,6 +25,7 @@ export const ro: Record<string, string> = {
   'home.ofQuestions': 'din {total} întrebări',
   'home.quickStartAnatomy': 'Start rapid - Anatomie',
   'home.seeAll': 'Vezi tot',
+  'home.categoryQuestions': '{current} / {total} întrebări',
 
   // Quiz Screen
   'quiz.title': 'Test grilă',
