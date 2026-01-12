@@ -113,7 +113,7 @@ export default function SettingsScreen() {
               <SettingsItem
                 icon={<Mail color={Colors.accentPink} size={22} />}
                 title="Contact Support"
-                subtitle="support@medixstudyhub.com"
+                subtitle="dev.ai.eood@icloud.com"
                 onPress={() => console.log('Contact')}
                 showBorder={false}
               />

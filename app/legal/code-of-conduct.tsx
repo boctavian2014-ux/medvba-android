@@ -11,7 +11,7 @@ import { Heart, Users, AlertOctagon, Flag, ShieldCheck, MessageCircle } from 'lu
 import Colors from '@/constants/colors';
 
 const LAST_UPDATED = 'January 12, 2026';
-const CONTACT_EMAIL = 'support@medixstudyhub.com';
+const CONTACT_EMAIL = 'dev.ai.eood@icloud.com';
 
 interface SectionProps {
   icon: React.ReactNode;
