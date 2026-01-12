@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
+  Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Clock, CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -390,6 +392,10 @@ async function selectQuestionsForQuiz(
 export default function QuizSessionScreen() {
   const router = useRouter();
   const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
+  const insets = useSafeAreaInsets();
+  
+  const topPadding = Math.max(insets.top, Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0);
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 16 : 0);
   
   const { 
     updateDailyProgress, 
@@ -574,11 +580,11 @@ export default function QuizSessionScreen() {
           colors={[Colors.background, Colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
-        <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>{t('session.loading')}</Text>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
@@ -590,14 +596,14 @@ export default function QuizSessionScreen() {
           colors={[Colors.background, Colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
-        <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>{t('session.noQuestions')}</Text>
             <TouchableOpacity style={styles.backButton} onPress={handleClose}>
               <Text style={styles.backButtonText}>{t('session.goBack')}</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
@@ -610,7 +616,7 @@ export default function QuizSessionScreen() {
           colors={[Colors.background, Colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
-        <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
           <View style={styles.resultContainer}>
             <GlassCard style={styles.resultCard} variant="accent">
               <View style={styles.resultIconContainer}>
@@ -648,7 +654,7 @@ export default function QuizSessionScreen() {
               </TouchableOpacity>
             </GlassCard>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
@@ -663,7 +669,7 @@ export default function QuizSessionScreen() {
         colors={[Colors.background, Colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
-      <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.safeArea, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
             <X color={Colors.text} size={24} />
@@ -755,7 +761,7 @@ export default function QuizSessionScreen() {
         </ScrollView>
 
         {showResult && (
-          <View style={styles.footer}>
+          <View style={[styles.footer, { paddingBottom: bottomPadding + 8 }]}>
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
               <LinearGradient
                 colors={[Colors.primary, Colors.primaryDark]}
@@ -771,7 +777,7 @@ export default function QuizSessionScreen() {
             </TouchableOpacity>
           </View>
         )}
-      </SafeAreaView>
+      </View>
     </View>
   );
 }
@@ -972,7 +978,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   nextButton: {
     borderRadius: 16,
