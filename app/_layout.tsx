@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
+import { LanguageProvider } from "@/providers/LanguageProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -43,12 +44,14 @@ export default function RootLayout() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <QuizProgressProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="light" />
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </QuizProgressProvider>
+        <LanguageProvider>
+          <QuizProgressProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <StatusBar style="light" />
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </QuizProgressProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

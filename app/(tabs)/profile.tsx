@@ -31,7 +31,7 @@ import {
   Minus,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { t, getCurrentLanguage, setCurrentLanguage, Language } from '@/lib/i18n';
+import { useLanguage, Language } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
 import { currentUser, leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
@@ -76,7 +76,7 @@ function getLast7Days(): string[] {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [activeLanguage, setActiveLanguage] = useState<Language>(getCurrentLanguage());
+  const { currentLanguage, changeLanguage, t } = useLanguage();
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
   
@@ -93,9 +93,8 @@ export default function ProfileScreen() {
   } = useQuizProgress();
 
   const handleLanguageChange = useCallback((lang: Language) => {
-    setCurrentLanguage(lang);
-    setActiveLanguage(lang);
-  }, []);
+    changeLanguage(lang);
+  }, [changeLanguage]);
 
   const achievements: Achievement[] = useMemo(() => [
     { 
@@ -330,7 +329,7 @@ export default function ProfileScreen() {
             <Text style={styles.languageSectionTitle}>{t('language')}</Text>
             <View style={styles.languageSelector}>
               {languages.map((lang) => {
-                const isActive = activeLanguage === lang.code;
+                const isActive = currentLanguage === lang.code;
                 return (
                   <TouchableOpacity
                     key={lang.code}

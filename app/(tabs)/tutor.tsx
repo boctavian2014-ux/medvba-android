@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
+import { generateText } from '@rork-ai/toolkit-sdk';
 
 interface Message {
   id: string;
@@ -50,8 +51,49 @@ export default function TutorScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const handleSend = () => {
-    if (!inputText.trim()) return;
+  const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
+    const systemPrompt = `You are an expert AI medical tutor helping students prepare for medical exams (USMLE, MBBS, anatomy exams, etc.).
+
+Your role:
+- Explain complex medical concepts clearly and accurately
+- Use clinical correlations and mnemonics when helpful
+- Structure answers with clear headings and bullet points
+- Provide mechanism-based explanations
+- Reference relevant anatomy, physiology, pathology, and pharmacology
+- Be encouraging and supportive
+
+Formatting guidelines:
+- Use **bold** for important terms and headings
+- Use bullet points (•) for lists
+- Keep explanations concise but comprehensive
+- End with a follow-up question or offer to explain more
+
+Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Microbiology, Immunology, Histology, Embryology, and clinical medicine.`;
+
+    const messages: { role: 'user' | 'assistant'; content: string }[] = [
+      { role: 'user', content: systemPrompt },
+      { role: 'assistant', content: 'I understand. I am ready to help medical students with accurate, detailed explanations.' },
+    ];
+
+    conversationHistory.forEach((msg) => {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    });
+
+    try {
+      console.log('[Tutor] Sending request to AI with', messages.length, 'messages');
+      const response = await generateText({ messages });
+      console.log('[Tutor] Received AI response:', response.substring(0, 100) + '...');
+      return response;
+    } catch (error) {
+      console.error('[Tutor] AI generation error:', error);
+      throw error;
+    }
+  }, []);
+
+  const handleSend = async () => {
+    if (!inputText.trim() || isTyping) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -62,7 +104,8 @@ export default function TutorScreen() {
       timestamp: new Date(),
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputText('');
     setIsTyping(true);
     
@@ -70,38 +113,31 @@ export default function TutorScreen() {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
     
-    setTimeout(() => {
+    try {
+      const aiResponseText = await generateAIResponse(updatedMessages);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: generateResponse(userMessage.content),
+        content: aiResponseText,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('[Tutor] Failed to get AI response:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment. If the issue persists, check your internet connection.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-      
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    }, 1500);
-  };
-
-  const generateResponse = (question: string): string => {
-    const lowerQ = question.toLowerCase();
-    
-    if (lowerQ.includes('cardiac') || lowerQ.includes('heart')) {
-      return "The cardiac cycle consists of two main phases:\n\n**Systole (Contraction):**\n• Ventricles contract, ejecting blood\n• Aortic and pulmonary valves open\n• AV valves close (S1 heart sound)\n\n**Diastole (Relaxation):**\n• Ventricles relax and fill with blood\n• AV valves open\n• Semilunar valves close (S2 heart sound)\n\nThe cycle is regulated by the SA node (pacemaker), AV node, and the His-Purkinje system. Would you like me to explain the electrical conduction system in more detail?";
     }
-    
-    if (lowerQ.includes('diabetes')) {
-      return "Diabetes mellitus has two main types:\n\n**Type 1 (5-10%):**\n• Autoimmune destruction of pancreatic β-cells\n• Results in absolute insulin deficiency\n• Usually presents in childhood/adolescence\n\n**Type 2 (90-95%):**\n• Insulin resistance + relative insulin deficiency\n• Associated with obesity, sedentary lifestyle\n• Often develops gradually in adults\n\n**Key pathophysiology:**\n• Hyperglycemia damages blood vessels (micro/macrovascular)\n• Leads to retinopathy, nephropathy, neuropathy\n• Increases cardiovascular disease risk\n\nShall I explain the diagnostic criteria or treatment approaches?";
-    }
-    
-    if (lowerQ.includes('beta-blocker') || lowerQ.includes('beta blocker')) {
-      return "Beta-blockers work by blocking β-adrenergic receptors:\n\n**Mechanism:**\n• Block catecholamine binding to β receptors\n• Reduce heart rate (negative chronotropy)\n• Decrease myocardial contractility (negative inotropy)\n• Lower blood pressure\n\n**β1 selective (cardioselective):**\n• Metoprolol, Atenolol, Bisoprolol\n• Primarily affect the heart\n\n**Non-selective (β1 + β2):**\n• Propranolol, Nadolol\n• Can cause bronchospasm (contraindicated in asthma)\n\n**Clinical uses:**\n• Hypertension, heart failure, arrhythmias\n• Angina, post-MI, migraine prophylaxis\n\nWould you like to know about the side effects or contraindications?";
-    }
-    
-    return "That's a great question! In medical education, it's important to approach complex topics systematically.\n\nTo give you the most helpful answer, could you please:\n1. Specify which aspect you'd like to focus on\n2. Mention if this relates to a specific exam topic\n3. Let me know your current understanding\n\nThis way, I can tailor my explanation to your level and help reinforce your learning effectively. Remember, understanding mechanisms is key to long-term retention! 📚";
   };
 
   const handleSuggestion = (text: string) => {
