@@ -9,16 +9,19 @@ import {
   FlatList,
   ViewToken,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, Brain, Users, Trophy, ChevronRight } from 'lucide-react-native';
+import { Brain, Users, Trophy, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 
 const { width } = Dimensions.get('window');
+
+const APP_ICON_URL = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8m00xerxk064za3jpist0';
 
 interface OnboardingSlide {
   id: string;
@@ -35,7 +38,7 @@ const slides: OnboardingSlide[] = [
     title: 'Welcome to',
     subtitle: 'Medix Study Hub',
     description: 'Your ultimate companion for medical exam preparation. Master anatomy, physiology, and more with our comprehensive quiz system.',
-    icon: <BookOpen size={80} color={colors.primary} strokeWidth={1.5} />,
+    icon: <Image source={{ uri: APP_ICON_URL }} style={{ width: 120, height: 120, borderRadius: 28 }} />,
     gradient: [colors.primary, colors.primaryDark],
   },
   {

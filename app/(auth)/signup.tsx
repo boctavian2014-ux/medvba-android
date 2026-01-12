@@ -10,11 +10,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff, User, BookOpen, ArrowLeft } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, ArrowLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
@@ -149,14 +150,10 @@ export default function SignUpScreen() {
 
             <View style={styles.header}>
               <View style={styles.logoContainer}>
-                <LinearGradient
-                  colors={[colors.accent, colors.success]}
-                  style={styles.logoGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <BookOpen size={40} color="#fff" strokeWidth={1.5} />
-                </LinearGradient>
+                <Image
+                  source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8m00xerxk064za3jpist0' }}
+                  style={styles.logoImage}
+                />
               </View>
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Join thousands of medical students</Text>
@@ -348,12 +345,10 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 20,
   },
-  logoGradient: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 22,
   },
   title: {
     fontSize: 28,
