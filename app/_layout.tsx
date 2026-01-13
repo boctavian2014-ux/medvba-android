@@ -20,6 +20,7 @@ function useProtectedRoute() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [splashHidden, setSplashHidden] = React.useState(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -37,8 +38,11 @@ function useProtectedRoute() {
       router.replace('/(tabs)');
     }
 
-    SplashScreen.hideAsync();
-  }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router]);
+    if (!splashHidden) {
+      SplashScreen.hideAsync().catch(() => {});
+      setSplashHidden(true);
+    }
+  }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden]);
 
   return isLoading;
 }
