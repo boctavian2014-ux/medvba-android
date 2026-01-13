@@ -22,7 +22,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 const { width } = Dimensions.get('window');
 
-const APP_ICON_URL = 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8m00xerxk064za3jpist0';
+const APP_ICON_URL = 'https://r2-pub.rork.com/generated-images/49dc2754-fc49-4f1e-85a9-2fa8abdb4260.png';
 
 interface OnboardingSlide {
   id: string;
@@ -48,7 +48,7 @@ const slidesData: SlideData[] = [
     titleKey: 'onboarding.slide1.title',
     subtitleKey: 'onboarding.slide1.subtitle',
     descriptionKey: 'onboarding.slide1.description',
-    icon: <Image source={{ uri: APP_ICON_URL }} style={{ width: 120, height: 120, borderRadius: 28 }} />,
+    icon: <Image source={{ uri: APP_ICON_URL }} style={{ width: 120, height: 120, borderRadius: 60 }} />,
     gradient: [colors.primary, colors.primaryDark],
   },
   {
