@@ -47,6 +47,7 @@ import GlassCard from '@/components/GlassCard';
 import { activities, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 const BLOCKED_USERS_KEY = '@medix_blocked_users';
 const USER_REPORTS_KEY = '@medix_user_reports';
@@ -135,6 +136,7 @@ const isSessionStartable = (scheduledFor: string): boolean => {
 
 export default function SocialScreen() {
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
   const [localRoomUpdates, setLocalRoomUpdates] = useState<Record<string, Partial<StudyRoom>>>({});
@@ -431,11 +433,27 @@ export default function SocialScreen() {
 
   const handleStartZoom = (room: StudyRoom) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    console.log('Starting Zoom for room:', room.id, room.name);
-    createMeetingMutation.mutate({
-      studyRoomId: room.id,
-      roomName: room.name,
-    });
+    
+    Alert.alert(
+      t('permissions.zoom.hostTitle'),
+      t('permissions.zoom.hostMessage'),
+      [
+        { 
+          text: t('permissions.zoom.cancel'), 
+          style: 'cancel' 
+        },
+        { 
+          text: t('permissions.zoom.understand'), 
+          onPress: () => {
+            console.log('Starting Zoom for room:', room.id, room.name);
+            createMeetingMutation.mutate({
+              studyRoomId: room.id,
+              roomName: room.name,
+            });
+          }
+        },
+      ]
+    );
   };
 
   const handleEndZoom = (room: StudyRoom) => {
@@ -465,21 +483,36 @@ export default function SocialScreen() {
     }
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log('Joining Zoom meeting:', joinUrl);
     
-    const zoomAppUrl = joinUrl.replace('https://zoom.us/j/', 'zoomus://zoom.us/join?confno=');
-    
-    try {
-      const canOpenZoom = await Linking.canOpenURL(zoomAppUrl);
-      if (canOpenZoom && Platform.OS !== 'web') {
-        await Linking.openURL(zoomAppUrl);
-      } else {
-        await Linking.openURL(joinUrl);
-      }
-    } catch (error) {
-      console.error('Failed to open Zoom:', error);
-      await Linking.openURL(joinUrl);
-    }
+    Alert.alert(
+      t('permissions.zoom.title'),
+      t('permissions.zoom.message'),
+      [
+        { 
+          text: t('permissions.zoom.cancel'), 
+          style: 'cancel' 
+        },
+        { 
+          text: t('permissions.zoom.understand'), 
+          onPress: async () => {
+            console.log('Joining Zoom meeting:', joinUrl);
+            const zoomAppUrl = joinUrl.replace('https://zoom.us/j/', 'zoomus://zoom.us/join?confno=');
+            
+            try {
+              const canOpenZoom = await Linking.canOpenURL(zoomAppUrl);
+              if (canOpenZoom && Platform.OS !== 'web') {
+                await Linking.openURL(zoomAppUrl);
+              } else {
+                await Linking.openURL(joinUrl);
+              }
+            } catch (error) {
+              console.error('Failed to open Zoom:', error);
+              await Linking.openURL(joinUrl);
+            }
+          }
+        },
+      ]
+    );
   };
 
   const handleHostJoinZoom = async (startUrl: string) => {

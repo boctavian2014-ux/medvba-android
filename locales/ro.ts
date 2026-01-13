@@ -262,4 +262,12 @@ export const ro: Record<string, string> = {
   'settings.unblockButton': 'Deblochează',
   'settings.blockedDate': 'Blocat pe {date}',
   'settings.cancel': 'Anulează',
+
+  // Permissions
+  'permissions.zoom.title': 'Alătură-te camerei de studiu',
+  'permissions.zoom.message': 'Când te alături unei camere de studiu prin Zoom, ți se poate cere să acorzi permisiuni pentru cameră și microfon. Aceste permisiuni îți permit să participi la discuții video cu alți studenți.\n\nPoți:\n• Să te alături cu video și audio\n• Să te alături doar cu audio\n• Să te alături doar ca spectator\n\nZoom va solicita aceste permisiuni când deschizi întâlnirea.',
+  'permissions.zoom.understand': 'Am înțeles',
+  'permissions.zoom.cancel': 'Anulează',
+  'permissions.zoom.hostTitle': 'Începe camera de studiu',
+  'permissions.zoom.hostMessage': 'Ca gazdă, va trebui să acorzi permisiuni pentru cameră și microfon când Zoom se deschide. Acest lucru îți permite să comunici cu studenții care se alătură camerei tale de studiu.\n\nZoom va solicita automat aceste permisiuni când întâlnirea începe.',
 };

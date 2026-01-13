@@ -262,4 +262,12 @@ export const en: Record<string, string> = {
   'settings.unblockButton': 'Unblock',
   'settings.blockedDate': 'Blocked {date}',
   'settings.cancel': 'Cancel',
+
+  // Permissions
+  'permissions.zoom.title': 'Join Study Room',
+  'permissions.zoom.message': 'When you join a study room via Zoom, you may be asked to grant camera and microphone permissions. These permissions allow you to participate in video discussions with other students.\n\nYou can:\n• Join with video and audio\n• Join with audio only\n• Join as a viewer only\n\nZoom will request these permissions when you open the meeting.',
+  'permissions.zoom.understand': 'I Understand',
+  'permissions.zoom.cancel': 'Cancel',
+  'permissions.zoom.hostTitle': 'Start Study Room',
+  'permissions.zoom.hostMessage': 'As the host, you\'ll need to grant camera and microphone permissions when Zoom opens. This allows you to communicate with students who join your study room.\n\nZoom will request these permissions automatically when the meeting starts.',
 };

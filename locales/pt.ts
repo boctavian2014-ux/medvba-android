@@ -149,4 +149,12 @@ export const pt: Record<string, string> = {
   'social.openRoom': 'Abrir',
   'social.endRoom': 'Encerrar sala',
   'social.notLive': 'Não está ao vivo',
+
+  // Permissions
+  'permissions.zoom.title': 'Entrar na sala de estudo',
+  'permissions.zoom.message': 'Quando você entra em uma sala de estudo via Zoom, pode ser solicitado a conceder permissões de câmera e microfone. Essas permissões permitem que você participe de discussões em vídeo com outros estudantes.\n\nVocê pode:\n• Entrar com vídeo e áudio\n• Entrar apenas com áudio\n• Entrar apenas como espectador\n\nO Zoom solicitará essas permissões quando você abrir a reunião.',
+  'permissions.zoom.understand': 'Eu entendo',
+  'permissions.zoom.cancel': 'Cancelar',
+  'permissions.zoom.hostTitle': 'Iniciar sala de estudo',
+  'permissions.zoom.hostMessage': 'Como anfitrião, você precisará conceder permissões de câmera e microfone quando o Zoom abrir. Isso permite que você se comunique com os estudantes que entrarem na sua sala de estudo.\n\nO Zoom solicitará essas permissões automaticamente quando a reunião começar.',
 };
