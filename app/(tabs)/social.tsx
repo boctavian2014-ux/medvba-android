@@ -68,11 +68,11 @@ interface UserReport {
   reportedAt: string;
 }
 
-const REPORT_REASONS = [
-  { id: 'harassment', label: 'Harassment', icon: AlertTriangle },
-  { id: 'inappropriate', label: 'Inappropriate Behavior', icon: Ban },
-  { id: 'spam', label: 'Spam', icon: Flag },
-  { id: 'other', label: 'Other', icon: Flag },
+const getReportReasons = (t: (key: string) => string) => [
+  { id: 'harassment', label: t('social.reportReasons.harassment'), icon: AlertTriangle },
+  { id: 'inappropriate', label: t('social.reportReasons.inappropriate'), icon: Ban },
+  { id: 'spam', label: t('social.reportReasons.spam'), icon: Flag },
+  { id: 'other', label: t('social.reportReasons.other'), icon: Flag },
 ];
 
 const activityIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
@@ -192,12 +192,12 @@ export default function SocialScreen() {
 
   const handleBlockUser = (user: { id: string; name: string; avatar: string }) => {
     Alert.alert(
-      'Block User',
-      `Block ${user.name}? They won't be able to join your future study rooms and you won't see their rooms.`,
+      t('social.blockUserTitle'),
+      t('social.blockConfirmMessage').replace('{name}', user.name),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('social.cancel'), style: 'cancel' },
         {
-          text: 'Block',
+          text: t('social.blockUser'),
           style: 'destructive',
           onPress: async () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -226,7 +226,7 @@ export default function SocialScreen() {
 
   const handleSubmitReport = async () => {
     if (!selectedUser || !selectedReportReason) {
-      Alert.alert('Missing Info', 'Please select a reason for your report.');
+      Alert.alert(t('social.missingInfo'), t('social.selectReasonMessage'));
       return;
     }
 
@@ -311,7 +311,7 @@ export default function SocialScreen() {
     },
     onError: (error) => {
       console.error('Failed to create Zoom meeting:', error);
-      Alert.alert('Error', 'Failed to start Zoom session. Please try again.');
+      Alert.alert(t('social.errorTitle'), t('social.zoomStartError'));
     },
   });
 
@@ -353,7 +353,7 @@ export default function SocialScreen() {
     },
     onError: (error) => {
       console.error('Failed to create session:', error);
-      Alert.alert('Error', 'Failed to schedule session. Please try again.');
+      Alert.alert(t('social.errorTitle'), t('social.scheduleError'));
     },
   });
 
@@ -379,7 +379,7 @@ export default function SocialScreen() {
     },
     onError: (error) => {
       console.error('Failed to create study room:', error);
-      Alert.alert('Error', 'Failed to create study room. Please try again.');
+      Alert.alert(t('social.errorTitle'), t('social.createRoomError'));
     },
   });
 
@@ -391,7 +391,7 @@ export default function SocialScreen() {
 
   const handleCreateRoom = () => {
     if (!newRoomName.trim()) {
-      Alert.alert('Missing Info', 'Please enter a room name.');
+      Alert.alert(t('social.missingInfo'), t('social.roomNameRequiredAlert'));
       return;
     }
 
@@ -460,12 +460,12 @@ export default function SocialScreen() {
     if (!room.zoomMeetingId) return;
     
     Alert.alert(
-      'End Session',
-      'Are you sure you want to end this Zoom session?',
+      t('social.endZoomSessionTitle'),
+      t('social.endZoomSessionMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('social.cancel'), style: 'cancel' },
         { 
-          text: 'End', 
+          text: t('social.endButton'), 
           style: 'destructive',
           onPress: () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -478,7 +478,7 @@ export default function SocialScreen() {
 
   const handleJoinZoom = async (joinUrl: string) => {
     if (!joinUrl) {
-      Alert.alert('Not Available', 'This session is not live yet.');
+      Alert.alert(t('social.notAvailable'), t('social.sessionNotLive'));
       return;
     }
 
@@ -542,7 +542,7 @@ export default function SocialScreen() {
 
   const handleCreateSession = () => {
     if (!selectedRoom || !sessionTitle || !sessionDate || !sessionTime) {
-      Alert.alert('Missing Info', 'Please fill in all required fields.');
+      Alert.alert(t('social.missingInfo'), t('social.fillAllFields'));
       return;
     }
 
@@ -570,7 +570,7 @@ export default function SocialScreen() {
 
   const handleJoinSession = (session: StudySession) => {
     if (!session.joinUrl) {
-      Alert.alert('Not Available', 'Session link not available yet.');
+      Alert.alert(t('social.notAvailable'), t('social.sessionLinkNotAvailable'));
       return;
     }
     handleJoinZoom(session.joinUrl);
@@ -578,12 +578,12 @@ export default function SocialScreen() {
 
   const handleEndSession = (session: StudySession) => {
     Alert.alert(
-      'End Session',
-      'Are you sure you want to end this session?',
+      t('social.endSessionTitle'),
+      t('social.endSessionMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('social.cancel'), style: 'cancel' },
         { 
-          text: 'End', 
+          text: t('social.endSessionConfirm'), 
           style: 'destructive',
           onPress: () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -622,14 +622,14 @@ export default function SocialScreen() {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Community</Text>
-            <Text style={styles.subtitle}>See what others are achieving</Text>
+            <Text style={styles.title}>{t('social.community')}</Text>
+            <Text style={styles.subtitle}>{t('social.communitySubtitle')}</Text>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Radio color={Colors.error} size={18} />
-              <Text style={styles.sectionTitle}>Live Study Rooms</Text>
+              <Text style={styles.sectionTitle}>{t('social.liveStudyRooms')}</Text>
               <TouchableOpacity 
                 style={styles.createRoomButton}
                 onPress={() => {
@@ -638,7 +638,7 @@ export default function SocialScreen() {
                 }}
               >
                 <Plus color={Colors.text} size={16} />
-                <Text style={styles.createRoomButtonText}>Create</Text>
+                <Text style={styles.createRoomButtonText}>{t('social.create')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView 
@@ -659,18 +659,18 @@ export default function SocialScreen() {
                         {isLive ? (
                           <View style={styles.liveIndicator}>
                             <View style={styles.liveDot} />
-                            <Text style={styles.liveText}>LIVE</Text>
+                            <Text style={styles.liveText}>{t('social.liveBadge')}</Text>
                           </View>
                         ) : (
                           <View style={styles.idleIndicator}>
-                            <Text style={styles.idleText}>OFFLINE</Text>
+                            <Text style={styles.idleText}>{t('social.offlineBadge')}</Text>
                           </View>
                         )}
                       </View>
                       <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
                       <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
                       <Text style={styles.roomHost}>
-                        {isHost ? 'You are hosting' : `Hosted by ${room.host}`}
+                        {isHost ? t('social.youAreHosting') : t('social.hostedBy').replace('{name}', room.host)}
                       </Text>
                       <View style={styles.roomFooter}>
                         <Users color={Colors.textSecondary} size={14} />
@@ -706,7 +706,7 @@ export default function SocialScreen() {
                                 ) : (
                                   <>
                                     <Video color={Colors.text} size={14} />
-                                    <Text style={styles.goLiveButtonText}>Go Live</Text>
+                                    <Text style={styles.goLiveButtonText}>{t('social.goLive')}</Text>
                                   </>
                                 )}
                               </TouchableOpacity>
@@ -724,13 +724,13 @@ export default function SocialScreen() {
                                 onPress={() => handleHostJoinZoom(room.startUrl!)}
                               >
                                 <ExternalLink color={Colors.text} size={14} />
-                                <Text style={styles.hostJoinButtonText}>Open</Text>
+                                <Text style={styles.hostJoinButtonText}>{t('social.openRoom')}</Text>
                               </TouchableOpacity>
                               <TouchableOpacity 
                                 style={styles.endButton}
                                 onPress={() => handleEndZoom(room)}
                               >
-                                <Text style={styles.endButtonText}>End</Text>
+                                <Text style={styles.endButtonText}>{t('social.endButton')}</Text>
                               </TouchableOpacity>
                             </View>
                           )}
@@ -742,7 +742,7 @@ export default function SocialScreen() {
                           disabled={!isLive}
                         >
                           <Text style={[styles.joinButtonText, !isLive && styles.joinButtonTextDisabled]}>
-                            {isLive ? 'Join' : 'Not Live'}
+                            {isLive ? t('social.join') : t('social.notLive')}
                           </Text>
                         </TouchableOpacity>
                       )}
@@ -757,7 +757,7 @@ export default function SocialScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Calendar color={Colors.secondary} size={18} />
-                <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
+                <Text style={styles.sectionTitle}>{t('social.upcomingSessions')}</Text>
               </View>
               
               {filteredUpcomingSessions.map((session) => {
@@ -772,7 +772,7 @@ export default function SocialScreen() {
                       <View style={styles.sessionInfo}>
                         <Text style={styles.sessionTitle} numberOfLines={1}>{session.title}</Text>
                         <Text style={styles.sessionHost}>
-                          {isHost ? 'You are hosting' : `by ${session.hostName}`}
+                          {isHost ? t('social.youAreHosting') : `${t('social.hostedBy').replace('Hosted by', '').trim()} ${session.hostName}`}
                         </Text>
                       </View>
                       {!isHost && (
@@ -790,7 +790,7 @@ export default function SocialScreen() {
                       {isLive ? (
                         <View style={styles.sessionLiveIndicator}>
                           <View style={styles.liveDot} />
-                          <Text style={styles.sessionLiveText}>LIVE</Text>
+                          <Text style={styles.sessionLiveText}>{t('social.liveBadge')}</Text>
                         </View>
                       ) : (
                         <View style={styles.countdownBadge}>
@@ -813,11 +813,11 @@ export default function SocialScreen() {
                       </View>
                       <View style={styles.sessionMetaItem}>
                         <Clock color={Colors.textMuted} size={14} />
-                        <Text style={styles.sessionMetaText}>{session.durationMinutes} min</Text>
+                        <Text style={styles.sessionMetaText}>{session.durationMinutes} {t('social.min')}</Text>
                       </View>
                       <View style={styles.sessionMetaItem}>
                         <Users color={Colors.textMuted} size={14} />
-                        <Text style={styles.sessionMetaText}>{session.attendees.length} joined</Text>
+                        <Text style={styles.sessionMetaText}>{session.attendees.length} {t('social.joined')}</Text>
                       </View>
                     </View>
                     
@@ -830,13 +830,13 @@ export default function SocialScreen() {
                               onPress={() => session.startUrl && handleHostJoinZoom(session.startUrl)}
                             >
                               <ExternalLink color={Colors.text} size={14} />
-                              <Text style={styles.sessionOpenButtonText}>Open Zoom</Text>
+                              <Text style={styles.sessionOpenButtonText}>{t('social.openZoom')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity 
                               style={styles.sessionEndButton}
                               onPress={() => handleEndSession(session)}
                             >
-                              <Text style={styles.sessionEndButtonText}>End</Text>
+                              <Text style={styles.sessionEndButtonText}>{t('social.endButton')}</Text>
                             </TouchableOpacity>
                           </View>
                         ) : (
@@ -847,7 +847,7 @@ export default function SocialScreen() {
                           >
                             <Play color={canStart ? Colors.text : Colors.textMuted} size={14} />
                             <Text style={[styles.sessionStartButtonText, !canStart && styles.sessionStartButtonTextDisabled]}>
-                              {canStart ? 'Start Session' : 'Not yet'}
+                              {canStart ? t('social.startSession') : t('social.notYet')}
                             </Text>
                             {!canStart && <ChevronRight color={Colors.textMuted} size={14} />}
                           </TouchableOpacity>
@@ -859,7 +859,7 @@ export default function SocialScreen() {
                           disabled={!isLive && !canStart}
                         >
                           <Text style={[styles.sessionJoinButtonText, (!isLive && !canStart) && styles.sessionJoinButtonTextDisabled]}>
-                            {isLive ? 'Join Now' : canStart ? 'Join' : 'Waiting...'}
+                            {isLive ? t('social.joinNow') : canStart ? t('social.join') : t('social.waiting')}
                           </Text>
                         </TouchableOpacity>
                       )}
@@ -873,7 +873,7 @@ export default function SocialScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <MessageCircle color={Colors.primary} size={18} />
-              <Text style={styles.sectionTitle}>Activity Feed</Text>
+              <Text style={styles.sectionTitle}>{t('social.activityFeed')}</Text>
             </View>
             
             {activities.map((activity) => {
@@ -942,7 +942,7 @@ export default function SocialScreen() {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Schedule Session</Text>
+              <Text style={styles.modalTitle}>{t('social.scheduleSession')}</Text>
               <TouchableOpacity 
                 style={styles.modalClose}
                 onPress={() => {
@@ -957,29 +957,29 @@ export default function SocialScreen() {
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
               {selectedRoom && (
                 <View style={styles.selectedRoomBadge}>
-                  <Text style={styles.selectedRoomLabel}>Room:</Text>
+                  <Text style={styles.selectedRoomLabel}>{t('social.room')}</Text>
                   <Text style={styles.selectedRoomName}>{selectedRoom.name}</Text>
                 </View>
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Title *</Text>
+                <Text style={styles.inputLabel}>{t('social.titleRequired')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={sessionTitle}
                   onChangeText={setSessionTitle}
-                  placeholder="e.g. Anatomy Review Session"
+                  placeholder={t('social.titlePlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Description</Text>
+                <Text style={styles.inputLabel}>{t('social.description')}</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
                   value={sessionDescription}
                   onChangeText={setSessionDescription}
-                  placeholder="What will you cover in this session?"
+                  placeholder={t('social.descriptionPlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   multiline
                   numberOfLines={3}
@@ -988,29 +988,29 @@ export default function SocialScreen() {
 
               <View style={styles.inputRow}>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
-                  <Text style={styles.inputLabel}>Date *</Text>
+                  <Text style={styles.inputLabel}>{t('social.dateRequired')}</Text>
                   <TextInput
                     style={styles.textInput}
                     value={sessionDate}
                     onChangeText={setSessionDate}
-                    placeholder="YYYY-MM-DD"
+                    placeholder={t('social.datePlaceholder')}
                     placeholderTextColor={Colors.textMuted}
                   />
                 </View>
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-                  <Text style={styles.inputLabel}>Time *</Text>
+                  <Text style={styles.inputLabel}>{t('social.timeRequired')}</Text>
                   <TextInput
                     style={styles.textInput}
                     value={sessionTime}
                     onChangeText={setSessionTime}
-                    placeholder="HH:MM"
+                    placeholder={t('social.timePlaceholder')}
                     placeholderTextColor={Colors.textMuted}
                   />
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Duration (minutes)</Text>
+                <Text style={styles.inputLabel}>{t('social.durationLabel')}</Text>
                 <View style={styles.durationOptions}>
                   {['30', '45', '60', '90', '120'].map(dur => (
                     <TouchableOpacity
@@ -1041,7 +1041,7 @@ export default function SocialScreen() {
                   resetScheduleForm();
                 }}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t('social.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.createButton, createSessionMutation.isPending && styles.buttonDisabled]}
@@ -1053,7 +1053,7 @@ export default function SocialScreen() {
                 ) : (
                   <>
                     <Calendar color={Colors.text} size={16} />
-                    <Text style={styles.createButtonText}>Schedule</Text>
+                    <Text style={styles.createButtonText}>{t('social.schedule')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1078,7 +1078,7 @@ export default function SocialScreen() {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Study Room</Text>
+              <Text style={styles.modalTitle}>{t('social.createStudyRoom')}</Text>
               <TouchableOpacity 
                 style={styles.modalClose}
                 onPress={() => {
@@ -1092,19 +1092,19 @@ export default function SocialScreen() {
 
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Room Name *</Text>
+                <Text style={styles.inputLabel}>{t('social.roomNameRequired')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newRoomName}
                   onChangeText={setNewRoomName}
-                  placeholder="e.g. Anatomy Study Group"
+                  placeholder={t('social.roomNamePlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   maxLength={100}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Category</Text>
+                <Text style={styles.inputLabel}>{t('social.category')}</Text>
                 <View style={styles.categoryOptions}>
                   {['anatomy', 'physiology', 'pathology', 'pharmacology', 'general'].map(cat => (
                     <TouchableOpacity
@@ -1119,7 +1119,7 @@ export default function SocialScreen() {
                         styles.categoryOptionText,
                         newRoomCategory === cat && styles.categoryOptionTextActive
                       ]}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        {t(`social.${cat}`)}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -1127,7 +1127,7 @@ export default function SocialScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Max Participants</Text>
+                <Text style={styles.inputLabel}>{t('social.maxParticipants')}</Text>
                 <View style={styles.durationOptions}>
                   {['5', '10', '20', '50', '100'].map(num => (
                     <TouchableOpacity
@@ -1158,7 +1158,7 @@ export default function SocialScreen() {
                   resetCreateRoomForm();
                 }}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t('social.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.createButton, createRoomMutation.isPending && styles.buttonDisabled]}
@@ -1170,7 +1170,7 @@ export default function SocialScreen() {
                 ) : (
                   <>
                     <Plus color={Colors.text} size={16} />
-                    <Text style={styles.createButtonText}>Create Room</Text>
+                    <Text style={styles.createButtonText}>{t('social.createRoom')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1210,8 +1210,8 @@ export default function SocialScreen() {
                     <Ban color={Colors.error} size={20} />
                   </View>
                   <View style={styles.userActionTextContainer}>
-                    <Text style={styles.userActionTitle}>Block User</Text>
-                    <Text style={styles.userActionSubtitle}>They won&apos;t see your rooms</Text>
+                    <Text style={styles.userActionTitle}>{t('social.blockUserTitle')}</Text>
+                    <Text style={styles.userActionSubtitle}>{t('social.blockUserSubtitle')}</Text>
                   </View>
                 </TouchableOpacity>
                 
@@ -1223,8 +1223,8 @@ export default function SocialScreen() {
                     <Flag color={Colors.warning} size={20} />
                   </View>
                   <View style={styles.userActionTextContainer}>
-                    <Text style={styles.userActionTitle}>Report User</Text>
-                    <Text style={styles.userActionSubtitle}>Report inappropriate behavior</Text>
+                    <Text style={styles.userActionTitle}>{t('social.reportUserTitle')}</Text>
+                    <Text style={styles.userActionSubtitle}>{t('social.reportUserSubtitle')}</Text>
                   </View>
                 </TouchableOpacity>
                 
@@ -1232,7 +1232,7 @@ export default function SocialScreen() {
                   style={styles.userActionCancelButton}
                   onPress={() => setShowUserActionsModal(false)}
                 >
-                  <Text style={styles.userActionCancelText}>Cancel</Text>
+                  <Text style={styles.userActionCancelText}>{t('social.cancel')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -1261,21 +1261,21 @@ export default function SocialScreen() {
                 <View style={styles.reportSuccessIcon}>
                   <CheckCircle color={Colors.success} size={48} />
                 </View>
-                <Text style={styles.reportSuccessTitle}>Report Submitted</Text>
+                <Text style={styles.reportSuccessTitle}>{t('social.reportSubmitted')}</Text>
                 <Text style={styles.reportSuccessText}>
-                  Thank you for helping keep our community safe. We&apos;ll review your report shortly.
+                  {t('social.reportSubmittedMessage')}
                 </Text>
                 <TouchableOpacity
                   style={styles.reportSuccessButton}
                   onPress={handleCloseReportModal}
                 >
-                  <Text style={styles.reportSuccessButtonText}>Done</Text>
+                  <Text style={styles.reportSuccessButtonText}>{t('social.done')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Report User</Text>
+                  <Text style={styles.modalTitle}>{t('social.reportUserTitle')}</Text>
                   <TouchableOpacity 
                     style={styles.modalClose}
                     onPress={handleCloseReportModal}
@@ -1288,13 +1288,13 @@ export default function SocialScreen() {
                   {selectedUser && (
                     <View style={styles.reportUserBadge}>
                       <Image source={{ uri: selectedUser.avatar }} style={styles.reportUserAvatar} />
-                      <Text style={styles.reportUserName}>Reporting: {selectedUser.name}</Text>
+                      <Text style={styles.reportUserName}>{t('social.reportingUser').replace('{name}', selectedUser.name)}</Text>
                     </View>
                   )}
 
-                  <Text style={styles.inputLabel}>Reason for report *</Text>
+                  <Text style={styles.inputLabel}>{t('social.reasonForReport')}</Text>
                   <View style={styles.reportReasonsList}>
-                    {REPORT_REASONS.map((reason) => {
+                    {getReportReasons(t).map((reason) => {
                       const IconComponent = reason.icon;
                       const isSelected = selectedReportReason === reason.id;
                       return (
@@ -1330,12 +1330,12 @@ export default function SocialScreen() {
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Additional details (optional)</Text>
+                    <Text style={styles.inputLabel}>{t('social.additionalDetails')}</Text>
                     <TextInput
                       style={[styles.textInput, styles.textArea]}
                       value={reportDetails}
                       onChangeText={setReportDetails}
-                      placeholder="Provide any additional context..."
+                      placeholder={t('social.additionalDetailsPlaceholder')}
                       placeholderTextColor={Colors.textMuted}
                       multiline
                       numberOfLines={4}
@@ -1348,7 +1348,7 @@ export default function SocialScreen() {
                     style={styles.cancelButton}
                     onPress={handleCloseReportModal}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                    <Text style={styles.cancelButtonText}>{t('social.cancel')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[
@@ -1359,7 +1359,7 @@ export default function SocialScreen() {
                     disabled={!selectedReportReason}
                   >
                     <Flag color={Colors.text} size={16} />
-                    <Text style={styles.submitReportButtonText}>Submit Report</Text>
+                    <Text style={styles.submitReportButtonText}>{t('social.submitReport')}</Text>
                   </TouchableOpacity>
                 </View>
               </>

@@ -212,18 +212,18 @@ export default function ProfileScreen() {
   }, [weeklyStudyTimeSeconds]);
 
   const getMotivationalMessage = useCallback(() => {
-    if (weeklyGoalProgress >= 100) return "🎉 Goal achieved! You're amazing!";
-    if (weeklyGoalProgress >= 75) return "Almost there! Keep pushing!";
-    if (weeklyGoalProgress >= 50) return "Great progress! Stay focused!";
-    if (weeklyGoalProgress >= 25) return "Good start! Build momentum!";
-    return "Let's get started this week!";
-  }, [weeklyGoalProgress]);
+    if (weeklyGoalProgress >= 100) return t('profile.motivational.goalAchieved');
+    if (weeklyGoalProgress >= 75) return t('profile.motivational.almostThere');
+    if (weeklyGoalProgress >= 50) return t('profile.motivational.greatProgress');
+    if (weeklyGoalProgress >= 25) return t('profile.motivational.goodStart');
+    return t('profile.motivational.getStarted');
+  }, [weeklyGoalProgress, t]);
 
   const periods: { key: LeaderboardPeriod; label: string }[] = [
-    { key: 'daily', label: 'Daily' },
-    { key: 'weekly', label: 'Weekly' },
-    { key: 'monthly', label: 'Monthly' },
-    { key: 'allTime', label: 'All-time' },
+    { key: 'daily', label: t('profile.daily') },
+    { key: 'weekly', label: t('profile.weekly') },
+    { key: 'monthly', label: t('profile.monthly') },
+    { key: 'allTime', label: t('profile.allTime') },
   ];
 
   const getRankChangeIcon = useCallback((index: number) => {
@@ -313,7 +313,7 @@ export default function ProfileScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Crown color={Colors.background} size={18} />
-                <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
+                <Text style={styles.premiumButtonText}>{t('profile.upgradeToPremium')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -331,7 +331,7 @@ export default function ProfileScreen() {
                 <Target color={Colors.primary} size={22} />
               </View>
               <Text style={styles.statValue}>{formattedQuestionsCount}</Text>
-              <Text style={styles.statLabel}>Questions</Text>
+              <Text style={styles.statLabel}>{t('profile.questions')}</Text>
             </View>
             <View style={styles.statCard}>
               <LinearGradient
@@ -343,7 +343,7 @@ export default function ProfileScreen() {
                 <TrendingUp color={Colors.success} size={22} />
               </View>
               <Text style={styles.statValue}>{accuracy.toFixed(1)}%</Text>
-              <Text style={styles.statLabel}>Accuracy</Text>
+              <Text style={styles.statLabel}>{t('profile.accuracy')}</Text>
             </View>
             <View style={styles.statCard}>
               <LinearGradient
@@ -355,7 +355,7 @@ export default function ProfileScreen() {
                 <Clock color={Colors.accentPink} size={22} />
               </View>
               <Text style={styles.statValue}>{formattedStudyTime}</Text>
-              <Text style={styles.statLabel}>Study Time</Text>
+              <Text style={styles.statLabel}>{t('profile.studyTime')}</Text>
             </View>
             <View style={styles.statCard}>
               <LinearGradient
@@ -367,14 +367,14 @@ export default function ProfileScreen() {
                 <Flame color={Colors.streakOrange} size={22} />
               </View>
               <Text style={styles.statValue}>{streakData.currentStreak}</Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
+              <Text style={styles.statLabel}>{t('profile.dayStreak')}</Text>
             </View>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Award color={Colors.primary} size={22} />
-              <Text style={styles.sectionTitleInline}>Achievements</Text>
+              <Text style={styles.sectionTitleInline}>{t('profile.achievements')}</Text>
               <View style={styles.achievementCounter}>
                 <Text style={styles.achievementCounterText}>{unlockedCount}/{achievements.length}</Text>
               </View>
@@ -443,9 +443,9 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Trophy color={Colors.warning} size={22} />
-              <Text style={styles.sectionTitleInline}>Leaderboard</Text>
+              <Text style={styles.sectionTitleInline}>{t('profile.leaderboard')}</Text>
               <TouchableOpacity style={styles.seeAllButton} activeOpacity={0.7}>
-                <Text style={styles.seeAllText}>See all</Text>
+                <Text style={styles.seeAllText}>{t('profile.seeAll')}</Text>
                 <ChevronRight color={Colors.primary} size={16} />
               </TouchableOpacity>
             </View>
@@ -541,7 +541,7 @@ export default function ProfileScreen() {
                     <Text style={styles.leaderboardName}>{user.name}</Text>
                     <View style={styles.leaderboardStats}>
                       <Zap color={Colors.warning} size={12} />
-                      <Text style={styles.leaderboardPoints}>{user.points.toLocaleString()} pts</Text>
+                      <Text style={styles.leaderboardPoints}>{user.points.toLocaleString()} {t('profile.pts')}</Text>
                     </View>
                   </View>
                   <View style={styles.leaderboardStreak}>
@@ -556,7 +556,7 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Calendar color={Colors.accent} size={22} />
-              <Text style={styles.sectionTitleInline}>Weekly Progress</Text>
+              <Text style={styles.sectionTitleInline}>{t('profile.weeklyProgress')}</Text>
             </View>
             <View style={styles.weeklyCard}>
               <LinearGradient
@@ -578,16 +578,16 @@ export default function ProfileScreen() {
                 <View style={styles.weeklyInfo}>
                   <Text style={styles.weeklyTitle}>{getMotivationalMessage()}</Text>
                   <Text style={styles.weeklySubtitle}>
-                    {weeklyQuestionsTotal}/350 questions this week
+                    {weeklyQuestionsTotal}/350 {t('profile.questionsThisWeek')}
                   </Text>
                   <View style={styles.weeklyStats}>
                     <View style={styles.weeklyStat}>
                       <Text style={styles.weeklyStatValue}>{weeklyQuestionsTotal}</Text>
-                      <Text style={styles.weeklyStatLabel}>Questions</Text>
+                      <Text style={styles.weeklyStatLabel}>{t('profile.questions')}</Text>
                     </View>
                     <View style={styles.weeklyStat}>
                       <Text style={styles.weeklyStatValue}>{formattedWeeklyStudyTime}</Text>
-                      <Text style={styles.weeklyStatLabel}>Study Time</Text>
+                      <Text style={styles.weeklyStatLabel}>{t('profile.studyTime')}</Text>
                     </View>
                   </View>
                 </View>
