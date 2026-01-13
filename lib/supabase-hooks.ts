@@ -59,9 +59,9 @@ export function useStudyRooms() {
       return (data || []).map((room: any) => ({
         id: room.id,
         name: room.name,
-        host: room.host_name,
+        host: `User ${room.host_id.substring(0, 8)}`,
         hostId: room.host_id,
-        hostAvatar: room.host_avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${room.host_id}`,
+        hostAvatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${room.host_id}`,
         participants: room.participants || 0,
         maxParticipants: room.max_participants || 20,
         category: room.category || 'general',
@@ -96,7 +96,6 @@ export function useCreateStudyRoom() {
         .insert({
           name: input.name,
           host_id: input.hostId,
-          host_name: input.hostName,
           category: input.category,
           max_participants: input.maxParticipants,
           participants: 0,
