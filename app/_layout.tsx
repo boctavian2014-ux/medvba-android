@@ -36,6 +36,8 @@ function useProtectedRoute() {
       console.log('[Auth] Redirecting to tabs');
       router.replace('/(tabs)');
     }
+
+    SplashScreen.hideAsync();
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router]);
 
   return isLoading;
@@ -100,10 +102,6 @@ const styles = StyleSheet.create({
 });
 
 export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
