@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Brain, Users, Trophy, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 const { width } = Dimensions.get('window');
 
@@ -32,36 +33,45 @@ interface OnboardingSlide {
   gradient: string[];
 }
 
-const slides: OnboardingSlide[] = [
+interface SlideData {
+  id: string;
+  titleKey: string;
+  subtitleKey: string;
+  descriptionKey: string;
+  icon: React.ReactNode;
+  gradient: string[];
+}
+
+const slidesData: SlideData[] = [
   {
     id: '1',
-    title: 'Welcome to',
-    subtitle: 'Medix Study Hub',
-    description: 'Your ultimate companion for medical exam preparation. Master anatomy, physiology, and more with our comprehensive quiz system.',
+    titleKey: 'onboarding.slide1.title',
+    subtitleKey: 'onboarding.slide1.subtitle',
+    descriptionKey: 'onboarding.slide1.description',
     icon: <Image source={{ uri: APP_ICON_URL }} style={{ width: 120, height: 120, borderRadius: 28 }} />,
     gradient: [colors.primary, colors.primaryDark],
   },
   {
     id: '2',
-    title: 'AI-Powered',
-    subtitle: 'Medical Tutor',
-    description: 'Get instant answers to your medical questions from our intelligent AI tutor. Learn concepts deeply and efficiently.',
+    titleKey: 'onboarding.slide2.title',
+    subtitleKey: 'onboarding.slide2.subtitle',
+    descriptionKey: 'onboarding.slide2.description',
     icon: <Brain size={80} color={colors.accent} strokeWidth={1.5} />,
     gradient: [colors.accent, colors.success],
   },
   {
     id: '3',
-    title: 'Study Together',
-    subtitle: 'In Virtual Rooms',
-    description: 'Join live study sessions with fellow medical students. Collaborate, discuss, and learn from each other in real-time.',
+    titleKey: 'onboarding.slide3.title',
+    subtitleKey: 'onboarding.slide3.subtitle',
+    descriptionKey: 'onboarding.slide3.description',
     icon: <Users size={80} color={colors.accentPink} strokeWidth={1.5} />,
     gradient: [colors.accentPink, colors.error],
   },
   {
     id: '4',
-    title: 'Track Your',
-    subtitle: 'Progress',
-    description: 'Monitor your learning journey with detailed statistics, streaks, and achievements. Compete on leaderboards and stay motivated.',
+    titleKey: 'onboarding.slide4.title',
+    subtitleKey: 'onboarding.slide4.subtitle',
+    descriptionKey: 'onboarding.slide4.description',
     icon: <Trophy size={80} color={colors.streakOrange} strokeWidth={1.5} />,
     gradient: [colors.streakOrange, colors.streakYellow],
   },
@@ -72,6 +82,16 @@ export default function OnboardingScreen() {
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { completeOnboarding } = useAuth();
+  const { t } = useLanguage();
+
+  const slides: OnboardingSlide[] = useMemo(() => slidesData.map(slide => ({
+    id: slide.id,
+    title: t(slide.titleKey),
+    subtitle: t(slide.subtitleKey),
+    description: t(slide.descriptionKey),
+    icon: slide.icon,
+    gradient: slide.gradient,
+  })), [t]);
 
   const handleGetStarted = useCallback(async () => {
     if (Platform.OS !== 'web') {
@@ -94,7 +114,7 @@ export default function OnboardingScreen() {
     } else {
       handleGetStarted();
     }
-  }, [currentIndex, handleGetStarted]);
+  }, [currentIndex, slides.length, handleGetStarted]);
 
   const handleSkip = useCallback(async () => {
     if (Platform.OS !== 'web') {
@@ -207,7 +227,7 @@ export default function OnboardingScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -238,7 +258,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.nextButtonText}>
-              {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === slides.length - 1 ? t('onboarding.getStarted') : t('onboarding.next')}
             </Text>
             <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>

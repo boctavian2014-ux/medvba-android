@@ -19,6 +19,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -27,25 +28,26 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const { signIn } = useAuth();
+  const { t } = useLanguage();
 
   const validateForm = useCallback(() => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('auth.emailInvalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.passwordTooShort');
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [email, password]);
+  }, [email, password, t]);
 
   const handleLogin = useCallback(async () => {
     if (!validateForm()) {
@@ -66,14 +68,14 @@ export default function LoginScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
         
-        let errorMessage = 'Login failed. Please try again.';
+        let errorMessage = t('auth.loginFailed');
         if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please try again.';
+          errorMessage = t('auth.invalidCredentials');
         } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please verify your email before logging in.';
+          errorMessage = t('auth.emailNotConfirmed');
         }
         
-        Alert.alert('Login Failed', errorMessage);
+        Alert.alert(t('auth.loginFailed'), errorMessage);
       } else {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -83,11 +85,11 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error('[Login] Unexpected error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Error', t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, validateForm]);
+  }, [email, password, signIn, validateForm, t]);
 
   const handleForgotPassword = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -127,18 +129,18 @@ export default function LoginScreen() {
                   style={styles.logoImage}
                 />
               </View>
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue your learning journey</Text>
+              <Text style={styles.title}>{t('auth.welcomeBack')}</Text>
+              <Text style={styles.subtitle}>{t('auth.signInSubtitle')}</Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{t('auth.email')}</Text>
                 <View style={[styles.inputContainer, errors.email && styles.inputError]}>
                   <Mail size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.emailPlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={email}
                     onChangeText={(text) => {
@@ -155,12 +157,12 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={[styles.inputContainer, errors.password && styles.inputError]}>
                   <Lock size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={password}
                     onChangeText={(text) => {
@@ -191,7 +193,7 @@ export default function LoginScreen() {
                 style={styles.forgotButton}
                 disabled={isLoading}
               >
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -209,16 +211,16 @@ export default function LoginScreen() {
                   {isLoading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.loginButtonText}>Sign In</Text>
+                    <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don&apos;t have an account?</Text>
+              <Text style={styles.footerText}>{t('auth.dontHaveAccount')}</Text>
               <TouchableOpacity onPress={handleSignUp} disabled={isLoading}>
-                <Text style={styles.signUpText}>Sign Up</Text>
+                <Text style={styles.signUpText}>{t('auth.signUp')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

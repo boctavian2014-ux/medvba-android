@@ -19,6 +19,7 @@ import { Mail, Lock, Eye, EyeOff, User, ArrowLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function SignUpScreen() {
   const [name, setName] = useState('');
@@ -35,37 +36,38 @@ export default function SignUpScreen() {
     confirmPassword?: string;
   }>({});
   const { signUp } = useAuth();
+  const { t } = useLanguage();
 
   const validateForm = useCallback(() => {
     const newErrors: typeof errors = {};
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('auth.nameRequired');
     } else if (name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('auth.nameTooShort');
     }
 
     if (!email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('auth.emailInvalid');
     }
 
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.passwordRequired');
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.passwordTooShort');
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = t('auth.confirmPasswordRequired');
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.passwordsDontMatch');
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [name, email, password, confirmPassword]);
+  }, [name, email, password, confirmPassword, t]);
 
   const handleSignUp = useCallback(async () => {
     if (!validateForm()) {
@@ -86,32 +88,32 @@ export default function SignUpScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
 
-        let errorMessage = 'Sign up failed. Please try again.';
+        let errorMessage = t('auth.signUpFailed');
         if (error.message.includes('already registered')) {
-          errorMessage = 'This email is already registered. Please sign in instead.';
+          errorMessage = t('auth.emailAlreadyRegistered');
         } else if (error.message.includes('Password')) {
           errorMessage = error.message;
         }
 
-        Alert.alert('Sign Up Failed', errorMessage);
+        Alert.alert(t('auth.signUpFailed'), errorMessage);
       } else {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
         console.log('[SignUp] Sign up successful');
         Alert.alert(
-          'Account Created',
-          'Please check your email to verify your account before signing in.',
-          [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+          t('auth.accountCreated'),
+          t('auth.verifyEmailMessage'),
+          [{ text: t('auth.ok'), onPress: () => router.replace('/(auth)/login') }]
         );
       }
     } catch (error) {
       console.error('[SignUp] Unexpected error:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Error', t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, name, signUp, validateForm]);
+  }, [email, password, name, signUp, validateForm, t]);
 
   const handleBack = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -155,18 +157,18 @@ export default function SignUpScreen() {
                   style={styles.logoImage}
                 />
               </View>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join thousands of medical students</Text>
+              <Text style={styles.title}>{t('auth.createAccount')}</Text>
+              <Text style={styles.subtitle}>{t('auth.joinStudents')}</Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={styles.label}>{t('auth.fullName')}</Text>
                 <View style={[styles.inputContainer, errors.name && styles.inputError]}>
                   <User size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your name"
+                    placeholder={t('auth.namePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={name}
                     onChangeText={(text) => {
@@ -182,12 +184,12 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{t('auth.email')}</Text>
                 <View style={[styles.inputContainer, errors.email && styles.inputError]}>
                   <Mail size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.emailPlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={email}
                     onChangeText={(text) => {
@@ -204,12 +206,12 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={[styles.inputContainer, errors.password && styles.inputError]}>
                   <Lock size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Create a password"
+                    placeholder={t('auth.createPasswordPlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={password}
                     onChangeText={(text) => {
@@ -236,12 +238,12 @@ export default function SignUpScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirm Password</Text>
+                <Text style={styles.label}>{t('auth.confirmPassword')}</Text>
                 <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
                   <Lock size={20} color={colors.textSecondary} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Confirm your password"
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={confirmPassword}
                     onChangeText={(text) => {
@@ -282,27 +284,27 @@ export default function SignUpScreen() {
                   {isLoading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.signUpButtonText}>Create Account</Text>
+                    <Text style={styles.signUpButtonText}>{t('auth.createAccount')}</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account?</Text>
+              <Text style={styles.footerText}>{t('auth.alreadyHaveAccount')}</Text>
               <TouchableOpacity onPress={handleSignIn} disabled={isLoading}>
-                <Text style={styles.signInText}>Sign In</Text>
+                <Text style={styles.signInText}>{t('auth.signIn')}</Text>
               </TouchableOpacity>
             </View>
 
             <Text style={styles.termsText}>
-              By creating an account, you agree to our{' '}
+              {t('auth.agreeToTerms')}{' '}
               <Text style={styles.termsLink} onPress={() => router.push('/legal/terms-of-service')}>
-                Terms of Service
+                {t('auth.termsOfService')}
               </Text>{' '}
-              and{' '}
+              {t('auth.and')}{' '}
               <Text style={styles.termsLink} onPress={() => router.push('/legal/privacy-policy')}>
-                Privacy Policy
+                {t('auth.privacyPolicy')}
               </Text>
             </Text>
           </ScrollView>
