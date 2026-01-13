@@ -92,9 +92,9 @@ export default function ProfileScreen() {
   const achievements: Achievement[] = useMemo(() => [
     { 
       id: 'question_master', 
-      name: 'Question Master', 
+      name: t('achievement.questionMaster'), 
       icon: '🎯', 
-      description: 'Answer 1,000 questions',
+      description: t('achievement.questionMasterDesc'),
       requirement: 1000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
       type: 'questions',
@@ -102,9 +102,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 'streak_champion', 
-      name: 'Streak Champion', 
+      name: t('achievement.streakChampion'), 
       icon: '🔥', 
-      description: '30-day streak achieved',
+      description: t('achievement.streakChampionDesc'),
       requirement: 30,
       currentProgress: streakData.currentStreak,
       type: 'streak',
@@ -112,9 +112,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 'accuracy_ace', 
-      name: 'Accuracy Ace', 
+      name: t('achievement.accuracyAce'), 
       icon: '✨', 
-      description: 'Maintain 80% accuracy',
+      description: t('achievement.accuracyAceDesc'),
       requirement: 80,
       currentProgress: Math.round(accuracy),
       type: 'accuracy',
@@ -122,9 +122,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 'study_warrior', 
-      name: 'Study Warrior', 
+      name: t('achievement.studyWarrior'), 
       icon: '⚔️', 
-      description: 'Study for 50 hours',
+      description: t('achievement.studyWarriorDesc'),
       requirement: 50,
       currentProgress: Math.floor(allTimeStats.totalStudyTimeSeconds / 3600),
       type: 'time',
@@ -132,9 +132,9 @@ export default function ProfileScreen() {
     },
     { 
       id: 'anatomy_expert', 
-      name: 'Anatomy Expert', 
+      name: t('achievement.anatomyExpert'), 
       icon: '🦴', 
-      description: 'Answer 5,000 questions',
+      description: t('achievement.anatomyExpertDesc'),
       requirement: 5000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
       type: 'questions',
@@ -142,15 +142,15 @@ export default function ProfileScreen() {
     },
     { 
       id: 'dedication', 
-      name: 'Dedication', 
+      name: t('achievement.dedication'), 
       icon: '💎', 
-      description: '100-day streak',
+      description: t('achievement.dedicationDesc'),
       requirement: 100,
       currentProgress: streakData.longestStreak,
       type: 'streak',
       gradient: ['#667EEA', '#764BA2'],
     },
-  ], [allTimeStats.totalQuestionsAnswered, allTimeStats.totalStudyTimeSeconds, streakData.currentStreak, streakData.longestStreak, accuracy]);
+  ], [allTimeStats.totalQuestionsAnswered, allTimeStats.totalStudyTimeSeconds, streakData.currentStreak, streakData.longestStreak, accuracy, t]);
 
   const unlockedCount = useMemo(() => {
     return achievements.filter(a => a.currentProgress >= a.requirement).length;

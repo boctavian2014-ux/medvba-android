@@ -148,6 +148,20 @@ export const ro: Record<string, string> = {
   'profile': 'Profil',
   'language': 'Limbă',
 
+  // Achievements
+  'achievement.questionMaster': 'Maestru Întrebări',
+  'achievement.questionMasterDesc': 'Răspunde la 1.000 de întrebări',
+  'achievement.streakChampion': 'Campion Streak',
+  'achievement.streakChampionDesc': 'Realizează un streak de 30 de zile',
+  'achievement.accuracyAce': 'As la Acuratețe',
+  'achievement.accuracyAceDesc': 'Menține acuratețe de 80%',
+  'achievement.studyWarrior': 'Războinic al Studiului',
+  'achievement.studyWarriorDesc': 'Studiază 50 de ore',
+  'achievement.anatomyExpert': 'Expert în Anatomie',
+  'achievement.anatomyExpertDesc': 'Răspunde la 5.000 de întrebări',
+  'achievement.dedication': 'Dedicație',
+  'achievement.dedicationDesc': 'Streak de 100 de zile',
+
   // AI Tutor
   'tutor.title': 'Tutor medical AI',
   'tutor.subtitle': 'Pune întrebări de anatomie, fiziologie, patologie și farmacologie.',

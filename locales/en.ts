@@ -148,6 +148,20 @@ export const en: Record<string, string> = {
   'profile': 'Profile',
   'language': 'Language',
 
+  // Achievements
+  'achievement.questionMaster': 'Question Master',
+  'achievement.questionMasterDesc': 'Answer 1,000 questions',
+  'achievement.streakChampion': 'Streak Champion',
+  'achievement.streakChampionDesc': '30-day streak achieved',
+  'achievement.accuracyAce': 'Accuracy Ace',
+  'achievement.accuracyAceDesc': 'Maintain 80% accuracy',
+  'achievement.studyWarrior': 'Study Warrior',
+  'achievement.studyWarriorDesc': 'Study for 50 hours',
+  'achievement.anatomyExpert': 'Anatomy Expert',
+  'achievement.anatomyExpertDesc': 'Answer 5,000 questions',
+  'achievement.dedication': 'Dedication',
+  'achievement.dedicationDesc': '100-day streak',
+
   // AI Tutor
   'tutor.title': 'AI Medical Tutor',
   'tutor.subtitle': 'Ask questions about anatomy, physiology, pathology, and pharmacology.',
