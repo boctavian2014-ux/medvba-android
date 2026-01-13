@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
+import { monitoring } from '@/lib/monitoring';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
 const SESSION_STATE_KEY = 'quiz_session_state';
@@ -306,6 +307,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
   const updateDailyProgress = useCallback(async (correct: boolean, questionId: string) => {
     try {
+      monitoring.logEvent('question_answered', { correct, questionId });
       setDailyProgress(prev => {
         if (prev.answeredQuestionIds.includes(questionId)) {
           console.log('[QuizProgress] Question already answered today:', questionId);
@@ -349,6 +351,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
+      monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
   }, [updateStreak, updateWeeklyHistory]);
 
@@ -369,6 +372,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
   const saveSessionState = useCallback(async (state: SessionState) => {
     try {
+      monitoring.logEvent('quiz_session_saved', { 
+        category: state.category, 
+        mode: state.mode,
+        progress: state.currentIndex / state.questions.length 
+      });
       console.log('[QuizProgress] Saving session state at index:', state.currentIndex);
       setSessionState(state);
       await AsyncStorage.setItem(SESSION_STATE_KEY, JSON.stringify(state));
@@ -376,6 +384,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await saveLastSessionInfo(state.category, state.mode);
     } catch (error) {
       console.error('[QuizProgress] Error saving session state:', error);
+      monitoring.logError(error as Error, { context: 'save_session_state' });
     }
   }, [saveLastSessionInfo]);
 

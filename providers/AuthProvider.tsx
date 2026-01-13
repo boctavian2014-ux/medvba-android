@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 import { trpcClient } from '@/lib/trpc';
+import { monitoring } from '@/lib/monitoring';
 
 const ONBOARDING_COMPLETE_KEY = '@medix_onboarding_complete';
 
@@ -127,6 +128,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           
           if (currentSession?.user) {
             await fetchProfile(currentSession.user.id);
+            monitoring.setUser(currentSession.user.id, currentSession.user.email);
           }
           
           setIsLoading(false);
@@ -151,8 +153,10 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         
         if (newSession?.user) {
           await fetchProfile(newSession.user.id);
+          monitoring.setUser(newSession.user.id, newSession.user.email);
         } else {
           setProfile(null);
+          monitoring.clearUser();
         }
       }
     });
@@ -179,8 +183,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (error) {
         console.error('[Auth] Sign up error:', error);
+        monitoring.logError(new Error(error.message), { context: 'signup' });
         return { error };
       }
+
+      monitoring.logEvent('user_signup', { email });
 
       if (data.user) {
         try {
@@ -214,6 +221,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (error) {
         console.error('[Auth] Sign in error:', error);
+        monitoring.logError(new Error(error.message), { context: 'signin' });
+      } else {
+        monitoring.logEvent('user_signin', { email });
       }
 
       return { error };
@@ -228,6 +238,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       console.log('[Auth] Signing out...');
       await supabase.auth.signOut();
       setProfile(null);
+      monitoring.clearUser();
+      monitoring.logEvent('user_signout');
       console.log('[Auth] Signed out successfully');
     } catch (error) {
       console.error('[Auth] Sign out error:', error);

@@ -10,9 +10,11 @@ import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
+import { monitoring } from "@/lib/monitoring";
 import colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
+monitoring.init();
 
 const queryClient = new QueryClient();
 
