@@ -21,6 +21,7 @@ import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { getAllQuestionsWithChapters } from '@/mocks/chapters';
+import { translateQuestions } from '@/lib/translateQuestion';
 
 import {
   generalVertebraeQuestions,
@@ -391,7 +392,7 @@ async function selectQuestionsForQuiz(
 
 export default function QuizSessionScreen() {
   const router = useRouter();
-  const { t, getChapterTitle } = useLanguage();
+  const { t, getChapterTitle, currentLanguage } = useLanguage();
   const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
   const insets = useSafeAreaInsets();
   
@@ -432,7 +433,8 @@ export default function QuizSessionScreen() {
         if (resume === 'true' && savedSession) {
           console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
           if (isMounted) {
-            setQuestions(savedSession.questions);
+            const translatedQuestions = translateQuestions(savedSession.questions, currentLanguage);
+            setQuestions(translatedQuestions);
             setCurrentIndex(savedSession.currentIndex);
             setScore(savedSession.score);
             setAnsweredInSession(savedSession.answeredInSession);
@@ -450,8 +452,10 @@ export default function QuizSessionScreen() {
           const allWithChapters = getAllQuestionsWithChapters(category || 'upper-lower-limbs');
           console.log(`[QuizSession] Sequential mode: loaded ${allWithChapters.length} questions for ${category}`);
           if (isMounted) {
+            const baseQuestions = allWithChapters.map(qc => qc.question);
+            const translatedQuestions = translateQuestions(baseQuestions, currentLanguage);
             setQuestionsWithChapters(allWithChapters);
-            setQuestions(allWithChapters.map(qc => qc.question));
+            setQuestions(translatedQuestions);
             setIsLoading(false);
           }
         } else {
@@ -467,7 +471,8 @@ export default function QuizSessionScreen() {
           console.log(`[QuizSession] Selected ${selectedQuestions.length} questions`);
           
           if (isMounted) {
-            setQuestions(selectedQuestions);
+            const translatedQuestions = translateQuestions(selectedQuestions, currentLanguage);
+            setQuestions(translatedQuestions);
             
             if (selectedQuestions.length > 0) {
               const questionIds = selectedQuestions.map(q => q.id);
