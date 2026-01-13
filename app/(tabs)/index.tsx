@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { t, getModuleName } from '@/lib/i18n';
+import { useLanguage } from '@/providers/LanguageProvider';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
@@ -22,6 +22,7 @@ import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t, getModuleName } = useLanguage();
   const { dailyProgress, hasActiveSession, sessionState, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);

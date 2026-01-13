@@ -25,7 +25,6 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
-import { getModuleName } from '@/lib/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 
@@ -40,7 +39,7 @@ type QuizMode = 'practice' | 'exam' | 'quick';
 
 export default function QuizScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, getModuleName } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { 
     isPremium, 

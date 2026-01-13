@@ -19,7 +19,6 @@ import Colors from '@/constants/colors';
 import { useQuizProgress, type SessionState } from '@/providers/QuizProgressProvider';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
-import { getChapterTitle } from '@/lib/i18n';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { getAllQuestionsWithChapters } from '@/mocks/chapters';
 
@@ -392,7 +391,7 @@ async function selectQuestionsForQuiz(
 
 export default function QuizSessionScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, getChapterTitle } = useLanguage();
   const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
   const insets = useSafeAreaInsets();
   
