@@ -274,7 +274,7 @@ export default function SocialScreen() {
   const studyRoomsQuery = trpc.studyRooms.list.useQuery({});
   const upcomingSessionsQuery = trpc.sessions.listUpcoming.useQuery({});
 
-  const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map(room => ({
+  const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map((room: any) => ({
     ...room,
     host: room.host,
     ...localRoomUpdates[room.id],

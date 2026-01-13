@@ -29,7 +29,7 @@ export const accountRouter = createTRPCRouter({
           .where('host_id', '=', input.userId)
           .execute();
 
-        const roomIds = userRooms.map(r => r.id);
+        const roomIds = userRooms.map((r: any) => r.id);
         
         if (roomIds.length > 0) {
           await db
@@ -54,7 +54,7 @@ export const accountRouter = createTRPCRouter({
 
         for (const session of allSessions) {
           if (session.attendees && session.attendees.includes(input.userId)) {
-            const updatedAttendees = session.attendees.filter(id => id !== input.userId);
+            const updatedAttendees = session.attendees.filter((id: string) => id !== input.userId);
             await db
               .updateTable('study_sessions')
               .set({ attendees: updatedAttendees })

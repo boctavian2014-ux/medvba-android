@@ -54,7 +54,7 @@ export const usersRouter = createTRPCRouter({
 
       console.log("Leaderboard fetched:", users.length, "users");
 
-      return users.map((user, index) => ({
+      return users.map((user: any, index: number) => ({
         id: user.id,
         name: user.name,
         avatar: user.avatar,

@@ -103,7 +103,7 @@ export const sessionsRouter = createTRPCRouter({
 
       console.log("Returning upcoming sessions:", sessions.length);
 
-      return sessions.map(session => ({
+      return sessions.map((session: any) => ({
         id: session.id,
         roomId: session.room_id,
         title: session.title,
@@ -233,7 +233,7 @@ export const sessionsRouter = createTRPCRouter({
         throw new Error("Session not found");
       }
 
-      const attendees = session.attendees.filter(id => id !== input.userId);
+      const attendees = session.attendees.filter((id: string) => id !== input.userId);
 
       const updated = await db
         .updateTable('study_sessions')

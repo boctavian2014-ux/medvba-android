@@ -21,7 +21,7 @@ export const studyRoomsRouter = createTRPCRouter({
 
       console.log("Study rooms fetched:", rooms.length);
 
-      return rooms.map(room => ({
+      return rooms.map((room: any) => ({
         id: room.id,
         name: room.name,
         host: room.host_name,
