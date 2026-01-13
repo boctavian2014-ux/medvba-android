@@ -251,7 +251,7 @@ export default function ProfileScreen() {
             <TouchableOpacity 
               style={styles.settingsButton} 
               activeOpacity={0.7}
-              onPress={() => router.push('/settings')}
+              onPress={() => router.push('/settings' as any)}
             >
               <LinearGradient
                 colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
@@ -487,34 +487,34 @@ export default function ProfileScreen() {
               <View style={styles.glassOverlay} />
               
               <View style={styles.podium}>
-                {leaderboard.slice(0, 3).map((user, index) => {
-                  const positions = [1, 0, 2];
-                  const heights = [70, 90, 60];
+                {[1, 0, 2].map((index) => {
+                  const user = leaderboard[index];
+                  const heights = [90, 70, 60];
                   const colors: readonly [string, string][] = [
-                    ['#C0C0C0', '#A8A8A8'],
                     ['#FFD700', '#FFA500'],
+                    ['#C0C0C0', '#A8A8A8'],
                     ['#CD7F32', '#8B4513'],
                   ];
-                  const orderIndex = positions[index];
+                  const podiumIndex = [1, 0, 2].indexOf(index);
                   
                   return (
-                    <View key={user.id} style={[styles.podiumItem, { order: orderIndex }]}>
+                    <View key={user.id} style={styles.podiumItem}>
                       <View style={styles.podiumAvatarContainer}>
                         <LinearGradient
-                          colors={colors[index]}
+                          colors={colors[podiumIndex]}
                           style={styles.podiumAvatarBorder}
                         >
                           <Image source={{ uri: user.avatar }} style={styles.podiumAvatar} />
                         </LinearGradient>
-                        <View style={[styles.podiumBadge, { backgroundColor: colors[index][0] }]}>
-                          <Text style={styles.podiumBadgeText}>{index + 1}</Text>
+                        <View style={[styles.podiumBadge, { backgroundColor: colors[podiumIndex][0] }]}>
+                          <Text style={styles.podiumBadgeText}>{user.rank}</Text>
                         </View>
                       </View>
                       <Text style={styles.podiumName} numberOfLines={1}>{user.name.split(' ')[0]}</Text>
                       <Text style={styles.podiumPoints}>{(user.points / 1000).toFixed(1)}k</Text>
-                      <View style={[styles.podiumBar, { height: heights[index] }]}>
+                      <View style={[styles.podiumBar, { height: heights[podiumIndex] }]}>
                         <LinearGradient
-                          colors={colors[index]}
+                          colors={colors[podiumIndex]}
                           style={StyleSheet.absoluteFill}
                         />
                       </View>

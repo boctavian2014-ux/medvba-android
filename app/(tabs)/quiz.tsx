@@ -62,14 +62,14 @@ export default function QuizScreen() {
     // Free users can only use Quick Quiz mode
     if (!isPremium && mode !== 'quick') {
       console.log('[Quiz] Free user tried to access premium mode:', mode);
-      router.push('/paywall');
+      router.push('/paywall' as any);
       return;
     }
 
     // Check if free user has remaining quizzes
     if (!canStartQuiz()) {
       console.log('[Quiz] Free quiz limit reached');
-      router.push('/paywall');
+      router.push('/paywall' as any);
       return;
     }
 
@@ -77,12 +77,12 @@ export default function QuizScreen() {
     const success = await incrementQuizCount();
     if (!success && !isPremium) {
       console.log('[Quiz] Failed to increment quiz count');
-      router.push('/paywall');
+      router.push('/paywall' as any);
       return;
     }
 
     router.push({
-      pathname: '/quiz-session',
+      pathname: '/quiz-session' as any,
       params: { 
         category: selectedCategory || 'mixed',
         mode: mode
