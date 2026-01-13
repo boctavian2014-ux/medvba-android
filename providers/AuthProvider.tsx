@@ -3,7 +3,7 @@ import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
-import { trpcClient } from '@/lib/trpc';
+
 import { monitoring } from '@/lib/monitoring';
 
 const ONBOARDING_COMPLETE_KEY = '@medix_onboarding_complete';
@@ -52,38 +52,33 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const fetchProfile = useCallback(async (userId: string) => {
     try {
       console.log('[Auth] Fetching profile for user:', userId);
-      const result = await trpcClient.users.me.query({ userId });
+      const { data: result, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
       if (result) {
         const userProfile: UserProfile = {
           id: result.id,
-          name: result.name,
-          avatar: result.avatar,
-          rank: result.rank,
-          points: result.points,
-          streak: result.streak,
-          questionsAnswered: result.questionsAnswered,
-          accuracy: Number(result.accuracy),
-          studyHours: Number(result.studyHours),
-          badges: result.badges,
-          joinedAt: result.joinedDate || new Date().toISOString(),
+          name: result.name || 'Student',
+          avatar: result.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
+          rank: result.rank || 0,
+          points: result.points || 0,
+          streak: result.streak || 0,
+          questionsAnswered: result.questions_answered || 0,
+          accuracy: Number(result.accuracy || 0),
+          studyHours: Number(result.study_hours || 0),
+          badges: result.badges || [],
+          joinedAt: result.joined_at || new Date().toISOString(),
         };
         setProfile(userProfile);
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
-    } catch (error: any) {
-      const errorMessage = error?.message || String(error);
-      const isNetworkError = 
-        errorMessage.includes('ENOTFOUND') || 
-        errorMessage.includes('network') ||
-        errorMessage.includes('getaddrinfo') ||
-        errorMessage.includes('fetch failed') ||
-        errorMessage.includes('NetworkError');
-      
-      if (isNetworkError) {
-        console.log('[Auth] Database unavailable - using offline profile');
-      } else {
-        console.warn('[Auth] Error fetching profile:', errorMessage);
-      }
+    } catch {
+      console.log('[Auth] Using default profile for user:', userId);
       
       setProfile({
         id: userId,
@@ -191,11 +186,19 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (data.user) {
         try {
-          console.log('[Auth] Creating user profile...');
-          await trpcClient.users.create.mutate({
+          console.log('[Auth] Creating user profile in Supabase...');
+          await supabase.from('user_profiles').insert({
             id: data.user.id,
             name,
             avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
+            rank: 0,
+            points: 0,
+            streak: 0,
+            questions_answered: 0,
+            accuracy: 0,
+            study_hours: 0,
+            badges: [],
+            joined_at: new Date().toISOString(),
           });
           console.log('[Auth] User profile created successfully');
         } catch (profileError) {

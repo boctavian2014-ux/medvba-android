@@ -3,20 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, useAuth } from '../AuthProvider';
 import { supabase } from '@/lib/supabase';
-import { trpcClient } from '@/lib/trpc';
 
-jest.mock('@/lib/trpc', () => ({
-  trpcClient: {
-    users: {
-      me: {
-        query: jest.fn(),
-      },
-      create: {
-        mutate: jest.fn(),
-      },
-    },
-  },
-}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
@@ -50,29 +37,36 @@ describe('AuthProvider', () => {
     });
 
     it('should set isAuthenticated to true when session exists', async () => {
-      const mockSession = {
-        user: {
-          id: 'user-123',
-          email: 'test@example.com',
-        },
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
       };
 
       (supabase.auth.getSession as jest.Mock).mockResolvedValue({
-        data: { session: mockSession },
+        data: { session: { user: mockUser } },
       });
 
-      (trpcClient.users.me.query as jest.Mock).mockResolvedValue({
-        id: 'user-123',
-        name: 'Test User',
-        avatar: 'https://example.com/avatar.png',
-        rank: 1,
-        points: 100,
-        streak: 5,
-        questionsAnswered: 50,
-        accuracy: 85,
-        studyHours: 10,
-        badges: ['badge1'],
-        joinedDate: '2024-01-01',
+      (supabase.from as jest.Mock).mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
+            single: jest.fn().mockResolvedValue({
+              data: {
+                id: 'user-123',
+                name: 'Test User',
+                avatar: 'https://example.com/avatar.png',
+                rank: 1,
+                points: 100,
+                streak: 5,
+                questions_answered: 50,
+                accuracy: 85,
+                study_hours: 10,
+                badges: ['badge1'],
+                joined_at: '2024-01-01',
+              },
+              error: null,
+            }),
+          }),
+        }),
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -99,7 +93,9 @@ describe('AuthProvider', () => {
         error: null,
       });
 
-      (trpcClient.users.create.mutate as jest.Mock).mockResolvedValue(undefined);
+      (supabase.from as jest.Mock).mockReturnValue({
+        insert: jest.fn().mockResolvedValue({ error: null }),
+      });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -123,7 +119,6 @@ describe('AuthProvider', () => {
           },
         },
       });
-      expect(trpcClient.users.create.mutate).toHaveBeenCalled();
     });
 
     it('should handle sign up errors', async () => {

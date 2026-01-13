@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { trpc, trpcClient } from "@/lib/trpc";
+
 import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
@@ -109,21 +109,19 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LanguageProvider>
-            <SubscriptionProvider>
-              <QuizProgressProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <StatusBar style="light" />
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </QuizProgressProvider>
-            </SubscriptionProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LanguageProvider>
+          <SubscriptionProvider>
+            <QuizProgressProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <StatusBar style="light" />
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </QuizProgressProvider>
+          </SubscriptionProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

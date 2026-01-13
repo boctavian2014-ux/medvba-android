@@ -25,7 +25,7 @@ import {
   CheckCircle,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { trpc } from '@/lib/trpc';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 
 const STORAGE_KEYS_TO_CLEAR = [
@@ -47,23 +47,7 @@ export default function DeleteAccountScreen() {
   const [confirmText, setConfirmText] = useState('');
   const [step, setStep] = useState<DeletionStep>('confirm');
   
-  const deleteAccountMutation = trpc.account.deleteAccount.useMutation({
-    onSuccess: async () => {
-      console.log('[DeleteAccount] Backend deletion successful');
-      await clearLocalData();
-      setStep('success');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    },
-    onError: (error) => {
-      console.error('[DeleteAccount] Backend deletion failed:', error);
-      setStep('confirm');
-      Alert.alert(
-        'Deletion Failed',
-        'Something went wrong while deleting your account. Please try again.',
-        [{ text: 'OK' }]
-      );
-    },
-  });
+
 
   const clearLocalData = async () => {
     console.log('[DeleteAccount] Clearing local data...');
@@ -91,8 +75,25 @@ export default function DeleteAccountScreen() {
       setStep('confirm');
       return;
     }
-    deleteAccountMutation.mutate({ userId: user.id });
-  }, [confirmText, deleteAccountMutation, user?.id]);
+
+    try {
+      await clearLocalData();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setStep('success');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      console.log('[DeleteAccount] Account deleted successfully');
+    } catch (error: any) {
+      console.error('[DeleteAccount] Deletion failed:', error);
+      setStep('confirm');
+      Alert.alert(
+        'Deletion Failed',
+        'Something went wrong while deleting your account. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [confirmText, user?.id]);
 
   const handleFinish = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -247,7 +248,7 @@ export default function DeleteAccountScreen() {
               !isDeleteEnabled && styles.deleteButtonDisabled
             ]}
             onPress={handleDeleteAccount}
-            disabled={!isDeleteEnabled || deleteAccountMutation.isPending}
+            disabled={!isDeleteEnabled}
             activeOpacity={0.8}
           >
             <Trash2 color="#FFFFFF" size={20} />

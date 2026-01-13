@@ -44,8 +44,19 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
-import { activities, StudyRoom, ZoomStatus, StudySession } from '@/mocks/activities';
-import { trpc } from '@/lib/trpc';
+import { activities } from '@/mocks/activities';
+import {
+  useStudyRooms,
+  useCreateStudyRoom,
+  useUpdateStudyRoom,
+  useUpcomingSessions,
+  useCreateSession,
+  useUpdateSession,
+  useCreateZoomMeeting,
+  useEndZoomMeeting,
+  StudyRoom,
+  StudySession,
+} from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -271,8 +282,8 @@ export default function SocialScreen() {
 
   const isUserBlocked = (userId: string) => blockedUsers.some(u => u.id === userId);
 
-  const studyRoomsQuery = trpc.studyRooms.list.useQuery({});
-  const upcomingSessionsQuery = trpc.sessions.listUpcoming.useQuery({});
+  const studyRoomsQuery = useStudyRooms();
+  const upcomingSessionsQuery = useUpcomingSessions();
 
   const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map((room: any) => ({
     ...room,
@@ -280,108 +291,78 @@ export default function SocialScreen() {
     ...localRoomUpdates[room.id],
   }));
 
-  const updateZoomInfoMutation = trpc.studyRooms.updateZoomInfo.useMutation({
-    onSuccess: () => {
-      studyRoomsQuery.refetch();
-    },
-  });
+  const updateZoomInfoMutation = useUpdateStudyRoom();
 
-  const createMeetingMutation = trpc.zoom.createMeeting.useMutation({
-    onSuccess: (data, variables) => {
-      console.log('Zoom meeting created successfully:', data);
-      setLocalRoomUpdates(prev => ({
-        ...prev,
-        [variables.studyRoomId]: {
-          zoomMeetingId: data.zoomMeetingId,
-          joinUrl: data.joinUrl,
-          startUrl: data.startUrl,
-          zoomStatus: data.zoomStatus,
-          isLive: true,
-        },
-      }));
-      updateZoomInfoMutation.mutate({
-        roomId: variables.studyRoomId,
+  const createMeetingMutation = useCreateZoomMeeting();
+
+  const handleCreateMeetingSuccess = useCallback((data: any, variables: any) => {
+    console.log('Zoom meeting created successfully:', data);
+    setLocalRoomUpdates(prev => ({
+      ...prev,
+      [variables.studyRoomId]: {
         zoomMeetingId: data.zoomMeetingId,
         joinUrl: data.joinUrl,
         startUrl: data.startUrl,
         zoomStatus: data.zoomStatus,
         isLive: true,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    },
-    onError: (error) => {
-      console.error('Failed to create Zoom meeting:', error);
-      Alert.alert(t('social.errorTitle'), t('social.zoomStartError'));
-    },
-  });
+      },
+    }));
+    updateZoomInfoMutation.mutate({
+      roomId: variables.studyRoomId,
+      zoomMeetingId: data.zoomMeetingId,
+      joinUrl: data.joinUrl,
+      startUrl: data.startUrl,
+      zoomStatus: data.zoomStatus,
+      isLive: true,
+    });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    studyRoomsQuery.refetch();
+  }, [updateZoomInfoMutation, studyRoomsQuery]);
 
-  const endMeetingMutation = trpc.zoom.endMeeting.useMutation({
-    onSuccess: (_, variables) => {
-      console.log('Zoom meeting ended');
-      const room = studyRooms.find(r => r.zoomMeetingId === variables.zoomMeetingId);
-      if (room) {
-        setLocalRoomUpdates(prev => ({
-          ...prev,
-          [room.id]: {
-            zoomStatus: 'ENDED' as ZoomStatus,
-            isLive: false,
-            zoomMeetingId: undefined,
-            joinUrl: undefined,
-            startUrl: undefined,
-          },
-        }));
-        updateZoomInfoMutation.mutate({
-          roomId: room.id,
-          zoomStatus: 'ENDED',
-          isLive: false,
-        });
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    },
-    onError: (error) => {
-      console.error('Failed to end Zoom meeting:', error);
-    },
-  });
+  const handleCreateMeetingError = useCallback((error: any) => {
+    console.error('Failed to create Zoom meeting:', error);
+    Alert.alert(t('social.errorTitle'), t('social.zoomStartError'));
+  }, [t]);
 
-  const createSessionMutation = trpc.sessions.create.useMutation({
-    onSuccess: () => {
-      console.log('Session created successfully');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setShowScheduleModal(false);
-      resetScheduleForm();
-      upcomingSessionsQuery.refetch();
-    },
-    onError: (error) => {
-      console.error('Failed to create session:', error);
-      Alert.alert(t('social.errorTitle'), t('social.scheduleError'));
-    },
-  });
+  const endMeetingMutation = useEndZoomMeeting();
 
-  const markLiveMutation = trpc.sessions.markLive.useMutation({
-    onSuccess: () => {
-      upcomingSessionsQuery.refetch();
-    },
-  });
+  const handleEndMeetingSuccess = useCallback(() => {
+    console.log('Zoom meeting ended');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    studyRoomsQuery.refetch();
+  }, [studyRoomsQuery]);
 
-  const markEndedMutation = trpc.sessions.markEnded.useMutation({
-    onSuccess: () => {
-      upcomingSessionsQuery.refetch();
-    },
-  });
+  const createSessionMutation = useCreateSession();
 
-  const createRoomMutation = trpc.studyRooms.create.useMutation({
-    onSuccess: () => {
-      console.log('Study room created successfully');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setShowCreateRoomModal(false);
-      resetCreateRoomForm();
-      studyRoomsQuery.refetch();
-    },
-    onError: (error) => {
-      console.error('Failed to create study room:', error);
-      Alert.alert(t('social.errorTitle'), t('social.createRoomError'));
-    },
-  });
+  const handleCreateSessionSuccess = useCallback(() => {
+    console.log('Session created successfully');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowScheduleModal(false);
+    resetScheduleForm();
+    upcomingSessionsQuery.refetch();
+  }, [upcomingSessionsQuery]);
+
+  const handleCreateSessionError = useCallback((error: any) => {
+    console.error('Failed to create session:', error);
+    Alert.alert(t('social.errorTitle'), t('social.scheduleError'));
+  }, [t]);
+
+  const updateSessionMutation = useUpdateSession();
+
+  const createRoomMutation = useCreateStudyRoom();
+
+  const handleCreateRoomSuccess = useCallback(() => {
+    console.log('Study room created successfully');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowCreateRoomModal(false);
+    resetCreateRoomForm();
+    studyRoomsQuery.refetch();
+  }, [studyRoomsQuery]);
+
+  const handleCreateRoomError = useCallback((error: any) => {
+    console.error('Failed to create study room:', error);
+    Alert.alert(t('social.errorTitle'), t('social.createRoomError'));
+  }, [t]);
 
   const resetCreateRoomForm = () => {
     setNewRoomName('');
@@ -395,14 +376,20 @@ export default function SocialScreen() {
       return;
     }
 
-    createRoomMutation.mutate({
+    createRoomMutation.mutate(
+      {
       name: newRoomName.trim(),
       hostId: user?.id || '',
       hostName: profile?.name || 'You',
       hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
       category: newRoomCategory,
-      maxParticipants: parseInt(newRoomMaxParticipants, 10),
-    });
+        maxParticipants: parseInt(newRoomMaxParticipants, 10),
+      },
+      {
+        onSuccess: handleCreateRoomSuccess,
+        onError: handleCreateRoomError,
+      }
+    );
   };
 
   const resetScheduleForm = () => {
@@ -446,10 +433,13 @@ export default function SocialScreen() {
           text: t('permissions.zoom.understand'), 
           onPress: () => {
             console.log('Starting Zoom for room:', room.id, room.name);
-            createMeetingMutation.mutate({
-              studyRoomId: room.id,
-              roomName: room.name,
-            });
+            createMeetingMutation.mutate(
+              { studyRoomId: room.id, roomName: room.name },
+              {
+                onSuccess: (data) => handleCreateMeetingSuccess(data, { studyRoomId: room.id }),
+                onError: handleCreateMeetingError,
+              }
+            );
           }
         },
       ]
@@ -469,7 +459,10 @@ export default function SocialScreen() {
           style: 'destructive',
           onPress: () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            endMeetingMutation.mutate({ zoomMeetingId: room.zoomMeetingId! });
+            endMeetingMutation.mutate(
+              { zoomMeetingId: room.zoomMeetingId! },
+              { onSuccess: handleEndMeetingSuccess }
+            );
           }
         },
       ]
@@ -548,7 +541,8 @@ export default function SocialScreen() {
 
     const scheduledFor = new Date(`${sessionDate}T${sessionTime}:00`).toISOString();
     
-    createSessionMutation.mutate({
+    createSessionMutation.mutate(
+      {
       roomId: selectedRoom.id,
       title: sessionTitle,
       description: sessionDescription || undefined,
@@ -557,14 +551,22 @@ export default function SocialScreen() {
       hostId: user?.id || '',
       hostName: profile?.name || 'You',
       hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
-      category: selectedRoom.category,
-    });
+        category: selectedRoom.category,
+      },
+      {
+        onSuccess: handleCreateSessionSuccess,
+        onError: handleCreateSessionError,
+      }
+    );
   };
 
   const handleStartSession = (session: StudySession) => {
     if (!session.startUrl) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    markLiveMutation.mutate({ sessionId: session.id });
+    updateSessionMutation.mutate({
+      sessionId: session.id,
+      status: 'LIVE',
+    });
     handleHostJoinZoom(session.startUrl);
   };
 
@@ -587,7 +589,10 @@ export default function SocialScreen() {
           style: 'destructive',
           onPress: () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            markEndedMutation.mutate({ sessionId: session.id });
+            updateSessionMutation.mutate({
+              sessionId: session.id,
+              status: 'ENDED',
+            });
           }
         },
       ]
