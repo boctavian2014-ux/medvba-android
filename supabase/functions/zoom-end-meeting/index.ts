@@ -1,7 +1,7 @@
-/* eslint-disable import/no-unresolved */
+/* eslint-disable */
 // @ts-nocheck
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from 'std/http/server.ts';
+import { createClient } from 'supabase';
 
 const ZOOM_ACCOUNT_ID = Deno.env.get('ZOOM_ACCOUNT_ID') || '';
 const ZOOM_CLIENT_ID = Deno.env.get('ZOOM_CLIENT_ID') || '';
@@ -83,7 +83,7 @@ async function endZoomMeeting(meetingId: string) {
   console.log('Zoom meeting ended successfully');
 }
 
-serve(async (req: Request) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       headers: {
@@ -130,7 +130,7 @@ serve(async (req: Request) => {
         },
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
