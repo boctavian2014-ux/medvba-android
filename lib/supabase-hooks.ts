@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
-import { trpc } from './trpc';
 
 export interface StudyRoom {
   id: string;
@@ -300,10 +299,4 @@ export function useUpdateSession() {
   });
 }
 
-export function useCreateZoomMeeting() {
-  return trpc.zoom.createMeeting.useMutation();
-}
 
-export function useEndZoomMeeting() {
-  return trpc.zoom.endMeeting.useMutation();
-}

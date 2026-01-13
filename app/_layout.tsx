@@ -12,7 +12,6 @@ import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { monitoring } from "@/lib/monitoring";
 import colors from "@/constants/colors";
-import { trpc, trpcClient } from "@/lib/trpc";
 
 SplashScreen.preventAutoHideAsync();
 monitoring.init();
@@ -110,21 +109,19 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LanguageProvider>
-            <SubscriptionProvider>
-              <QuizProgressProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <StatusBar style="light" />
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </QuizProgressProvider>
-            </SubscriptionProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LanguageProvider>
+          <SubscriptionProvider>
+            <QuizProgressProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <StatusBar style="light" />
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </QuizProgressProvider>
+          </SubscriptionProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

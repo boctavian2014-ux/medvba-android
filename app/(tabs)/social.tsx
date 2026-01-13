@@ -7,13 +7,12 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  Linking,
-  Platform,
   Alert,
   ActivityIndicator,
   Modal,
   TextInput,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,13 +26,9 @@ import {
   BookOpen,
   Star,
   Target,
-  Video,
-  ExternalLink,
   Calendar,
   Clock,
   X,
-  ChevronRight,
-  Play,
   Plus,
   MoreVertical,
   Ban,
@@ -48,12 +43,8 @@ import { activities } from '@/mocks/activities';
 import {
   useStudyRooms,
   useCreateStudyRoom,
-  useUpdateStudyRoom,
   useUpcomingSessions,
   useCreateSession,
-  useUpdateSession,
-  useCreateZoomMeeting,
-  useEndZoomMeeting,
   StudyRoom,
   StudySession,
 } from '@/lib/supabase-hooks';
@@ -138,12 +129,7 @@ const formatSessionTime = (scheduledFor: string): string => {
   return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
 };
 
-const isSessionStartable = (scheduledFor: string): boolean => {
-  const now = new Date();
-  const scheduled = new Date(scheduledFor);
-  const diff = scheduled.getTime() - now.getTime();
-  return diff <= 15 * 60 * 1000;
-};
+
 
 export default function SocialScreen() {
   const { user, profile } = useAuth();
@@ -291,47 +277,6 @@ export default function SocialScreen() {
     ...localRoomUpdates[room.id],
   }));
 
-  const updateZoomInfoMutation = useUpdateStudyRoom();
-
-  const createMeetingMutation = useCreateZoomMeeting();
-
-  const handleCreateMeetingSuccess = useCallback((data: any, variables: any) => {
-    console.log('Zoom meeting created successfully:', data);
-    setLocalRoomUpdates(prev => ({
-      ...prev,
-      [variables.studyRoomId]: {
-        zoomMeetingId: data.zoomMeetingId,
-        joinUrl: data.joinUrl,
-        startUrl: data.startUrl,
-        zoomStatus: data.zoomStatus,
-        isLive: true,
-      },
-    }));
-    updateZoomInfoMutation.mutate({
-      roomId: variables.studyRoomId,
-      zoomMeetingId: data.zoomMeetingId,
-      joinUrl: data.joinUrl,
-      startUrl: data.startUrl,
-      zoomStatus: data.zoomStatus,
-      isLive: true,
-    });
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    studyRoomsQuery.refetch();
-  }, [updateZoomInfoMutation, studyRoomsQuery]);
-
-  const handleCreateMeetingError = useCallback((error: any) => {
-    console.error('Failed to create Zoom meeting:', error);
-    Alert.alert(t('social.errorTitle'), t('social.zoomStartError'));
-  }, [t]);
-
-  const endMeetingMutation = useEndZoomMeeting();
-
-  const handleEndMeetingSuccess = useCallback(() => {
-    console.log('Zoom meeting ended');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    studyRoomsQuery.refetch();
-  }, [studyRoomsQuery]);
-
   const createSessionMutation = useCreateSession();
 
   const handleCreateSessionSuccess = useCallback(() => {
@@ -347,7 +292,7 @@ export default function SocialScreen() {
     Alert.alert(t('social.errorTitle'), t('social.scheduleError'));
   }, [t]);
 
-  const updateSessionMutation = useUpdateSession();
+
 
   const createRoomMutation = useCreateStudyRoom();
 
@@ -418,110 +363,6 @@ export default function SocialScreen() {
     }));
   };
 
-  const handleStartZoom = (room: StudyRoom) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    Alert.alert(
-      t('permissions.zoom.hostTitle'),
-      t('permissions.zoom.hostMessage'),
-      [
-        { 
-          text: t('permissions.zoom.cancel'), 
-          style: 'cancel' 
-        },
-        { 
-          text: t('permissions.zoom.understand'), 
-          onPress: () => {
-            console.log('Starting Zoom for room:', room.id, room.name);
-            createMeetingMutation.mutate(
-              { studyRoomId: room.id, roomName: room.name },
-              {
-                onSuccess: (data) => handleCreateMeetingSuccess(data, { studyRoomId: room.id }),
-                onError: handleCreateMeetingError,
-              }
-            );
-          }
-        },
-      ]
-    );
-  };
-
-  const handleEndZoom = (room: StudyRoom) => {
-    if (!room.zoomMeetingId) return;
-    
-    Alert.alert(
-      t('social.endZoomSessionTitle'),
-      t('social.endZoomSessionMessage'),
-      [
-        { text: t('social.cancel'), style: 'cancel' },
-        { 
-          text: t('social.endButton'), 
-          style: 'destructive',
-          onPress: () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            endMeetingMutation.mutate(
-              { zoomMeetingId: room.zoomMeetingId! },
-              { onSuccess: handleEndMeetingSuccess }
-            );
-          }
-        },
-      ]
-    );
-  };
-
-  const handleJoinZoom = async (joinUrl: string) => {
-    if (!joinUrl) {
-      Alert.alert(t('social.notAvailable'), t('social.sessionNotLive'));
-      return;
-    }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
-    Alert.alert(
-      t('permissions.zoom.title'),
-      t('permissions.zoom.message'),
-      [
-        { 
-          text: t('permissions.zoom.cancel'), 
-          style: 'cancel' 
-        },
-        { 
-          text: t('permissions.zoom.understand'), 
-          onPress: async () => {
-            console.log('Joining Zoom meeting:', joinUrl);
-            const zoomAppUrl = joinUrl.replace('https://zoom.us/j/', 'zoomus://zoom.us/join?confno=');
-            
-            try {
-              const canOpenZoom = await Linking.canOpenURL(zoomAppUrl);
-              if (canOpenZoom && Platform.OS !== 'web') {
-                await Linking.openURL(zoomAppUrl);
-              } else {
-                await Linking.openURL(joinUrl);
-              }
-            } catch (error) {
-              console.error('Failed to open Zoom:', error);
-              await Linking.openURL(joinUrl);
-            }
-          }
-        },
-      ]
-    );
-  };
-
-  const handleHostJoinZoom = async (startUrl: string) => {
-    if (!startUrl) return;
-    
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log('Host joining Zoom meeting:', startUrl);
-    
-    try {
-      await Linking.openURL(startUrl);
-    } catch (error) {
-      console.error('Failed to open Zoom as host:', error);
-      Alert.alert('Error', 'Failed to open Zoom. Please try again.');
-    }
-  };
-
   const handleScheduleSession = (room: StudyRoom) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedRoom(room);
@@ -560,48 +401,8 @@ export default function SocialScreen() {
     );
   };
 
-  const handleStartSession = (session: StudySession) => {
-    if (!session.startUrl) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    updateSessionMutation.mutate({
-      sessionId: session.id,
-      status: 'LIVE',
-    });
-    handleHostJoinZoom(session.startUrl);
-  };
-
-  const handleJoinSession = (session: StudySession) => {
-    if (!session.joinUrl) {
-      Alert.alert(t('social.notAvailable'), t('social.sessionLinkNotAvailable'));
-      return;
-    }
-    handleJoinZoom(session.joinUrl);
-  };
-
-  const handleEndSession = (session: StudySession) => {
-    Alert.alert(
-      t('social.endSessionTitle'),
-      t('social.endSessionMessage'),
-      [
-        { text: t('social.cancel'), style: 'cancel' },
-        { 
-          text: t('social.endSessionConfirm'), 
-          style: 'destructive',
-          onPress: () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            updateSessionMutation.mutate({
-              sessionId: session.id,
-              status: 'ENDED',
-            });
-          }
-        },
-      ]
-    );
-  };
-
   const isCurrentUserHost = (room: StudyRoom) => room.hostId === user?.id;
   const isSessionHost = (session: StudySession) => session.hostId === user?.id;
-  const isRoomLive = (room: StudyRoom) => room.zoomStatus === 'LIVE' && room.joinUrl;
 
   const upcomingSessions: StudySession[] = upcomingSessionsQuery.data ?? [];
   
@@ -653,25 +454,10 @@ export default function SocialScreen() {
             >
               {filteredStudyRooms.map((room) => {
                 const isHost = isCurrentUserHost(room);
-                const isLive = isRoomLive(room);
-                const isLoading = createMeetingMutation.isPending && 
-                  createMeetingMutation.variables?.studyRoomId === room.id;
 
                 return (
                   <TouchableOpacity key={room.id} activeOpacity={0.9}>
                     <GlassCard style={styles.roomCard} variant="light">
-                      <View style={styles.roomHeader}>
-                        {isLive ? (
-                          <View style={styles.liveIndicator}>
-                            <View style={styles.liveDot} />
-                            <Text style={styles.liveText}>{t('social.liveBadge')}</Text>
-                          </View>
-                        ) : (
-                          <View style={styles.idleIndicator}>
-                            <Text style={styles.idleText}>{t('social.offlineBadge')}</Text>
-                          </View>
-                        )}
-                      </View>
                       <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
                       <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
                       <Text style={styles.roomHost}>
@@ -697,58 +483,13 @@ export default function SocialScreen() {
                         </TouchableOpacity>
                       )}
                       
-                      {isHost ? (
-                        <View style={styles.hostButtons}>
-                          {!isLive ? (
-                            <View style={styles.hostActionButtons}>
-                              <TouchableOpacity 
-                                style={[styles.goLiveButton, isLoading && styles.buttonDisabled]}
-                                onPress={() => handleStartZoom(room)}
-                                disabled={isLoading}
-                              >
-                                {isLoading ? (
-                                  <ActivityIndicator size="small" color={Colors.text} />
-                                ) : (
-                                  <>
-                                    <Video color={Colors.text} size={14} />
-                                    <Text style={styles.goLiveButtonText}>{t('social.goLive')}</Text>
-                                  </>
-                                )}
-                              </TouchableOpacity>
-                              <TouchableOpacity 
-                                style={styles.scheduleButton}
-                                onPress={() => handleScheduleSession(room)}
-                              >
-                                <Calendar color={Colors.primary} size={14} />
-                              </TouchableOpacity>
-                            </View>
-                          ) : (
-                            <View style={styles.liveHostButtons}>
-                              <TouchableOpacity 
-                                style={styles.hostJoinButton}
-                                onPress={() => handleHostJoinZoom(room.startUrl!)}
-                              >
-                                <ExternalLink color={Colors.text} size={14} />
-                                <Text style={styles.hostJoinButtonText}>{t('social.openRoom')}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity 
-                                style={styles.endButton}
-                                onPress={() => handleEndZoom(room)}
-                              >
-                                <Text style={styles.endButtonText}>{t('social.endButton')}</Text>
-                              </TouchableOpacity>
-                            </View>
-                          )}
-                        </View>
-                      ) : (
+                      {isHost && (
                         <TouchableOpacity 
-                          style={[styles.joinButton, !isLive && styles.joinButtonDisabled]}
-                          onPress={() => room.joinUrl && handleJoinZoom(room.joinUrl)}
-                          disabled={!isLive}
+                          style={styles.scheduleButton}
+                          onPress={() => handleScheduleSession(room)}
                         >
-                          <Text style={[styles.joinButtonText, !isLive && styles.joinButtonTextDisabled]}>
-                            {isLive ? t('social.join') : t('social.notLive')}
-                          </Text>
+                          <Calendar color={Colors.primary} size={14} />
+                          <Text style={styles.scheduleButtonText}>{t('social.schedule')}</Text>
                         </TouchableOpacity>
                       )}
                     </GlassCard>
@@ -767,8 +508,6 @@ export default function SocialScreen() {
               
               {filteredUpcomingSessions.map((session) => {
                 const isHost = isSessionHost(session);
-                const canStart = isSessionStartable(session.scheduledFor);
-                const isLive = session.status === 'LIVE';
                 
                 return (
                   <GlassCard key={session.id} style={styles.sessionCard}>
@@ -792,17 +531,10 @@ export default function SocialScreen() {
                           <MoreVertical color={Colors.textMuted} size={18} />
                         </TouchableOpacity>
                       )}
-                      {isLive ? (
-                        <View style={styles.sessionLiveIndicator}>
-                          <View style={styles.liveDot} />
-                          <Text style={styles.sessionLiveText}>{t('social.liveBadge')}</Text>
-                        </View>
-                      ) : (
-                        <View style={styles.countdownBadge}>
-                          <Clock color={Colors.secondary} size={12} />
-                          <Text style={styles.countdownText}>{formatCountdown(session.scheduledFor)}</Text>
-                        </View>
-                      )}
+                      <View style={styles.countdownBadge}>
+                        <Clock color={Colors.secondary} size={12} />
+                        <Text style={styles.countdownText}>{formatCountdown(session.scheduledFor)}</Text>
+                      </View>
                     </View>
                     
                     {session.description && (
@@ -824,50 +556,6 @@ export default function SocialScreen() {
                         <Users color={Colors.textMuted} size={14} />
                         <Text style={styles.sessionMetaText}>{session.attendees.length} {t('social.joined')}</Text>
                       </View>
-                    </View>
-                    
-                    <View style={styles.sessionActions}>
-                      {isHost ? (
-                        isLive ? (
-                          <View style={styles.sessionHostLiveButtons}>
-                            <TouchableOpacity 
-                              style={styles.sessionOpenButton}
-                              onPress={() => session.startUrl && handleHostJoinZoom(session.startUrl)}
-                            >
-                              <ExternalLink color={Colors.text} size={14} />
-                              <Text style={styles.sessionOpenButtonText}>{t('social.openZoom')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                              style={styles.sessionEndButton}
-                              onPress={() => handleEndSession(session)}
-                            >
-                              <Text style={styles.sessionEndButtonText}>{t('social.endButton')}</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <TouchableOpacity 
-                            style={[styles.sessionStartButton, !canStart && styles.sessionStartButtonDisabled]}
-                            onPress={() => handleStartSession(session)}
-                            disabled={!canStart}
-                          >
-                            <Play color={canStart ? Colors.text : Colors.textMuted} size={14} />
-                            <Text style={[styles.sessionStartButtonText, !canStart && styles.sessionStartButtonTextDisabled]}>
-                              {canStart ? t('social.startSession') : t('social.notYet')}
-                            </Text>
-                            {!canStart && <ChevronRight color={Colors.textMuted} size={14} />}
-                          </TouchableOpacity>
-                        )
-                      ) : (
-                        <TouchableOpacity 
-                          style={[styles.sessionJoinButton, (!isLive && !canStart) && styles.sessionJoinButtonDisabled]}
-                          onPress={() => handleJoinSession(session)}
-                          disabled={!isLive && !canStart}
-                        >
-                          <Text style={[styles.sessionJoinButtonText, (!isLive && !canStart) && styles.sessionJoinButtonTextDisabled]}>
-                            {isLive ? t('social.joinNow') : canStart ? t('social.join') : t('social.waiting')}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
                   </GlassCard>
                 );
@@ -1555,11 +1243,21 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
   },
   scheduleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(0, 180, 216, 0.15)',
-    padding: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.primary,
+    marginTop: 12,
+    gap: 4,
+  },
+  scheduleButtonText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600' as const,
   },
   liveHostButtons: {
     flexDirection: 'row',
