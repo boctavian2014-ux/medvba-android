@@ -258,6 +258,7 @@ export const ro: Record<string, string> = {
   'social.durationLabel': 'Durată (minute)',
   'social.cancel': 'Anulează',
   'social.schedule': 'Programează',
+  'social.chat': 'Chat',
   'social.createStudyRoom': 'Creează sală de studiu',
   'social.roomNameRequired': 'Nume sală *',
   'social.roomNamePlaceholder': 'ex. Grup de studiu anatomie',

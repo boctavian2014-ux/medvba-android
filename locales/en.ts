@@ -258,6 +258,7 @@ export const en: Record<string, string> = {
   'social.durationLabel': 'Duration (minutes)',
   'social.cancel': 'Cancel',
   'social.schedule': 'Schedule',
+  'social.chat': 'Chat',
   'social.createStudyRoom': 'Create Study Room',
   'social.roomNameRequired': 'Room Name *',
   'social.roomNamePlaceholder': 'e.g. Anatomy Study Group',

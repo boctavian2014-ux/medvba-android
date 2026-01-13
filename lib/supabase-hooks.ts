@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 
 export interface StudyRoom {
@@ -299,4 +300,127 @@ export function useUpdateSession() {
   });
 }
 
+export interface RoomMessage {
+  id: string;
+  roomId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  message: string;
+  createdAt: string;
+}
+
+export function useRoomMessages(roomId: string) {
+  const [messages, setMessages] = useState<RoomMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!roomId) {
+      setMessages([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchMessages = async () => {
+      console.log('[Supabase] Fetching messages for room:', roomId);
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from('room_messages')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.error('[Supabase] Error fetching messages:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      const formattedMessages: RoomMessage[] = (data || []).map((msg: any) => ({
+        id: msg.id,
+        roomId: msg.room_id,
+        userId: msg.user_id,
+        userName: msg.user_name,
+        userAvatar: msg.user_avatar,
+        message: msg.message,
+        createdAt: msg.created_at,
+      }));
+
+      setMessages(formattedMessages);
+      setIsLoading(false);
+      console.log('[Supabase] Loaded', formattedMessages.length, 'messages');
+    };
+
+    fetchMessages();
+
+    const channel = supabase
+      .channel(`room:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'room_messages',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log('[Supabase] New message received:', payload);
+          const newMessage: RoomMessage = {
+            id: payload.new.id,
+            roomId: payload.new.room_id,
+            userId: payload.new.user_id,
+            userName: payload.new.user_name,
+            userAvatar: payload.new.user_avatar,
+            message: payload.new.message,
+            createdAt: payload.new.created_at,
+          };
+          setMessages((prev) => [...prev, newMessage]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[Supabase] Unsubscribing from room:', roomId);
+      supabase.removeChannel(channel);
+    };
+  }, [roomId]);
+
+  return { messages, isLoading };
+}
+
+export function useSendMessage() {
+  return useMutation({
+    mutationFn: async (input: {
+      roomId: string;
+      userId: string;
+      userName: string;
+      userAvatar: string;
+      message: string;
+    }) => {
+      console.log('[Supabase] Sending message to room:', input.roomId);
+
+      const { data, error } = await supabase
+        .from('room_messages')
+        .insert({
+          room_id: input.roomId,
+          user_id: input.userId,
+          user_name: input.userName,
+          user_avatar: input.userAvatar,
+          message: input.message,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error sending message:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Message sent:', data.id);
+      return data;
+    },
+  });
+}
 

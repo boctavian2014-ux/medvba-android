@@ -39,6 +39,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
+import RoomChat from '@/components/RoomChat';
 import { activities } from '@/mocks/activities';
 import {
   useStudyRooms,
@@ -157,6 +158,8 @@ export default function SocialScreen() {
   const [selectedReportReason, setSelectedReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [selectedChatRoom, setSelectedChatRoom] = useState<StudyRoom | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => forceUpdate(n => n + 1), 30000);
@@ -456,7 +459,15 @@ export default function SocialScreen() {
                 const isHost = isCurrentUserHost(room);
 
                 return (
-                  <TouchableOpacity key={room.id} activeOpacity={0.9}>
+                  <TouchableOpacity 
+                    key={room.id} 
+                    activeOpacity={0.9}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedChatRoom(room);
+                      setShowChatModal(true);
+                    }}
+                  >
                     <GlassCard style={styles.roomCard} variant="light">
                       <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
                       <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
@@ -483,15 +494,32 @@ export default function SocialScreen() {
                         </TouchableOpacity>
                       )}
                       
-                      {isHost && (
+                      <View style={styles.roomActions}>
                         <TouchableOpacity 
-                          style={styles.scheduleButton}
-                          onPress={() => handleScheduleSession(room)}
+                          style={styles.chatButton}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setSelectedChatRoom(room);
+                            setShowChatModal(true);
+                          }}
                         >
-                          <Calendar color={Colors.primary} size={14} />
-                          <Text style={styles.scheduleButtonText}>{t('social.schedule')}</Text>
+                          <MessageCircle color={Colors.primary} size={14} />
+                          <Text style={styles.chatButtonText}>{t('social.chat')}</Text>
                         </TouchableOpacity>
-                      )}
+                        
+                        {isHost && (
+                          <TouchableOpacity 
+                            style={styles.scheduleButton}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleScheduleSession(room);
+                            }}
+                          >
+                            <Calendar color={Colors.primary} size={14} />
+                            <Text style={styles.scheduleButtonText}>{t('social.schedule')}</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </GlassCard>
                   </TouchableOpacity>
                 );
@@ -1059,6 +1087,39 @@ export default function SocialScreen() {
             )}
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showChatModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setShowChatModal(false);
+          setSelectedChatRoom(null);
+        }}
+      >
+        <View style={styles.chatModalContainer}>
+          <SafeAreaView style={styles.chatSafeArea} edges={['top']}>
+            <View style={styles.chatModalHeader}>
+              <TouchableOpacity
+                style={styles.chatCloseButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowChatModal(false);
+                  setSelectedChatRoom(null);
+                }}
+              >
+                <X color={Colors.text} size={24} />
+              </TouchableOpacity>
+            </View>
+            {selectedChatRoom && (
+              <RoomChat
+                roomId={selectedChatRoom.id}
+                roomName={selectedChatRoom.name}
+              />
+            )}
+          </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
@@ -1886,5 +1947,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text,
+  },
+  roomActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  chatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  chatButtonText: {
+    color: Colors.text,
+    fontSize: 13,
+    fontWeight: '600' as const,
+  },
+  chatModalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  chatSafeArea: {
+    flex: 1,
+  },
+  chatModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.cardBg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.cardBgLight,
+  },
+  chatCloseButton: {
+    padding: 4,
   },
 });
