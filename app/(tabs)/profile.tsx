@@ -41,8 +41,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const languages: { code: Language; label: string; flag: string }[] = [
   { code: 'en', label: 'EN', flag: '🇬🇧' },
   { code: 'ro', label: 'RO', flag: '🇷🇴' },
-  { code: 'es', label: 'ES', flag: '🇪🇸' },
-  { code: 'pt', label: 'PT', flag: '🇵🇹' },
 ];
 
 interface Achievement {

@@ -3,19 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { en } from '@/locales/en';
 import { ro } from '@/locales/ro';
-import { es } from '@/locales/es';
-import { pt } from '@/locales/pt';
 import { chapterTranslations } from '@/locales/chapterTranslations';
 
-export type Language = 'en' | 'ro' | 'es' | 'pt';
+export type Language = 'en' | 'ro';
 
 const LANGUAGE_STORAGE_KEY = '@medix_language';
 
 const translations: Record<Language, Record<string, string>> = {
   en,
   ro,
-  es,
-  pt,
 };
 
 export const [LanguageProvider, useLanguage] = createContextHook(() => {
@@ -26,7 +22,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     const loadLanguage = async () => {
       try {
         const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-        if (storedLanguage && ['en', 'ro', 'es', 'pt'].includes(storedLanguage)) {
+        if (storedLanguage && ['en', 'ro'].includes(storedLanguage)) {
           setCurrentLanguage(storedLanguage as Language);
           console.log('Loaded language from storage:', storedLanguage);
         }
