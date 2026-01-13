@@ -353,6 +353,7 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     width: 160,
+    height: 180,
     alignItems: 'center',
     paddingVertical: 20,
   },

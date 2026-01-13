@@ -783,7 +783,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: (SCREEN_WIDTH - 52) / 2,
+    height: 140,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 18,
     borderRadius: 20,
     borderWidth: 1,
@@ -850,7 +852,9 @@ const styles = StyleSheet.create({
   },
   achievementCard: {
     width: 140,
+    height: 160,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 18,
     paddingHorizontal: 12,
     borderRadius: 20,
