@@ -65,7 +65,7 @@ export function useStudyRooms() {
         participants: room.participants || 0,
         maxParticipants: room.max_participants || 20,
         category: room.category || 'general',
-        isLive: room.is_live || false,
+        isLive: room.zoom_status === 'LIVE',
         zoomMeetingId: room.zoom_meeting_id,
         joinUrl: room.join_url,
         startUrl: room.start_url,
@@ -99,7 +99,6 @@ export function useCreateStudyRoom() {
           category: input.category,
           max_participants: input.maxParticipants,
           participants: 0,
-          is_live: false,
           zoom_status: 'IDLE',
         })
         .select()
@@ -140,7 +139,6 @@ export function useUpdateStudyRoom() {
       if (input.zoomMeetingId !== undefined) updateData.zoom_meeting_id = input.zoomMeetingId;
       if (input.joinUrl !== undefined) updateData.join_url = input.joinUrl;
       if (input.startUrl !== undefined) updateData.start_url = input.startUrl;
-      if (input.isLive !== undefined) updateData.is_live = input.isLive;
 
       const { data, error } = await supabase
         .from('study_rooms')
