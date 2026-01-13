@@ -77,7 +77,7 @@ const languages: { code: Language; label: string; flag: string }[] = [
 export default function SettingsScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
-  const { currentLanguage, changeLanguage } = useLanguage();
+  const { currentLanguage, changeLanguage, t } = useLanguage();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
   useEffect(() => {
@@ -97,12 +97,12 @@ export default function SettingsScreen() {
 
   const handleUnblockUser = (user: BlockedUser) => {
     Alert.alert(
-      'Unblock User',
-      `Unblock ${user.name}? They will be able to see your study rooms again.`,
+      t('settings.unblockUser'),
+      t('settings.unblockConfirmMessage').replace('{name}', user.name),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('settings.cancel'), style: 'cancel' },
         {
-          text: 'Unblock',
+          text: t('settings.unblockButton'),
           onPress: async () => {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             const updated = blockedUsers.filter(u => u.id !== user.id);
@@ -123,7 +123,7 @@ export default function SettingsScreen() {
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.title}>{t('settings.title')}</Text>
           <TouchableOpacity 
             style={styles.closeButton} 
             onPress={() => router.back()}
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
+            <Text style={styles.sectionTitle}>{t('settings.preferences')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -150,8 +150,8 @@ export default function SettingsScreen() {
                     <Globe color={Colors.primary} size={22} />
                   </View>
                   <View style={styles.settingsItemContent}>
-                    <Text style={styles.settingsItemTitle}>Language</Text>
-                    <Text style={styles.settingsItemSubtitle}>Choose your preferred language</Text>
+                    <Text style={styles.settingsItemTitle}>{t('settings.language')}</Text>
+                    <Text style={styles.settingsItemSubtitle}>{t('settings.languageSubtitle')}</Text>
                   </View>
                 </View>
                 <View style={styles.languageSelector}>
@@ -194,14 +194,14 @@ export default function SettingsScreen() {
               </View>
               <SettingsItem
                 icon={<Bell color={Colors.primary} size={22} />}
-                title="Notifications"
-                subtitle="Manage push notifications"
+                title={t('settings.notifications')}
+                subtitle={t('settings.notificationsSubtitle')}
                 onPress={() => console.log('Notifications')}
               />
               <SettingsItem
                 icon={<Moon color={Colors.accent} size={22} />}
-                title="Appearance"
-                subtitle="Dark mode enabled"
+                title={t('settings.appearance')}
+                subtitle={t('settings.appearanceSubtitle')}
                 onPress={() => console.log('Appearance')}
                 showBorder={false}
               />
@@ -209,7 +209,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Privacy & Safety</Text>
+            <Text style={styles.sectionTitle}>{t('settings.privacySafety')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -220,11 +220,13 @@ export default function SettingsScreen() {
                   <Ban color={Colors.error} size={22} />
                 </View>
                 <View style={styles.blockedUsersInfo}>
-                  <Text style={styles.settingsItemTitle}>Blocked Users</Text>
+                  <Text style={styles.settingsItemTitle}>{t('settings.blockedUsers')}</Text>
                   <Text style={styles.settingsItemSubtitle}>
                     {blockedUsers.length === 0 
-                      ? 'No blocked users' 
-                      : `${blockedUsers.length} blocked user${blockedUsers.length > 1 ? 's' : ''}`}
+                      ? t('settings.noBlockedUsers') 
+                      : blockedUsers.length === 1
+                        ? t('settings.blockedUsersCount').replace('{count}', String(blockedUsers.length))
+                        : t('settings.blockedUsersCountPlural').replace('{count}', String(blockedUsers.length))}
                   </Text>
                 </View>
               </View>
@@ -243,7 +245,7 @@ export default function SettingsScreen() {
                       <View style={styles.blockedUserInfo}>
                         <Text style={styles.blockedUserName}>{user.name}</Text>
                         <Text style={styles.blockedUserDate}>
-                          Blocked {new Date(user.blockedAt).toLocaleDateString()}
+                          {t('settings.blockedDate').replace('{date}', new Date(user.blockedAt).toLocaleDateString())}
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -251,7 +253,7 @@ export default function SettingsScreen() {
                         onPress={() => handleUnblockUser(user)}
                       >
                         <UserX color={Colors.error} size={18} />
-                        <Text style={styles.unblockButtonText}>Unblock</Text>
+                        <Text style={styles.unblockButtonText}>{t('settings.unblockButton')}</Text>
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -261,7 +263,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Support</Text>
+            <Text style={styles.sectionTitle}>{t('settings.support')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -269,14 +271,14 @@ export default function SettingsScreen() {
               />
               <SettingsItem
                 icon={<HelpCircle color={Colors.warning} size={22} />}
-                title="Help Center"
-                subtitle="FAQs and tutorials"
+                title={t('settings.helpCenter')}
+                subtitle={t('settings.helpCenterSubtitle')}
                 onPress={() => console.log('Help')}
               />
               <SettingsItem
                 icon={<Mail color={Colors.accentPink} size={22} />}
-                title="Contact Support"
-                subtitle="dev.ai.eood@icloud.com"
+                title={t('settings.contactSupport')}
+                subtitle={t('settings.contactSupportSubtitle')}
                 onPress={() => console.log('Contact')}
                 showBorder={false}
               />
@@ -284,7 +286,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Legal</Text>
+            <Text style={styles.sectionTitle}>{t('settings.legal')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -292,20 +294,20 @@ export default function SettingsScreen() {
               />
               <SettingsItem
                 icon={<Shield color={Colors.primary} size={22} />}
-                title="Privacy Policy"
-                subtitle="How we handle your data"
+                title={t('settings.privacyPolicy')}
+                subtitle={t('settings.privacyPolicySubtitle')}
                 onPress={() => router.push('/legal/privacy-policy')}
               />
               <SettingsItem
                 icon={<FileText color={Colors.accent} size={22} />}
-                title="Terms of Service"
-                subtitle="Usage terms and conditions"
+                title={t('settings.termsOfService')}
+                subtitle={t('settings.termsOfServiceSubtitle')}
                 onPress={() => router.push('/legal/terms-of-service')}
               />
               <SettingsItem
                 icon={<Heart color={Colors.success} size={22} />}
-                title="Code of Conduct"
-                subtitle="Community guidelines"
+                title={t('settings.codeOfConduct')}
+                subtitle={t('settings.codeOfConductSubtitle')}
                 onPress={() => router.push('/legal/code-of-conduct')}
                 showBorder={false}
               />
@@ -313,7 +315,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account</Text>
+            <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -328,8 +330,8 @@ export default function SettingsScreen() {
                   <Trash2 color={Colors.error} size={22} />
                 </View>
                 <View style={styles.settingsItemContent}>
-                  <Text style={styles.deleteAccountTitle}>Delete Account</Text>
-                  <Text style={styles.deleteAccountSubtitle}>Permanently delete your account and data</Text>
+                  <Text style={styles.deleteAccountTitle}>{t('settings.deleteAccount')}</Text>
+                  <Text style={styles.deleteAccountSubtitle}>{t('settings.deleteAccountSubtitle')}</Text>
                 </View>
                 <ChevronRight color={Colors.error} size={20} />
               </TouchableOpacity>
@@ -337,12 +339,12 @@ export default function SettingsScreen() {
                 style={styles.signOutItem} 
                 onPress={() => {
                   Alert.alert(
-                    'Sign Out',
-                    'Are you sure you want to sign out?',
+                    t('settings.signOutConfirmTitle'),
+                    t('settings.signOutConfirmMessage'),
                     [
-                      { text: 'Cancel', style: 'cancel' },
+                      { text: t('settings.cancel'), style: 'cancel' },
                       {
-                        text: 'Sign Out',
+                        text: t('settings.signOut'),
                         style: 'destructive',
                         onPress: async () => {
                           if (Platform.OS !== 'web') {
@@ -361,8 +363,8 @@ export default function SettingsScreen() {
                   <LogOut color={Colors.warning} size={22} />
                 </View>
                 <View style={styles.settingsItemContent}>
-                  <Text style={styles.signOutTitle}>Sign Out</Text>
-                  <Text style={styles.signOutSubtitle}>Sign out of your account</Text>
+                  <Text style={styles.signOutTitle}>{t('settings.signOut')}</Text>
+                  <Text style={styles.signOutSubtitle}>{t('settings.signOutSubtitle')}</Text>
                 </View>
                 <ChevronRight color={Colors.warning} size={20} />
               </TouchableOpacity>
@@ -370,7 +372,7 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
             <View style={styles.sectionCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
@@ -378,7 +380,7 @@ export default function SettingsScreen() {
               />
               <SettingsItem
                 icon={<Info color={Colors.textSecondary} size={22} />}
-                title="App Version"
+                title={t('settings.appVersion')}
                 subtitle="1.0.0"
                 onPress={() => {}}
                 showBorder={false}
@@ -387,8 +389,8 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>MedixStudyHub</Text>
-            <Text style={styles.footerSubtext}>Made with ❤️ for medical students</Text>
+            <Text style={styles.footerText}>{t('settings.footer')}</Text>
+            <Text style={styles.footerSubtext}>{t('settings.footerSubtext')}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

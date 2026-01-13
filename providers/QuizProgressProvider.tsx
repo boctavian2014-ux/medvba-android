@@ -8,6 +8,7 @@ const SESSION_STATE_KEY = 'quiz_session_state';
 const ALL_TIME_STATS_KEY = 'quiz_all_time_stats';
 const STREAK_KEY = 'quiz_streak_data';
 const WEEKLY_HISTORY_KEY = 'quiz_weekly_history';
+const LAST_SESSION_KEY = 'quiz_last_session_info';
 
 interface DailyProgress {
   date: string;
@@ -46,6 +47,12 @@ interface DailyHistoryEntry {
   studyTimeSeconds: number;
 }
 
+interface LastSessionInfo {
+  category: string;
+  mode: string;
+  timestamp: string;
+}
+
 function getDefaultAllTimeStats(): AllTimeStats {
   return {
     totalQuestionsAnswered: 0,
@@ -68,11 +75,13 @@ interface QuizProgressContextValue {
   allTimeStats: AllTimeStats;
   streakData: StreakData;
   weeklyHistory: DailyHistoryEntry[];
+  lastSessionInfo: LastSessionInfo | null;
   isLoading: boolean;
   updateDailyProgress: (correct: boolean, questionId: string) => Promise<void>;
   saveSessionState: (state: SessionState) => Promise<void>;
   clearSessionState: () => Promise<void>;
   loadSessionState: () => Promise<SessionState | null>;
+  saveLastSessionInfo: (category: string, mode: string) => Promise<void>;
   hasActiveSession: boolean;
   resetDailyProgress: () => Promise<void>;
   addStudyTime: (seconds: number) => Promise<void>;
@@ -120,6 +129,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   const [allTimeStats, setAllTimeStats] = useState<AllTimeStats>(getDefaultAllTimeStats());
   const [streakData, setStreakData] = useState<StreakData>(getDefaultStreakData());
   const [weeklyHistory, setWeeklyHistory] = useState<DailyHistoryEntry[]>([]);
+  const [lastSessionInfo, setLastSessionInfo] = useState<LastSessionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const updateStreak = useCallback(async () => {
@@ -277,6 +287,13 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           console.log('[QuizProgress] Loaded weekly history:', filtered.length, 'days');
           setWeeklyHistory(filtered);
         }
+
+        const lastSessionStored = await AsyncStorage.getItem(LAST_SESSION_KEY);
+        if (lastSessionStored) {
+          const parsedLastSession = JSON.parse(lastSessionStored) as LastSessionInfo;
+          console.log('[QuizProgress] Loaded last session:', parsedLastSession.category, parsedLastSession.mode);
+          setLastSessionInfo(parsedLastSession);
+        }
       } catch (error) {
         console.error('[QuizProgress] Error loading progress:', error);
       } finally {
@@ -335,15 +352,32 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     }
   }, [updateStreak, updateWeeklyHistory]);
 
+  const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
+    try {
+      const info: LastSessionInfo = {
+        category,
+        mode,
+        timestamp: new Date().toISOString(),
+      };
+      console.log('[QuizProgress] Saving last session info:', category, mode);
+      setLastSessionInfo(info);
+      await AsyncStorage.setItem(LAST_SESSION_KEY, JSON.stringify(info));
+    } catch (error) {
+      console.error('[QuizProgress] Error saving last session info:', error);
+    }
+  }, []);
+
   const saveSessionState = useCallback(async (state: SessionState) => {
     try {
       console.log('[QuizProgress] Saving session state at index:', state.currentIndex);
       setSessionState(state);
       await AsyncStorage.setItem(SESSION_STATE_KEY, JSON.stringify(state));
+      
+      await saveLastSessionInfo(state.category, state.mode);
     } catch (error) {
       console.error('[QuizProgress] Error saving session state:', error);
     }
-  }, []);
+  }, [saveLastSessionInfo]);
 
   const clearSessionState = useCallback(async () => {
     try {
@@ -453,11 +487,13 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     allTimeStats,
     streakData,
     weeklyHistory,
+    lastSessionInfo,
     isLoading,
     updateDailyProgress,
     saveSessionState,
     clearSessionState,
     loadSessionState,
+    saveLastSessionInfo,
     hasActiveSession,
     resetDailyProgress,
     addStudyTime,
@@ -470,4 +506,4 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   };
 });
 
-export type { DailyProgress, SessionState, AllTimeStats, StreakData, DailyHistoryEntry };
+export type { DailyProgress, SessionState, AllTimeStats, StreakData, DailyHistoryEntry, LastSessionInfo };

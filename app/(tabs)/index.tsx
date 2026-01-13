@@ -23,7 +23,7 @@ import { useQuizProgress } from '@/providers/QuizProgressProvider';
 export default function HomeScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
-  const { dailyProgress, hasActiveSession, sessionState, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
+  const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
   const completedQuestions = categories.reduce((sum, cat) => sum + cat.completedCount, 0);
@@ -34,7 +34,7 @@ export default function HomeScreen() {
   
   const handleContinueLearning = useCallback(() => {
     if (hasActiveSession && sessionState) {
-      console.log('[Home] Resuming session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
+      console.log('[Home] Resuming active session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
       router.push({
         pathname: '/quiz-session',
         params: { 
@@ -43,7 +43,17 @@ export default function HomeScreen() {
           resume: 'true'
         }
       });
+    } else if (lastSessionInfo) {
+      console.log('[Home] Starting new session with last used settings:', lastSessionInfo.category, lastSessionInfo.mode);
+      router.push({
+        pathname: '/quiz-session',
+        params: { 
+          category: lastSessionInfo.category,
+          mode: lastSessionInfo.mode
+        }
+      });
     } else {
+      console.log('[Home] Starting default session');
       router.push({
         pathname: '/quiz-session',
         params: { 
@@ -52,7 +62,7 @@ export default function HomeScreen() {
         }
       });
     }
-  }, [hasActiveSession, sessionState, router]);
+  }, [hasActiveSession, sessionState, lastSessionInfo, router]);
 
   return (
     <View style={styles.container}>
