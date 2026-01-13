@@ -31,17 +31,14 @@ import {
   Minus,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { useLanguage, Language } from '@/providers/LanguageProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
 import { currentUser, leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const languages: { code: Language; label: string; flag: string }[] = [
-  { code: 'en', label: 'EN', flag: '🇬🇧' },
-  { code: 'ro', label: 'RO', flag: '🇷🇴' },
-];
+
 
 interface Achievement {
   id: string;
@@ -74,7 +71,7 @@ function getLast7Days(): string[] {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { currentLanguage, changeLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
   
@@ -90,9 +87,7 @@ export default function ProfileScreen() {
     weeklyGoalProgress,
   } = useQuizProgress();
 
-  const handleLanguageChange = useCallback((lang: Language) => {
-    changeLanguage(lang);
-  }, [changeLanguage]);
+
 
   const achievements: Achievement[] = useMemo(() => [
     { 
@@ -323,41 +318,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.languageSection}>
-            <Text style={styles.languageSectionTitle}>{t('language')}</Text>
-            <View style={styles.languageSelector}>
-              {languages.map((lang) => {
-                const isActive = currentLanguage === lang.code;
-                return (
-                  <TouchableOpacity
-                    key={lang.code}
-                    style={[
-                      styles.languageButton,
-                      isActive && styles.languageButtonActive,
-                    ]}
-                    onPress={() => handleLanguageChange(lang.code)}
-                    activeOpacity={0.7}
-                  >
-                    {isActive && (
-                      <LinearGradient
-                        colors={[Colors.primary, Colors.secondary]}
-                        style={StyleSheet.absoluteFill}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      />
-                    )}
-                    <Text style={styles.languageFlag}>{lang.flag}</Text>
-                    <Text style={[
-                      styles.languageLabel,
-                      isActive && styles.languageLabelActive,
-                    ]}>
-                      {lang.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
+
 
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
@@ -812,57 +773,7 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.background,
   },
-  languageSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  languageSectionTitle: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 12,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 1,
-  },
-  languageSelector: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 16,
-    padding: 4,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  languageButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    gap: 6,
-    overflow: 'hidden',
-  },
-  languageButtonActive: {
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  languageFlag: {
-    fontSize: 18,
-  },
-  languageLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  languageLabelActive: {
-    color: Colors.text,
-    fontWeight: '700' as const,
-  },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

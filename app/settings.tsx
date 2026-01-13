@@ -33,6 +33,7 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage, Language } from '@/providers/LanguageProvider';
 
 interface SettingsItemProps {
   icon: React.ReactNode;
@@ -68,9 +69,15 @@ interface BlockedUser {
   blockedAt: string;
 }
 
+const languages: { code: Language; label: string; flag: string }[] = [
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'ro', label: 'Română', flag: '🇷🇴' },
+];
+
 export default function SettingsScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
+  const { currentLanguage, changeLanguage } = useLanguage();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
   useEffect(() => {
@@ -137,6 +144,54 @@ export default function SettingsScreen() {
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
+              <View style={styles.languageSection}>
+                <View style={styles.languageSectionHeader}>
+                  <View style={styles.settingsItemIcon}>
+                    <Globe color={Colors.primary} size={22} />
+                  </View>
+                  <View style={styles.settingsItemContent}>
+                    <Text style={styles.settingsItemTitle}>Language</Text>
+                    <Text style={styles.settingsItemSubtitle}>Choose your preferred language</Text>
+                  </View>
+                </View>
+                <View style={styles.languageSelector}>
+                  {languages.map((lang) => {
+                    const isActive = currentLanguage === lang.code;
+                    return (
+                      <TouchableOpacity
+                        key={lang.code}
+                        style={[
+                          styles.languageButton,
+                          isActive && styles.languageButtonActive,
+                        ]}
+                        onPress={() => {
+                          if (Platform.OS !== 'web') {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          }
+                          changeLanguage(lang.code);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        {isActive && (
+                          <LinearGradient
+                            colors={[Colors.primary, Colors.secondary]}
+                            style={StyleSheet.absoluteFill}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                          />
+                        )}
+                        <Text style={styles.languageFlag}>{lang.flag}</Text>
+                        <Text style={[
+                          styles.languageLabel,
+                          isActive && styles.languageLabelActive,
+                        ]}>
+                          {lang.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
               <SettingsItem
                 icon={<Bell color={Colors.primary} size={22} />}
                 title="Notifications"
@@ -263,12 +318,6 @@ export default function SettingsScreen() {
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
-              />
-              <SettingsItem
-                icon={<Globe color={Colors.primary} size={22} />}
-                title="Change Language"
-                subtitle="Manage app language"
-                onPress={() => router.push('/(tabs)/profile')}
               />
               <TouchableOpacity 
                 style={[styles.deleteAccountItem, styles.settingsItemBorder]} 
@@ -558,5 +607,54 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
     marginTop: 2,
+  },
+  languageSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  languageSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  languageSelector: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  languageButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    gap: 6,
+    overflow: 'hidden',
+  },
+  languageButtonActive: {
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  languageFlag: {
+    fontSize: 18,
+  },
+  languageLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  languageLabelActive: {
+    color: Colors.text,
+    fontWeight: '700' as const,
   },
 });
