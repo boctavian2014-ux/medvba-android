@@ -163,11 +163,11 @@ export const ro: Record<string, string> = {
   'achievement.dedicationDesc': 'Streak de 100 de zile',
   'profile.upgradeToPremium': 'Treci la Premium',
   'profile.questions': 'Întrebări',
-  'profile.accuracy': 'Acuratețe',
+  'profile.accuracy': 'Precizie',
   'profile.studyTime': 'Timp de studiu',
-  'profile.dayStreak': 'Zile streak',
+  'profile.dayStreak': 'Activități zilnice',
   'profile.achievements': 'Realizări',
-  'profile.leaderboard': 'Clasament',
+  'profile.leaderboard': 'Podium',
   'profile.seeAll': 'Vezi tot',
   'profile.daily': 'Zilnic',
   'profile.weekly': 'Săptămânal',
@@ -180,7 +180,7 @@ export const ro: Record<string, string> = {
   'profile.motivational.almostThere': 'Aproape acolo! Continuă!',
   'profile.motivational.greatProgress': 'Progres grozav! Rămâi concentrat!',
   'profile.motivational.goodStart': 'Start bun! Construiește momentum!',
-  'profile.motivational.getStarted': 'Hai să începem săptămâna aceasta!',
+  'profile.motivational.getStarted': 'Hai să începem săptămâna asta!',
 
   // AI Tutor
   'tutor.title': 'Tutor medical AI',
