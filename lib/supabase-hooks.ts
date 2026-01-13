@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { trpc } from './trpc';
 
 export interface StudyRoom {
   id: string;
@@ -300,77 +301,9 @@ export function useUpdateSession() {
 }
 
 export function useCreateZoomMeeting() {
-  return useMutation({
-    mutationFn: async (input: { studyRoomId: string; roomName: string }) => {
-      console.log('[Supabase] Calling Edge Function to create Zoom meeting...');
-
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/zoom-create-meeting`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            studyRoomId: input.studyRoomId,
-            roomName: input.roomName,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Supabase] Edge Function error:', response.status, errorText);
-        throw new Error(`Failed to create Zoom meeting: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('[Supabase] Zoom meeting created:', result.zoomMeetingId);
-
-      return {
-        zoomMeetingId: result.zoomMeetingId,
-        joinUrl: result.joinUrl,
-        startUrl: result.startUrl,
-        zoomStatus: result.zoomStatus as 'LIVE',
-      };
-    },
-  });
+  return trpc.zoom.createMeeting.useMutation();
 }
 
 export function useEndZoomMeeting() {
-  return useMutation({
-    mutationFn: async (input: { zoomMeetingId: string }) => {
-      console.log('[Supabase] Calling Edge Function to end Zoom meeting...');
-
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/zoom-end-meeting`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            zoomMeetingId: input.zoomMeetingId,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[Supabase] Edge Function error:', response.status, errorText);
-        throw new Error(`Failed to end Zoom meeting: ${response.status}`);
-      }
-
-      await response.json();
-      console.log('[Supabase] Zoom meeting ended');
-
-      return { success: true, zoomStatus: 'ENDED' as const };
-    },
-  });
+  return trpc.zoom.endMeeting.useMutation();
 }
