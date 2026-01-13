@@ -49,7 +49,34 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name?: string) => {
+    try {
+      console.log('[Auth] Ensuring user exists in users table:', userId);
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (!existingUser) {
+        console.log('[Auth] User not found in users table, creating...');
+        await supabase.from('users').insert({
+          id: userId,
+          email: email || '',
+          name: name || 'Student',
+          avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
+          created_at: new Date().toISOString(),
+        });
+        console.log('[Auth] User created in users table');
+      }
+    } catch (error) {
+      console.error('[Auth] Error ensuring user exists:', error);
+    }
+  }, []);
+
+  const fetchProfile = useCallback(async (userId: string, email: string | undefined) => {
+    await ensureUserExists(userId, email);
+
     try {
       console.log('[Auth] Fetching profile for user:', userId);
       const { data: result, error } = await supabase
@@ -94,7 +121,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         joinedAt: new Date().toISOString(),
       });
     }
-  }, []);
+  }, [ensureUserExists]);
 
   const checkOnboardingStatus = useCallback(async () => {
     try {
@@ -122,7 +149,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           setUser(currentSession?.user ?? null);
           
           if (currentSession?.user) {
-            await fetchProfile(currentSession.user.id);
+            await fetchProfile(currentSession.user.id, currentSession.user.email);
             monitoring.setUser(currentSession.user.id, currentSession.user.email);
           }
           
@@ -147,7 +174,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          await fetchProfile(newSession.user.id);
+          await fetchProfile(newSession.user.id, newSession.user.email);
           monitoring.setUser(newSession.user.id, newSession.user.email);
         } else {
           setProfile(null);
@@ -186,6 +213,16 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (data.user) {
         try {
+          console.log('[Auth] Creating user in Supabase...');
+          
+          await supabase.from('users').insert({
+            id: data.user.id,
+            email: data.user.email,
+            name,
+            avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
+            created_at: new Date().toISOString(),
+          });
+          
           console.log('[Auth] Creating user profile in Supabase...');
           await supabase.from('user_profiles').insert({
             id: data.user.id,
@@ -200,9 +237,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             badges: [],
             joined_at: new Date().toISOString(),
           });
-          console.log('[Auth] User profile created successfully');
+          console.log('[Auth] User and profile created successfully');
         } catch (profileError) {
-          console.error('[Auth] Error creating profile:', profileError);
+          console.error('[Auth] Error creating user/profile:', profileError);
         }
       }
 
@@ -278,7 +315,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user.id, user.email);
     }
   }, [user, fetchProfile]);
 
