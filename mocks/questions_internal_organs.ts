@@ -75,6 +75,7 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'Which statement BEST distinguishes pulmonary from systemic circulation with respect to oxygen content in major vessels?',
+    question_ro: 'Care afirmație diferențiază CEL MAI BINE circulația pulmonară de cea sistemică în ceea ce privește conținutul de oxigen în vasele majore?',
     options: [
       'Pulmonary arteries carry oxygenated blood to the lungs and pulmonary veins carry deoxygenated blood',
       'Pulmonary arteries and veins both carry deoxygenated blood',
@@ -82,15 +83,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Pulmonary arteries carry mixed blood and pulmonary veins carry only deoxygenated blood',
       'Pulmonary circulation has no veins, only arteries and capillaries'
     ],
+    options_ro: [
+      'Arterele pulmonare transportă sânge oxigenat către plămâni și venele pulmonare transportă sânge dezoxigenat',
+      'Arterele și venele pulmonare transportă ambele sânge dezoxigenat',
+      'Arterele pulmonare transportă sânge dezoxigenat către plămâni și venele pulmonare transportă sânge oxigenat către inimă',
+      'Arterele pulmonare transportă sânge mixt și venele pulmonare transportă doar sânge dezoxigenat',
+      'Circulația pulmonară nu are vene, doar artere și capilare'
+    ],
     correctAnswer: 2,
     explanation:
-      'In pulmonary circulation, arteries leave the right ventricle carrying deoxygenated blood to the lungs, while pulmonary veins return oxygenated blood to the left atrium.[web:231][web:236][web:241]'
+      'In pulmonary circulation, arteries leave the right ventricle carrying deoxygenated blood to the lungs, while pulmonary veins return oxygenated blood to the left atrium.[web:231][web:236][web:241]',
+    explanation_ro:
+      'În circulația pulmonară, arterele ies din ventriculul drept transportând sânge dezoxigenat către plămâni, în timp ce venele pulmonare returnează sânge oxigenat către atriul stâng.'
   },
   {
     id: 'pc2',
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'How many pulmonary veins usually drain into the left atrium?',
+    question_ro: 'Câte vene pulmonare se drenează de obicei în atriul stâng?',
     options: [
       'Two (one from each lung)',
       'Three (one from each lobe of the right lung)',
@@ -98,15 +109,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Six (one from each lobe of both lungs)',
       'A single common pulmonary vein'
     ],
+    options_ro: [
+      'Două (una din fiecare plămân)',
+      'Trei (una din fiecare lob al plămânului drept)',
+      'Patru (două din fiecare plămân)',
+      'Șase (una din fiecare lob al ambilor plămâni)',
+      'O singură venă pulmonară comună'
+    ],
     correctAnswer: 2,
     explanation:
-      'Typically, four pulmonary veins (two from each lung) return oxygenated blood to the left atrium.[web:231][web:233][web:236]'
+      'Typically, four pulmonary veins (two from each lung) return oxygenated blood to the left atrium.[web:231][web:233][web:236]',
+    explanation_ro:
+      'De obicei, patru vene pulmonare (două din fiecare plămân) returnează sânge oxigenat către atriul stâng.'
   },
   {
     id: 'pc3',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which description BEST summarizes the dual arterial blood supply to the lungs?',
+    question_ro: 'Care descriere rezumă CEL MAI BINE dubla aprovizionare arterială cu sânge a plămânilor?',
     options: [
       'Only pulmonary arteries supply the lungs',
       'Only bronchial arteries supply the lungs',
@@ -114,15 +135,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Bronchial arteries provide deoxygenated blood to the alveoli',
       'Pulmonary arteries and bronchial arteries both arise from the right ventricle'
     ],
+    options_ro: [
+      'Doar arterele pulmonare alimentează plămânii',
+      'Doar arterele bronșice alimentează plămânii',
+      'Arterele pulmonare furnizează sânge la presiune joasă pentru schimbul de gaze; arterele bronșice furnizează sânge sistemic la presiune înaltă către căile respiratorii conducătoare și structurile de susținere',
+      'Arterele bronșice furnizează sânge dezoxigenat către alveole',
+      'Arterele pulmonare și arterele bronșice provin ambele din ventriculul drept'
+    ],
     correctAnswer: 2,
     explanation:
-      'Pulmonary arteries (from the right ventricle) form a low-pressure circuit for gas exchange, while bronchial arteries (from the aorta) supply oxygenated systemic blood to bronchi, larger vessels and pleura.[web:232][web:237][web:243]'
+      'Pulmonary arteries (from the right ventricle) form a low-pressure circuit for gas exchange, while bronchial arteries (from the aorta) supply oxygenated systemic blood to bronchi, larger vessels and pleura.[web:232][web:237][web:243]',
+    explanation_ro:
+      'Arterele pulmonare (din ventriculul drept) formează un circuit la presiune joasă pentru schimbul de gaze, în timp ce arterele bronșice (din aortă) furnizează sânge sistemic oxigenat către bronhii, vasele mai mari și pleură.'
   },
   {
     id: 'pc4',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which structures are primarily supplied by the bronchial arteries rather than the pulmonary arteries?',
+    question_ro: 'Care structuri sunt în principal alimentate de arterele bronșice în loc de arterele pulmonare?',
     options: [
       'Alveolar capillary beds only',
       'Respiratory bronchioles and alveoli only',
@@ -130,15 +161,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Only the parietal pleura',
       'Only the right ventricle'
     ],
+    options_ro: [
+      'Doar paturile capilare alveolare',
+      'Doar bronhiolele respiratorii și alveolele',
+      'Căile respiratorii conducătoare (bronhii și bronhiole), pleura viscerală și pereții vaselor pulmonare mari',
+      'Doar pleura parietală',
+      'Doar ventriculul drept'
+    ],
     correctAnswer: 2,
     explanation:
-      'Bronchial arteries supply the bronchial tree down to the respiratory bronchioles, visceral pleura, hilar lymph nodes and walls of large pulmonary vessels.[web:235][web:240][web:243]'
+      'Bronchial arteries supply the bronchial tree down to the respiratory bronchioles, visceral pleura, hilar lymph nodes and walls of large pulmonary vessels.[web:235][web:240][web:243]',
+    explanation_ro:
+      'Arterele bronșice alimentează arborele bronșic până la bronhiolele respiratorii, pleura viscerală, ganglionii limfatici hilari și pereții vaselor pulmonare mari.'
   },
   {
     id: 'pc5',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which route BEST describes venous drainage of blood supplied by the bronchial arteries?',
+    question_ro: 'Care cale descrie CEL MAI BINE drenajul venos al sângelui furnizat de arterele bronșice?',
     options: [
       'Entirely via bronchial veins into the azygos system',
       'Entirely via pulmonary veins to the left atrium',
@@ -146,15 +187,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Exclusively via the inferior vena cava',
       'Exclusively via the portal venous system'
     ],
+    options_ro: [
+      'În întregime prin venele bronșice în sistemul azygos',
+      'În întregime prin venele pulmonare către atriul stâng',
+      'Parțial prin venele bronșice către venele sistemice și parțial prin anastomoze în venele pulmonare',
+      'Exclusiv prin vena cavă inferioară',
+      'Exclusiv prin sistemul venos portal'
+    ],
     correctAnswer: 2,
     explanation:
-      'Approximately one-third of bronchial arterial blood drains via bronchial veins to systemic veins (e.g. azygos), while the remainder enters pulmonary veins, creating a small physiological right-to-left shunt.[web:235][web:238][web:240]'
+      'Approximately one-third of bronchial arterial blood drains via bronchial veins to systemic veins (e.g. azygos), while the remainder enters pulmonary veins, creating a small physiological right-to-left shunt.[web:235][web:238][web:240]',
+    explanation_ro:
+      'Aproximativ o treime din sângele arterial bronșic se drenează prin venele bronșice către venele sistemice (ex. azygos), în timp ce restul intră în venele pulmonare, creând un mic șunt fiziologic dreapta-stânga.'
   },
   {
     id: 'pc6',
     category: 'internal-organs',
     difficulty: 'hard',
     question: 'Which hemodynamic feature is MOST characteristic of the pulmonary arterial system compared with systemic arteries?',
+    question_ro: 'Care caracteristică hemodinamică este CEL MAI caracteristică sistemului arterial pulmonar comparativ cu arterele sistemice?',
     options: [
       'Higher resistance and thicker walls',
       'Lower resistance, thinner more compliant walls and larger total cross-sectional area',
@@ -162,15 +213,25 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Presence of valves throughout the pulmonary arteries',
       'Complete absence of elastic tissue'
     ],
+    options_ro: [
+      'Rezistență mai mare și pereți mai groși',
+      'Rezistență mai mică, pereți mai subțiri mai complianți și arie transversală totală mai mare',
+      'Absența mușchiului neted în peretele arterial pulmonar',
+      'Prezența valvelor pe toată lungimea arterelor pulmonare',
+      'Absența completă a țesutului elastic'
+    ],
     correctAnswer: 1,
     explanation:
-      'Pulmonary arteries are thinner-walled, more compliant and operate at lower pressures and resistance than systemic arteries, suited to receiving the entire cardiac output at low pressure.[web:239][web:242]'
+      'Pulmonary arteries are thinner-walled, more compliant and operate at lower pressures and resistance than systemic arteries, suited to receiving the entire cardiac output at low pressure.[web:239][web:242]',
+    explanation_ro:
+      'Arterele pulmonare au pereți mai subțiri, sunt mai compliante și funcționează la presiuni și rezistențe mai mici decât arterele sistemice, fiind adaptate să primească întregul debit cardiac la presiune joasă.'
   },
   {
     id: 'pc7',
     category: 'internal-organs',
     difficulty: 'hard',
     question: 'Which statement BEST explains why pulmonary edema may initially present as "peribronchial cuffing" on imaging?',
+    question_ro: 'Care afirmație explică CEL MAI BINE de ce edemul pulmonar poate prezenta inițial „manchonare peribronșică” la imagistică?',
     options: [
       'Edema fluid accumulates first in the pleural space',
       'Bronchial arteries lack any lymphatic drainage',
@@ -178,9 +239,18 @@ export const pulmonaryAndBronchialCirculationQuestions: Question[] = [
       'Pulmonary capillaries do not accompany bronchi',
       'Only bronchial veins are affected in early edema'
     ],
+    options_ro: [
+      'Lichidul de edem se acumulează mai întâi în spațiul pleural',
+      'Arterele bronșice nu au drenaj limfatic',
+      'Lichidul tinde să se acumuleze în tecile interstițiale peribronchovasculare unde arterele pulmonare, venele și bronhiile circulă împreună',
+      'Capilarele pulmonare nu însoțesc bronhiile',
+      'Doar venele bronșice sunt afectate în edemul precoce'
+    ],
     correctAnswer: 2,
     explanation:
-      'Pulmonary arteries and veins travel with bronchi in bronchovascular bundles; interstitial fluid accumulation around these structures produces peribronchial "cuffing" on radiographs.[web:231][web:238][web:239]'
+      'Pulmonary arteries and veins travel with bronchi in bronchovascular bundles; interstitial fluid accumulation around these structures produces peribronchial "cuffing" on radiographs.[web:231][web:238][web:239]',
+    explanation_ro:
+      'Arterele și venele pulmonare circulă cu bronhiile în fascicule bronchovasculare; acumularea de lichid interstițial în jurul acestor structuri produce „manchonare” peribronșică la radiografii.'
   }
 ];
 
