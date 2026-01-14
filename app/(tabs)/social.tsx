@@ -137,7 +137,7 @@ const formatSessionTime = (scheduledFor: string): string => {
 export default function SocialScreen() {
   const router = useRouter();
   const { user, profile } = useAuth();
-  const { t } = useLanguage();
+  const { t, getModuleName } = useLanguage();
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
   const [localRoomUpdates, setLocalRoomUpdates] = useState<Record<string, Partial<StudyRoom>>>({});
@@ -858,10 +858,10 @@ export default function SocialScreen() {
                 <Text style={styles.inputLabel}>{t('social.category')}</Text>
                 <View style={styles.categoryOptions}>
                   {[
-                    { id: 'upper_lower_limbs', label: 'Upper & Lower Limbs' },
-                    { id: 'internal_organs', label: 'Internal Organs' },
-                    { id: 'head_and_neck', label: 'Head and Neck' },
-                    { id: 'neuroanatomy', label: 'Neuroanatomy' },
+                    { id: 'upper_lower_limbs', label: getModuleName('upper-lower-limbs') },
+                    { id: 'internal_organs', label: getModuleName('internal-organs') },
+                    { id: 'head_and_neck', label: getModuleName('head-neck') },
+                    { id: 'neuroanatomy', label: getModuleName('neuroanatomy') },
                   ].map(cat => (
                     <TouchableOpacity
                       key={cat.id}
