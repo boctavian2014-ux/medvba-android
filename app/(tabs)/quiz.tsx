@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +28,7 @@ import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
+import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
 const categoryIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   'upper-lower-limbs': Bone,
@@ -41,6 +43,7 @@ export default function QuizScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
   const { 
     isPremium, 
     canStartQuiz, 
@@ -48,12 +51,49 @@ export default function QuizScreen() {
     getRemainingQuizzes,
     FREE_QUIZ_LIMIT 
   } = useSubscription();
+  const { hasActiveSession, sessionState, clearSessionState } = useQuizProgress();
 
   const remainingQuizzes = getRemainingQuizzes();
+
+  useEffect(() => {
+    if (hasActiveSession && sessionState) {
+      const sessionDate = new Date(sessionState.startedAt);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 24) {
+        console.log('[Quiz] Session older than 24 hours, clearing');
+        clearSessionState();
+      } else {
+        console.log('[Quiz] Active session found, showing resume dialog');
+        setShowResumeDialog(true);
+      }
+    }
+  }, [hasActiveSession, sessionState, clearSessionState]);
 
   const handleCategorySelect = (categoryId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
+  };
+
+  const handleResumeQuiz = () => {
+    setShowResumeDialog(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('[Quiz] User chose to resume quiz');
+    router.push({
+      pathname: '/quiz-session' as any,
+      params: { 
+        category: sessionState?.category || 'mixed',
+        mode: sessionState?.mode || 'quick',
+        resume: 'true'
+      }
+    });
+  };
+
+  const handleStartNewQuiz = async () => {
+    setShowResumeDialog(false);
+    await clearSessionState();
+    console.log('[Quiz] User chose to start new quiz, cleared session');
   };
 
   const handleStartQuiz = async (mode: QuizMode) => {
@@ -96,6 +136,41 @@ export default function QuizScreen() {
         colors={[Colors.background, Colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
+      
+      <Modal
+        visible={showResumeDialog}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowResumeDialog(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('session.resumeQuiz')}</Text>
+            <Text style={styles.modalMessage}>{t('session.resumeQuizMessage')}</Text>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary]}
+                onPress={handleStartNewQuiz}
+              >
+                <Text style={styles.modalButtonTextSecondary}>{t('session.startNew')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                onPress={handleResumeQuiz}
+              >
+                <LinearGradient
+                  colors={[Colors.primary, Colors.primaryDark]}
+                  style={styles.modalButtonGradient}
+                >
+                  <Text style={styles.modalButtonTextPrimary}>{t('session.continue')}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView 
           showsVerticalScrollIndicator={false}
@@ -472,5 +547,68 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: Colors.cardBg,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  modalButtonSecondary: {
+    backgroundColor: Colors.cardBgLight,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonPrimary: {
+    overflow: 'hidden',
+  },
+  modalButtonGradient: {
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonTextSecondary: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  modalButtonTextPrimary: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
   },
 });

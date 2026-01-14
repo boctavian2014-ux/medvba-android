@@ -123,6 +123,10 @@ export const ro: Record<string, string> = {
   'session.copy': 'Copiază',
   'session.copied': 'Copiat',
   'session.explanationCopied': 'Explicație copiată!',
+  'session.resumeQuiz': 'Continui Quiz-ul?',
+  'session.resumeQuizMessage': 'Ai un quiz neterminat. Vrei să continui de unde ai rămas?',
+  'session.continue': 'Continuă',
+  'session.startNew': 'Quiz Nou',
 
   // Module Names
   'module.upperLowerLimbs': 'Membre Superioare și Inferioare',

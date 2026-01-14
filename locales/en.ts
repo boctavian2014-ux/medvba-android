@@ -123,6 +123,10 @@ export const en: Record<string, string> = {
   'session.copy': 'Copy',
   'session.copied': 'Copied',
   'session.explanationCopied': 'Explanation copied!',
+  'session.resumeQuiz': 'Resume Quiz?',
+  'session.resumeQuizMessage': 'You have an unfinished quiz. Would you like to continue where you left off?',
+  'session.continue': 'Continue',
+  'session.startNew': 'Start New',
 
   // Module Names
   'module.upperLowerLimbs': 'Upper/Lower Limbs',
