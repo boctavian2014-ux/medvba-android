@@ -6,6 +6,7 @@ export const generalVertebraeQuestions: Question[] = [
     category: 'upper-lower-limbs',
     difficulty: 'easy',
     question: 'Which components are present in a typical vertebra?',
+    question_ro: 'Care componente sunt prezente într-o vertebră tipică?',
     options: [
       'Vertebral body only',
       'Vertebral arch only',
@@ -13,15 +14,25 @@ export const generalVertebraeQuestions: Question[] = [
       'Only spinous and transverse processes',
       'Only articular processes and pedicles'
     ],
+    options_ro: [
+      'Doar corpul vertebral',
+      'Doar arcul vertebral',
+      'Corpul vertebral și arcul vertebral care dau naștere la mai multe procese',
+      'Doar procesele spinoase și transversale',
+      'Doar procesele articulare și pediculii'
+    ],
     correctAnswer: 2,
     explanation:
-      'A typical vertebra consists of a vertebral body anteriorly and a vertebral arch posteriorly, together forming the vertebral foramen and giving rise to multiple processes.[web:606][web:608][web:619]'
+      'A typical vertebra consists of a vertebral body anteriorly and a vertebral arch posteriorly, together forming the vertebral foramen and giving rise to multiple processes.[web:606][web:608][web:619]',
+    explanation_ro:
+      'O vertebră tipică constă dintr-un corp vertebral anterior și un arc vertebral posterior, formând împreună foramenul vertebral și dând naștere la multiple procese.[web:606][web:608][web:619]'
   },
   {
     id: 'gv2',
     category: 'upper-lower-limbs',
     difficulty: 'easy',
     question: 'Which structures form the vertebral arch of a typical vertebra?',
+    question_ro: 'Care structuri formează arcul vertebral al unei vertebre tipice?',
     options: [
       'Pedicles and laminae',
       'Transverse and spinous processes',
@@ -29,9 +40,18 @@ export const generalVertebraeQuestions: Question[] = [
       'Body and spinous process',
       'Intervertebral discs'
     ],
+    options_ro: [
+      'Pediculii și laminele',
+      'Procesele transversale și spinoase',
+      'Doar procesele articulare',
+      'Corpul și procesul spinos',
+      'Discurile intervertebrale'
+    ],
     correctAnswer: 0,
     explanation:
-      'The vertebral arch is formed by a pair of pedicles and a pair of laminae, projecting posteriorly from the vertebral body.[web:609][web:610][web:619]'
+      'The vertebral arch is formed by a pair of pedicles and a pair of laminae, projecting posteriorly from the vertebral body.[web:609][web:610][web:619]',
+    explanation_ro:
+      'Arcul vertebral este format dintr-o pereche de pediculi și o pereche de lamine, care se proiectează posterior de la corpul vertebral.[web:609][web:610][web:619]'
   },
   {
     id: 'gv3',
