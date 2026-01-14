@@ -21,6 +21,7 @@ export const thoracicTracheaBronchiQuestions: Question[] = [
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'At which vertebral level does the trachea typically bifurcate into the main bronchi in the thorax?',
+    question_ro: 'La ce nivel vertebral se bifurcă de obicei traheea în bronhiile principale în torace?',
     options: [
       'At the level of T1 vertebra',
       'At the level of T4–T5 (sternal angle)',
@@ -28,15 +29,25 @@ export const thoracicTracheaBronchiQuestions: Question[] = [
       'At the level of C7 vertebra',
       'At the level of T9–T10 vertebrae'
     ],
+    options_ro: [
+      'La nivelul vertebrei T1',
+      'La nivelul T4–T5 (unghiul sternal)',
+      'La nivelul vertebrei T7',
+      'La nivelul vertebrei C7',
+      'La nivelul vertebrelor T9–T10'
+    ],
     correctAnswer: 1,
     explanation:
-      'Within the thorax the trachea descends in the superior mediastinum and usually bifurcates at the level of the sternal angle, corresponding to the T4–T5 intervertebral disc.'
+      'Within the thorax the trachea descends in the superior mediastinum and usually bifurcates at the level of the sternal angle, corresponding to the T4–T5 intervertebral disc.',
+    explanation_ro:
+      'În torace, traheea coboară în mediastinul superior și se bifurcă de obicei la nivelul unghiului sternal, corespunzând discului intervertebral T4–T5.'
   },
   {
     id: 'ttb2',
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'Which statement BEST describes the position of the thoracic trachea in relation to the esophagus?',
+    question_ro: 'Care afirmație descrie CEL MAI BINE poziția traheei toracice în raport cu esofagul?',
     options: [
       'The trachea lies posterior to the esophagus throughout its course',
       'The trachea lies anterior to the esophagus throughout its course',
@@ -44,9 +55,18 @@ export const thoracicTracheaBronchiQuestions: Question[] = [
       'The trachea lies lateral to the esophagus on the right side only',
       'The trachea and esophagus do not have a close anatomical relationship'
     ],
+    options_ro: [
+      'Traheea se află posterior de esofag pe tot parcursul său',
+      'Traheea se află anterior de esofag pe tot parcursul său',
+      'Traheea se află lateral de esofag doar pe partea stângă',
+      'Traheea se află lateral de esofag doar pe partea dreaptă',
+      'Traheea și esofagul nu au o relație anatomică strânsă'
+    ],
     correctAnswer: 1,
     explanation:
-      'In the superior mediastinum the thoracic trachea lies anterior to the esophagus, with its membranous posterior wall directly related to the esophageal tube.'
+      'In the superior mediastinum the thoracic trachea lies anterior to the esophagus, with its membranous posterior wall directly related to the esophageal tube.',
+    explanation_ro:
+      'În mediastinul superior, traheea toracică se află anterior de esofag, cu peretele său posterior membranos direct în contact cu tubul esofagian.'
   },
   {
     id: 'ttb3',

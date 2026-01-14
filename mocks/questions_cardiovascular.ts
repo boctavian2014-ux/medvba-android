@@ -22,6 +22,7 @@ export const heartExternalAnatomyQuestions: Question[] = [
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'In which mediastinal compartment is the heart primarily located?',
+    question_ro: 'În ce compartiment mediastinal este localizată în principal inima?',
     options: [
       'Superior mediastinum',
       'Anterior mediastinum',
@@ -29,15 +30,25 @@ export const heartExternalAnatomyQuestions: Question[] = [
       'Posterior mediastinum',
       'Entirely outside the mediastinum'
     ],
+    options_ro: [
+      'Mediastinul superior',
+      'Mediastinul anterior',
+      'Mediastinul mijlociu în sacul pericardic',
+      'Mediastinul posterior',
+      'Complet în afara mediastinului'
+    ],
     correctAnswer: 2,
     explanation:
-      'The heart lies within the fibrous pericardium in the middle mediastinum, between the lungs and above the diaphragm.[web:2][web:3]'
+      'The heart lies within the fibrous pericardium in the middle mediastinum, between the lungs and above the diaphragm.[web:2][web:3]',
+    explanation_ro:
+      'Inima se află în interiorul pericardului fibros în mediastinul mijlociu, între plămâni și deasupra diafragmului.'
   },
   {
     id: 'her2',
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'Which chamber forms the anatomical apex of the heart?',
+    question_ro: 'Ce cameră formează vârful anatomic al inimii?',
     options: [
       'Right atrium',
       'Right ventricle',
@@ -45,9 +56,18 @@ export const heartExternalAnatomyQuestions: Question[] = [
       'Left ventricle',
       'Coronary sinus'
     ],
+    options_ro: [
+      'Atriul drept',
+      'Ventriculul drept',
+      'Atriul stâng',
+      'Ventriculul stâng',
+      'Sinusul coronarian'
+    ],
     correctAnswer: 3,
     explanation:
-      'The apex of the heart is formed by the inferolateral part of the left ventricle and is directed forward, downward and to the left.[web:72][web:75]'
+      'The apex of the heart is formed by the inferolateral part of the left ventricle and is directed forward, downward and to the left.[web:72][web:75]',
+    explanation_ro:
+      'Vârful inimii este format de partea inferolaterală a ventriculului stâng și este orientat anterior, inferior și spre stânga.'
   },
   {
     id: 'her3',
