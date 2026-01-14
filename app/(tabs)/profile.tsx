@@ -257,19 +257,34 @@ export default function ProfileScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.title}>{t('profile')}</Text>
-            <TouchableOpacity 
-              style={styles.settingsButton} 
-              activeOpacity={0.7}
-              onPress={() => router.push('/settings' as any)}
-            >
-              <LinearGradient
-                colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
-                style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-              <Settings color={Colors.textSecondary} size={22} />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity 
+                style={styles.headerButton} 
+                activeOpacity={0.7}
+                onPress={() => router.push('/edit-profile' as any)}
+              >
+                <LinearGradient
+                  colors={['rgba(0, 180, 216, 0.2)', 'rgba(0, 180, 216, 0.1)']}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <Settings color={Colors.primary} size={20} />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.settingsButton} 
+                activeOpacity={0.7}
+                onPress={() => router.push('/settings' as any)}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <Settings color={Colors.textSecondary} size={22} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.profileCard}>
@@ -713,6 +728,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
     marginTop: 8,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    overflow: 'hidden',
   },
   title: {
     fontSize: 28,

@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import { 
   Users, 
   Radio, 
@@ -35,6 +36,7 @@ import {
   Flag,
   AlertTriangle,
   CheckCircle,
+  User,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -133,6 +135,7 @@ const formatSessionTime = (scheduledFor: string): string => {
 
 
 export default function SocialScreen() {
+  const router = useRouter();
   const { user, profile } = useAuth();
   const { t } = useLanguage();
   const [refreshing, setRefreshing] = useState(false);
@@ -431,8 +434,29 @@ export default function SocialScreen() {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t('social.community')}</Text>
-            <Text style={styles.subtitle}>{t('social.communitySubtitle')}</Text>
+            <View style={styles.headerTop}>
+              <View>
+                <Text style={styles.title}>{t('social.community')}</Text>
+                <Text style={styles.subtitle}>{t('social.communitySubtitle')}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.findPartnersButton}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/find-partners' as any);
+                }}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[Colors.accent, Colors.secondary]}
+                  style={StyleSheet.absoluteFill}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
+                <User color={Colors.text} size={18} />
+                <Text style={styles.findPartnersButtonText}>Find Partners</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -1140,6 +1164,26 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginTop: 8,
     paddingHorizontal: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  findPartnersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    overflow: 'hidden',
+  },
+  findPartnersButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
   },
   title: {
     fontSize: 28,

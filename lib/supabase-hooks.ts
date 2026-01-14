@@ -502,3 +502,190 @@ export function useCreateZoomRequest() {
   });
 }
 
+export interface UserProfile {
+  id: string;
+  email?: string;
+  name: string;
+  avatar: string;
+  city?: string;
+  university?: string;
+  year_of_study?: number;
+  bio?: string;
+  is_public: boolean;
+  profile_photo_url?: string;
+  created_at: string;
+}
+
+export function useStudyPartners(filters?: {
+  city?: string;
+  university?: string;
+  searchQuery?: string;
+}) {
+  return useQuery({
+    queryKey: ['studyPartners', filters],
+    queryFn: async () => {
+      console.log('[Supabase] Fetching study partners with filters:', filters);
+      
+      let query = supabase
+        .from('users')
+        .select('*')
+        .eq('is_public', true);
+
+      if (filters?.city) {
+        query = query.eq('city', filters.city);
+      }
+
+      if (filters?.university) {
+        query = query.eq('university', filters.university);
+      }
+
+      if (filters?.searchQuery) {
+        query = query.or(`name.ilike.%${filters.searchQuery}%,bio.ilike.%${filters.searchQuery}%`);
+      }
+
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('[Supabase] Error fetching study partners:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'study partners');
+
+      return (data || []).map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        name: user.name || 'Student',
+        avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+        city: user.city,
+        university: user.university,
+        year_of_study: user.year_of_study,
+        bio: user.bio,
+        is_public: user.is_public ?? true,
+        profile_photo_url: user.profile_photo_url,
+        created_at: user.created_at,
+      })) as UserProfile[];
+    },
+  });
+}
+
+export function useUserProfile(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['userProfile', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+
+      console.log('[Supabase] Fetching user profile:', userId);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error fetching user profile:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name || 'Student',
+        avatar: data.profile_photo_url || data.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${data.id}`,
+        city: data.city,
+        university: data.university,
+        year_of_study: data.year_of_study,
+        bio: data.bio,
+        is_public: data.is_public ?? true,
+        profile_photo_url: data.profile_photo_url,
+        created_at: data.created_at,
+      } as UserProfile;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      name?: string;
+      city?: string;
+      university?: string;
+      year_of_study?: number;
+      bio?: string;
+      is_public?: boolean;
+      profile_photo_url?: string;
+    }) => {
+      console.log('[Supabase] Updating user profile:', input.userId);
+
+      const updateData: any = {};
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.city !== undefined) updateData.city = input.city;
+      if (input.university !== undefined) updateData.university = input.university;
+      if (input.year_of_study !== undefined) updateData.year_of_study = input.year_of_study;
+      if (input.bio !== undefined) updateData.bio = input.bio;
+      if (input.is_public !== undefined) updateData.is_public = input.is_public;
+      if (input.profile_photo_url !== undefined) updateData.profile_photo_url = input.profile_photo_url;
+
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', input.userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error updating user profile:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] User profile updated');
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['studyPartners'] });
+    },
+  });
+}
+
+export async function uploadProfilePhoto(userId: string, uri: string): Promise<string> {
+  try {
+    console.log('[Supabase] Uploading profile photo for user:', userId);
+
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const arrayBuffer = await blob.arrayBuffer();
+    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, arrayBuffer, {
+        contentType: `image/${fileExt}`,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[Supabase] Error uploading photo:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(filePath);
+
+    console.log('[Supabase] Photo uploaded successfully:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('[Supabase] Error in uploadProfilePhoto:', error);
+    throw error;
+  }
+}
+
