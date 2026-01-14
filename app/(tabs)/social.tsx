@@ -151,8 +151,8 @@ export default function SocialScreen() {
   const [, forceUpdate] = useState(0);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomCategory, setNewRoomCategory] = useState('anatomy');
-  const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState('20');
+  const [newRoomCategory, setNewRoomCategory] = useState('upper_lower_limbs');
+  const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState('10');
   
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [showUserActionsModal, setShowUserActionsModal] = useState(false);
@@ -317,13 +317,19 @@ export default function SocialScreen() {
 
   const resetCreateRoomForm = () => {
     setNewRoomName('');
-    setNewRoomCategory('anatomy');
-    setNewRoomMaxParticipants('20');
+    setNewRoomCategory('upper_lower_limbs');
+    setNewRoomMaxParticipants('10');
   };
 
   const handleCreateRoom = () => {
     if (!newRoomName.trim()) {
       Alert.alert(t('social.missingInfo'), t('social.roomNameRequiredAlert'));
+      return;
+    }
+
+    const maxParts = parseInt(newRoomMaxParticipants, 10);
+    if (maxParts > 10) {
+      Alert.alert(t('social.errorTitle'), 'Maximum participants cannot exceed 10');
       return;
     }
 
@@ -334,7 +340,7 @@ export default function SocialScreen() {
       hostName: profile?.name || 'You',
       hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
       category: newRoomCategory,
-        maxParticipants: parseInt(newRoomMaxParticipants, 10),
+        maxParticipants: maxParts,
       },
       {
         onSuccess: handleCreateRoomSuccess,
@@ -851,20 +857,25 @@ export default function SocialScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>{t('social.category')}</Text>
                 <View style={styles.categoryOptions}>
-                  {['anatomy', 'physiology', 'pathology', 'pharmacology', 'general'].map(cat => (
+                  {[
+                    { id: 'upper_lower_limbs', label: 'Upper & Lower Limbs' },
+                    { id: 'internal_organs', label: 'Internal Organs' },
+                    { id: 'head_and_neck', label: 'Head and Neck' },
+                    { id: 'neuroanatomy', label: 'Neuroanatomy' },
+                  ].map(cat => (
                     <TouchableOpacity
-                      key={cat}
+                      key={cat.id}
                       style={[
                         styles.categoryOption,
-                        newRoomCategory === cat && styles.categoryOptionActive
+                        newRoomCategory === cat.id && styles.categoryOptionActive
                       ]}
-                      onPress={() => setNewRoomCategory(cat)}
+                      onPress={() => setNewRoomCategory(cat.id)}
                     >
                       <Text style={[
                         styles.categoryOptionText,
-                        newRoomCategory === cat && styles.categoryOptionTextActive
+                        newRoomCategory === cat.id && styles.categoryOptionTextActive
                       ]}>
-                        {t(`social.${cat}`)}
+                        {cat.label}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -872,9 +883,9 @@ export default function SocialScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>{t('social.maxParticipants')}</Text>
+                <Text style={styles.inputLabel}>{t('social.maxParticipants')} (Max: 10)</Text>
                 <View style={styles.durationOptions}>
-                  {['5', '10', '20', '50', '100'].map(num => (
+                  {['3', '5', '7', '10'].map(num => (
                     <TouchableOpacity
                       key={num}
                       style={[
