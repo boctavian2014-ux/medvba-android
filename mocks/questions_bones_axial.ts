@@ -58,6 +58,7 @@ export const generalVertebraeQuestions: Question[] = [
     category: 'upper-lower-limbs',
     difficulty: 'medium',
     question: 'How many processes typically arise from the vertebral arch of a typical vertebra and what are they?',
+    question_ro: 'Câte procese apar de obicei din arcul vertebral al unei vertebre tipice și care sunt acestea?',
     options: [
       'Four processes: two transverse and two spinous',
       'Five processes: one spinous, two transverse and two articular',
@@ -65,15 +66,25 @@ export const generalVertebraeQuestions: Question[] = [
       'Eight processes: two spinous, two transverse and four articular',
       'Three processes: one spinous and two articular'
     ],
+    options_ro: [
+      'Patru procese: două transversale și două spinoase',
+      'Cinci procese: unul spinos, două transversale și două articulare',
+      'Șapte procese: unul spinos, două transversale și patru articulare (două superioare, două inferioare)',
+      'Opt procese: două spinoase, două transversale și patru articulare',
+      'Trei procese: unul spinos și două articulare'
+    ],
     correctAnswer: 2,
     explanation:
-      'A typical vertebral arch supports seven processes: one spinous, two transverse and four articular processes (paired superior and inferior).[web:609][web:610][web:619]'
+      'A typical vertebral arch supports seven processes: one spinous, two transverse and four articular processes (paired superior and inferior).[web:609][web:610][web:619]',
+    explanation_ro:
+      'Un arc vertebral tipic susține șapte procese: unul spinos, două transversale și patru procese articulare (perechi superioare și inferioare).[web:609][web:610][web:619]'
   },
   {
     id: 'gv4',
     category: 'upper-lower-limbs',
     difficulty: 'medium',
     question: 'Which statement BEST describes the vertebral foramen and vertebral canal?',
+    question_ro: 'Care afirmație descrie CEL MAI BINE foramenul vertebral și canalul vertebral?',
     options: [
       'Each vertebral body alone forms the vertebral canal',
       'The vertebral foramen is bounded by the body and arch; aligned foramina form the vertebral canal for the spinal cord',
@@ -81,15 +92,25 @@ export const generalVertebraeQuestions: Question[] = [
       'The vertebral canal is formed by intervertebral discs only',
       'The vertebral canal contains only vertebral veins'
     ],
+    options_ro: [
+      'Fiecare corp vertebral singur formează canalul vertebral',
+      'Foramenul vertebral este delimitat de corp și arc; foramenele aliniate formează canalul vertebral pentru măduva spinării',
+      'Doar vertebrele cervicale au foramene vertebrale',
+      'Canalul vertebral este format doar de discurile intervertebrale',
+      'Canalul vertebral conține doar vene vertebrale'
+    ],
     correctAnswer: 1,
     explanation:
-      'In each vertebra, the body and vertebral arch enclose a vertebral foramen; the succession of foramina forms the vertebral canal that transmits and protects the spinal cord.[web:606][web:607][web:618]'
+      'In each vertebra, the body and vertebral arch enclose a vertebral foramen; the succession of foramina forms the vertebral canal that transmits and protects the spinal cord.[web:606][web:607][web:618]',
+    explanation_ro:
+      'În fiecare vertebră, corpul și arcul vertebral delimitează un foramen vertebral; succesiunea de foramene formează canalul vertebral care transmite și protejează măduva spinării.[web:606][web:607][web:618]'
   },
   {
     id: 'gv5',
     category: 'upper-lower-limbs',
     difficulty: 'medium',
     question: 'What forms an intervertebral foramen and what typically passes through it?',
+    question_ro: 'Ce formează un foramen intervertebral și ce trece de obicei prin el?',
     options: [
       'Spinous processes; vertebral arteries',
       'Laminae; spinal cord',
@@ -97,15 +118,25 @@ export const generalVertebraeQuestions: Question[] = [
       'Vertebral notches of adjacent pedicles; spinal nerve roots and vessels',
       'Articular processes; dorsal root ganglion only'
     ],
+    options_ro: [
+      'Procesele spinoase; arterele vertebrale',
+      'Laminele; măduva spinării',
+      'Discurile intervertebrale; lichidul cefalorahidian',
+      'Incizurile vertebrale ale pediculilor adiacenți; rădăcinile nervilor spinali și vasele',
+      'Procesele articulare; doar ganglionul radicular dorsal'
+    ],
     correctAnswer: 3,
     explanation:
-      'Superior and inferior vertebral notches of adjacent pedicles plus the intervertebral disc form the intervertebral foramen, which transmits spinal nerve roots, vessels and contains the dorsal root ganglion.[web:606][web:612][web:615]'
+      'Superior and inferior vertebral notches of adjacent pedicles plus the intervertebral disc form the intervertebral foramen, which transmits spinal nerve roots, vessels and contains the dorsal root ganglion.[web:606][web:612][web:615]',
+    explanation_ro:
+      'Incizurile vertebrale superioare și inferioare ale pediculilor adiacenți plus discul intervertebral formează foramenul intervertebral, care transmite rădăcinile nervilor spinali, vasele și conține ganglionul radicular dorsal.[web:606][web:612][web:615]'
   },
   {
     id: 'gv6',
     category: 'upper-lower-limbs',
     difficulty: 'hard',
     question: 'Which vertebral structures directly participate in forming zygapophyseal (facet) joints between adjacent vertebrae?',
+    question_ro: 'Care structuri vertebrale participă direct la formarea articulațiilor zigapofizare (fațete) între vertebrele adiacente?',
     options: [
       'Spinous processes',
       'Transverse processes',
@@ -113,15 +144,25 @@ export const generalVertebraeQuestions: Question[] = [
       'Pedicles and laminae',
       'Vertebral bodies and intervertebral discs'
     ],
+    options_ro: [
+      'Procesele spinoase',
+      'Procesele transversale',
+      'Procesele articulare superioare și inferioare cu fațetele lor articulare',
+      'Pediculii și laminele',
+      'Corpurile vertebrale și discurile intervertebrale'
+    ],
     correctAnswer: 2,
     explanation:
-      'Zygapophyseal (facet) joints are synovial joints between the superior articular processes of one vertebra and the inferior articular processes of the vertebra above.[web:609][web:619]'
+      'Zygapophyseal (facet) joints are synovial joints between the superior articular processes of one vertebra and the inferior articular processes of the vertebra above.[web:609][web:619]',
+    explanation_ro:
+      'Articulațiile zigapofizare (fațete) sunt articulații sinoviale între procesele articulare superioare ale unei vertebre și procesele articulare inferioare ale vertebrei de deasupra.[web:609][web:619]'
   },
   {
     id: 'gv7',
     category: 'upper-lower-limbs',
     difficulty: 'hard',
     question: 'Functionally, which statement BEST summarizes the role of the vertebral body versus the vertebral arch in a typical vertebra?',
+    question_ro: 'Funcțional, care afirmație rezumă CEL MAI BINE rolul corpului vertebral față de arcul vertebral într-o vertebră tipică?',
     options: [
       'Vertebral body primarily provides muscle attachment; vertebral arch bears weight',
       'Vertebral body primarily bears weight and resists compressive forces; vertebral arch protects the spinal cord and provides attachment for muscles and ligaments',
@@ -129,9 +170,18 @@ export const generalVertebraeQuestions: Question[] = [
       'Vertebral body only transmits spinal nerves; vertebral arch only houses bone marrow',
       'Vertebral arch is the main weight-bearing structure; vertebral body is vestigial'
     ],
+    options_ro: [
+      'Corpul vertebral oferă în principal inserție musculară; arcul vertebral suportă greutatea',
+      'Corpul vertebral suportă în principal greutatea și rezistă forțelor de compresie; arcul vertebral protejează măduva spinării și oferă inserție pentru mușchi și ligamente',
+      'Ambele structuri au roluri identice doar în protecție',
+      'Corpul vertebral doar transmite nervii spinali; arcul vertebral doar găzduiește măduva osoasă',
+      'Arcul vertebral este principala structură de susținere a greutății; corpul vertebral este vezigial'
+    ],
     correctAnswer: 1,
     explanation:
-      'The vertebral body is the main weight-bearing component, whereas the vertebral arch surrounds and protects the spinal cord and serves as an attachment and lever system for muscles and ligaments.[web:606][web:609][web:619]'
+      'The vertebral body is the main weight-bearing component, whereas the vertebral arch surrounds and protects the spinal cord and serves as an attachment and lever system for muscles and ligaments.[web:606][web:609][web:619]',
+    explanation_ro:
+      'Corpul vertebral este principala componentă de susținere a greutății, în timp ce arcul vertebral înconjoară și protejează măduva spinării și servește ca sistem de inserție și pârghie pentru mușchi și ligamente.[web:606][web:609][web:619]'
   }
 ];
 
