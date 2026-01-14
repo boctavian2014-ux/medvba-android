@@ -391,5 +391,213 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       ],
       explanation: 'După închidere, ductus arteriosus formează ligamentum arteriosum între trunchiul pulmonar și aortă, în timp ce ductus venosus devine ligamentum venosum în ficat.'
     }
+  },
+  'ttb1': {
+    ro: {
+      question: 'La ce nivel vertebral se bifurcă de obicei traheea în bronhiile principale în torace?',
+      options: [
+        'La nivelul vertebrei T1',
+        'La nivelul T4–T5 (unghiul sternal)',
+        'La nivelul vertebrei T7',
+        'La nivelul vertebrei C7',
+        'La nivelul vertebrelor T9–T10'
+      ],
+      explanation: 'În torace, traheea coboară în mediastinul superior și se bifurcă de obicei la nivelul unghiului sternal, corespunzător discului intervertebral T4–T5.'
+    }
+  },
+  'ttb2': {
+    ro: {
+      question: 'Care afirmație descrie cel mai bine poziția traheei toracice în raport cu esofagul?',
+      options: [
+        'Traheea se află posterior față de esofag pe tot parcursul său',
+        'Traheea se află anterior față de esofag pe tot parcursul său',
+        'Traheea se află lateral față de esofag doar pe partea stângă',
+        'Traheea se află lateral față de esofag doar pe partea dreaptă',
+        'Traheea și esofagul nu au o relație anatomică apropiată'
+      ],
+      explanation: 'În mediastinul superior, traheea toracică se află anterior față de esofag, cu peretele său posterior membranos direct în raport cu tubul esofagian.'
+    }
+  },
+  'ttb3': {
+    ro: {
+      question: 'Care bronhie principală este mai verticală, mai largă și mai scurtă, și prin urmare mai predispusă să primească corpuri străine aspirate?',
+      options: [
+        'Bronhia principală stângă',
+        'Bronhia principală dreaptă',
+        'Sunt identice ca calibru și direcție',
+        'Ambele bronhii principale sunt orizontale',
+        'Nicio bronhie nu primește material aspirat preferențial'
+      ],
+      explanation: 'Bronhia principală dreaptă este clasic descrisă ca fiind mai largă, mai scurtă și mai verticală decât cea stângă, astfel corpurile străine inhalate tind să intre mai frecvent în arborele bronșic drept.'
+    }
+  },
+  'ttb4': {
+    ro: {
+      question: 'Care structură arcuiește peste bronhia principală stângă când aceasta intră în rădăcina plămânului?',
+      options: [
+        'Vena azygos',
+        'Arcul aortic',
+        'Vena cavă superioară',
+        'Vena cavă inferioară',
+        'Artera toracică internă'
+      ],
+      explanation: 'Arcul aortic trece peste bronhia principală stângă pe măsură ce se curbează posterior și spre stânga, formând o relație caracteristică la rădăcina plămânului stâng.'
+    }
+  },
+  'ttb5': {
+    ro: {
+      question: 'Care vas arcuiește peste bronhia principală dreaptă la hilul plămânului drept?',
+      options: [
+        'Arcul aortic',
+        'Vena brahiocefalică stângă',
+        'Vena azygos',
+        'Trunchiul pulmonar',
+        'Aorta toracică descendentă'
+      ],
+      explanation: 'Vena azygos formează un arc caracteristic peste rădăcina plămânului drept, trecând superior față de bronhia principală dreaptă înainte de a se drena în vena cavă superioară.'
+    }
+  },
+  'ttb6': {
+    ro: {
+      question: 'Care dintre următoarele afirmații despre carină este cea mai precisă?',
+      options: [
+        'Este o creastă musculară pe peretele anterior al traheei',
+        'Este o creastă cartilaginoasă la bifurcație care se proiectează în originea bronhiilor principale',
+        'Este o bandă fibroasă care unește bronhiile principale posterior',
+        'Este un șanț între venele pulmonare',
+        'Este vizibilă doar extern pe suprafața plămânului'
+      ],
+      explanation: 'Carina este o creastă cartilaginoasă în formă de chilă la capătul inferior al traheei, proiectându-se între originile celor două bronhii principale și servind ca un reper bronhoscopic important.'
+    }
+  },
+  'ttb7': {
+    ro: {
+      question: 'Care structură se află direct posterior față de bifurcația traheei în torace?',
+      options: [
+        'Aorta ascendentă',
+        'Trunchiul pulmonar',
+        'Esofagul',
+        'Vena cavă superioară',
+        'Artera pulmonară stângă'
+      ],
+      explanation: 'La nivelul carinei, esofagul se află imediat posterior, astfel încât mărirea patologică a ganglionilor subcarinali sau distorsiunea carinei poate îngusta sau deplasa lumenul esofagian.'
+    }
+  },
+  'ttb8': {
+    ro: {
+      question: 'Cum diferă bronhia principală stângă de cea dreaptă în cursul său prin mediastin?',
+      options: [
+        'Trece mai vertical și ajunge la plămân într-o distanță mai scurtă',
+        'Trece inferior față de trunchiul pulmonar și vena cavă superioară',
+        'Trece inferolateral, anterior față de esofag și aorta toracică',
+        'Trece inferolateral, inferior față de arcul aortic și anterior față de esofag și aorta descendentă',
+        'Rulează în întregime în mediastinul anterior'
+      ],
+      explanation: 'Bronhia principală stângă urmează un curs mai lung și mai oblic, trecând inferior față de arcul aortic și anterior față de esofag și aorta toracică descendentă înainte de a intra în hilul plămânului stâng.'
+    }
+  },
+  'ttb9': {
+    ro: {
+      question: 'Care dintre următoarele descrie cel mai bine raporturile traheei toracice în mediastinul superior?',
+      options: [
+        'Anterior față de timus și posterior față de vena cavă superioară',
+        'Posterior față de esofag și anterior față de coloana vertebrală',
+        'Anterior față de esofag și posterior față de arcul aortic și trunchiul brahiocefal',
+        'Anterior față de esofag și posterior față de stern, timus și venele mari',
+        'Lateral față de esofag și vasele mari fără raporturi anterioare'
+      ],
+      explanation: 'În mediastinul superior, traheea se află anterior față de esofag și posterior față de structurile mediastinului anterior, incluzând sternul, timusul și venele mari precum venele brahiocefalice și vena cavă superioară.'
+    }
+  },
+  'ttb10': {
+    ro: {
+      question: 'Care afirmație explică cel mai bine semnificația clinică a bronhiei superioare drepte (eparteriala) în raport cu artera pulmonară dreaptă?',
+      options: [
+        'Se află inferior față de artera pulmonară dreaptă, similar cu toate celelalte bronhii lobare',
+        'Traversează anterior față de artera și venele pulmonare',
+        'Apare deasupra nivelului arterei pulmonare drepte în hil',
+        'Este singura bronhie care nu este însoțită de o ramură a arterei pulmonare',
+        'Se află în întregime în afara rădăcinii plămânului'
+      ],
+      explanation: 'Bronhia lobului superior drept este numită eparterială deoarece apare deasupra arterei pulmonare drepte în rădăcina plămânului, un aranjament distinctiv comparativ cu bronhiile hipartariale rămase.'
+    }
+  },
+  'mb1': {
+    ro: {
+      question: 'Care afirmație compară cel mai bine bronhiile principale dreapta și stânga?',
+      options: [
+        'Bronhia principală dreaptă este mai lungă și mai îngustă decât cea stângă',
+        'Bronhia principală dreaptă este mai scurtă, mai largă și mai verticală decât cea stângă',
+        'Bronhia principală stângă este mai scurtă și mai verticală decât cea dreaptă',
+        'Ambele bronhii principale au lungime, calibru și direcție identice',
+        'Bronhia principală stângă este mai largă și mai verticală decât cea dreaptă'
+      ],
+      explanation: 'Bronhia principală dreaptă este caracteristic mai scurtă, mai largă și mai verticală decât cea stângă, o configurație care favorizează intrarea materialului aspirat în arborele bronșic drept.'
+    }
+  },
+  'mb2': {
+    ro: {
+      question: 'Care lob pulmonar este aprovizionat de o bronhie lobară "eparterială"?',
+      options: [
+        'Lobul mijlociu drept',
+        'Lobul inferior drept',
+        'Lobul superior drept',
+        'Lobul superior stâng',
+        'Lobul inferior stâng'
+      ],
+      explanation: 'Bronhia lobului superior drept apare deasupra arterei pulmonare drepte și este prin urmare numită eparterială, în timp ce bronhiile lobare rămase sunt hiparteriale.'
+    }
+  },
+  'mb3': {
+    ro: {
+      question: 'Care este lungimea tipică a bronhiei principale stângi comparativ cu cea dreaptă?',
+      options: [
+        'Bronhia principală stângă este mai scurtă decât cea dreaptă (aproximativ 1 cm)',
+        'Bronhia principală stângă are lungime identică cu cea dreaptă (aproximativ 2 cm)',
+        'Bronhia principală stângă este mai lungă, în mod obișnuit aproximativ 5 cm în lungime',
+        'Bronhia principală stângă lipsește; traheea se divide direct în bronhii lobare',
+        'Bronhia principală stângă se extinde doar în substanța pulmonară'
+      ],
+      explanation: 'Bronhia principală stângă are un curs intratoracic mai lung, măsurând în mod obișnuit aproximativ 5 cm, deoarece trece oblic sub arcul aortic pentru a ajunge la rădăcina plămânului stâng, în timp ce cea dreaptă este de obicei mai scurtă.'
+    }
+  },
+  'mb4': {
+    ro: {
+      question: 'Care structuri majore sunt strâns legate de bronhia principală stângă pe parcursul cursului său?',
+      options: [
+        'Vena cavă superioară anterior și vena azygos posterior',
+        'Aorta ascendentă anterior și vena cavă inferioară posterior',
+        'Arcul aortic superior și esofagul și aorta toracică descendentă posterior',
+        'Trunchiul pulmonar superior și atriul drept posterior',
+        'Vasele toracice interne anterior și coloana vertebrală posterior'
+      ],
+      explanation: 'Bronhia principală stângă trece inferior față de arcul aortic și anterior față de esofag și aorta toracică descendentă, relații de importanță în patologia și imagistica mediastinală.'
+    }
+  },
+  'mb5': {
+    ro: {
+      question: 'În câte bronhii lobare (secundare) se divide de obicei bronhia principală dreaptă?',
+      options: [
+        'Două bronhii lobare',
+        'Trei bronhii lobare',
+        'Patru bronhii lobare',
+        'Cinci bronhii lobare',
+        'Șase bronhii lobare'
+      ],
+      explanation: 'Bronhia principală dreaptă se divide în trei bronhii lobare care aprovizionează lobii superior, mijlociu și inferior ai plămânului drept, în timp ce bronhia principală stângă se divide în două bronhii lobare.'
+    }
+  },
+  'mb6': {
+    ro: {
+      question: 'Care caracteristică clinică reflectă cel mai direct orientarea mai verticală a bronhiei principale drepte?',
+      options: [
+        'Incidență mai mare a pneumoniei pe partea stângă',
+        'Compresia frecventă a bronhiei principale drepte de către arcul aortic',
+        'Probabilitate mai mare de aspirare a corpului străin în bronhia lobului inferior drept',
+        'Protecție completă a plămânului drept împotriva materialului aspirat',
+        'Absența bronhiilor segmentare pe partea dreaptă'
+      ],
+      explanation: 'Deoarece bronhia principală dreaptă este mai verticală și în linie directă cu traheea, corpurile străine aspirate tind să pătrundă în ea și se depun adesea în bronhia lobului inferior drept.'
+    }
   }
 };
