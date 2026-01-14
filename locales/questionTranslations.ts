@@ -937,5 +937,162 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       ],
       explanation: 'Ligamentul gastrosplenic (gastrolienal) se extinde de la curbura mare a stomacului la hilul splinei, transmițând vasele gastrice scurte și vasele gastroepiploice stângi.'
     }
+  },
+
+  'mc1': {
+    ro: {
+      question: 'Care afirmație descrie cel mai bine microcirculația?',
+      options: [
+        'Doar arterele mari și venele mari',
+        'Rețeaua de arteriole, capilare și venule unde are loc schimbul substanțelor',
+        'Doar inima și aorta',
+        'Doar vasele limfatice',
+        'Doar venele profunde'
+      ],
+      explanation: 'Microcirculația constă din arteriole, capilare și venule unde are loc schimbul de gaze, nutrienți și deșeuri între sânge și țesuturi.'
+    }
+  },
+  'mc2': {
+    ro: {
+      question: 'Care tip de capilare sunt cele mai permeabile?',
+      options: [
+        'Capilare continue',
+        'Capilare fenestrate',
+        'Capilare sinusoidale (discontinue)',
+        'Toate au permeabilitate egală',
+        'Capilarele nu sunt niciodată permeabile'
+      ],
+      explanation: 'Capilarele sinusoidale (discontinue) sunt cele mai permeabile, având spații mari între celule și o membrană bazală discontinuă, găsite în ficat, splină și măduvă osoasă.'
+    }
+  },
+  'mc3': {
+    ro: {
+      question: 'Ce forțe determină mișcarea fluidului prin pereții capilarelor conform ecuației Starling?',
+      options: [
+        'Doar presiunea hidrostatică',
+        'Doar presiunea oncotică',
+        'Presiunea hidrostatică capilar și oncotică interstițială (favorează filtrarea) versus presiunea oncotică capilară și hidrostatică interstițială (favorează reabsorbția)',
+        'Doar gravitația',
+        'Doar temperatura'
+      ],
+      explanation: 'Ecuația Starling descrie echilibrul între presiunea hidrostatică (împinge fluidul afară) și presiunea oncotică (trage fluidul înapoi) atât în capilare cât și în interstițiu.'
+    }
+  },
+  'mc4': {
+    ro: {
+      question: 'În majoritatea patului capilar, unde predomină filtrarea față de reabsorbție?',
+      options: [
+        'Filtrarea predomină la capătul arterial; reabsorbția predomină la capătul venos',
+        'Reabsorbția predomină la capătul arterial; filtrarea predomină la capătul venos',
+        'Filtrarea și reabsorbția sunt egale peste tot',
+        'Nu există nicio filtrare sau reabsorbție',
+        'Doar filtrarea are loc pretutindeni'
+      ],
+      explanation: 'La capătul arterial al capilarelor, presiunea hidrostatică ridicată favorizează filtrarea, în timp ce la capătul venos, presiunea hidrostatică scăzută permite reabsorbției oncotice să predomine.'
+    }
+  },
+  'mc5': {
+    ro: {
+      question: 'Ce rol joacă sistemul limfatic în echilibrul fluidelor?',
+      options: [
+        'Nu are nicio legătură cu fluidele',
+        'Returnează excesul de fluid interstițial filtrat și proteine în circulația venoasă',
+        'Doar produce limfocite',
+        'Doar filtrează sângele',
+        'Doar stochează grăsimi'
+      ],
+      explanation: 'Sistemul limfatic colectează excesul de fluid interstițial (inclusiv proteine) care nu este reabsorbit de capilare și îl returnează în circulația venoasă, prevenind edemul.'
+    }
+  },
+  'mc6': {
+    ro: {
+      question: 'Care mechanim reglează fluxul sanguin prin paturile capilare?',
+      options: [
+        'Doar inima',
+        'Sfincterele precapilare și metarteriolele',
+        'Doar venele',
+        'Doar hormonii',
+        'Fluxul este constant fără reglare'
+      ],
+      explanation: 'Sfincterele precapilare (benzi de mușchi neted la intrarea capilarelor) și metarteriolele reglează fluxul sanguin în paturile capilare în funcție de nevoile metabolice locale.'
+    }
+  },
+  'hd1': {
+    ro: {
+      question: 'Care lege descrie relația dintre flux, presiune și rezistență în vasele de sânge?',
+      options: [
+        'Legea lui Boyle',
+        'Legea lui Ohm (flux = ΔPresiune / Rezistență)',
+        'Legea lui Newton',
+        'Legea lui Hooke',
+        'Legea lui Avogadro'
+      ],
+      explanation: 'Fluxul sanguin este proporțional cu gradientul de presiune și invers proporțional cu rezistența vasculară (Q = ΔP/R), analog cu legea lui Ohm în electricitate.'
+    }
+  },
+  'hd2': {
+    ro: {
+      question: 'Care afirmație descrie cel mai bine rezistența vasculară?',
+      options: [
+        'Este determinată doar de lungimea vasului',
+        'Este invers proporțională cu a patra putere a razei vasului (legea Poiseuille)',
+        'Nu depinde de vâscozitatea sângelui',
+        'Este aceeași în toate vasele',
+        'Nu afectează fluxul sanguin'
+      ],
+      explanation: 'Conform legii Poiseuille, rezistența este direct proporțională cu lungimea și vâscozitatea și invers proporțională cu a patra putere a razei - astfel, mici modificări ale diametrului au efecte mari.'
+    }
+  },
+  'hd3': {
+    ro: {
+      question: 'Unde se găsește cea mai mare rezistență vasculară în circulația sistemică?',
+      options: [
+        'În aortă',
+        'În capilare',
+        'În arteriole',
+        'În vene',
+        'În vena cavă'
+      ],
+      explanation: 'Arteriolele contribuie cel mai mult la rezistența vasculară totală datorită diametrului lor mic și capacității de vasoconstricție/vasodilatație, servind ca "robinete de rezistență".'
+    }
+  },
+  'hd4': {
+    ro: {
+      question: 'Ce este fluxul laminar versus turbulent?',
+      options: [
+        'Fluxul laminar este haotic; fluxul turbulent este ordonat',
+        'Fluxul laminar este ordonat în straturi; fluxul turbulent este haotic și poate produce sufluri',
+        'Ambele sunt identice',
+        'Fluxul turbulent apare doar în vene',
+        'Fluxul laminar nu există niciodată'
+      ],
+      explanation: 'Fluxul laminar este ordonat și silențios, cu straturi de sânge care se mișcă paralel. Fluxul turbulent este dezordonat, apare la viteze mari sau îngustări, și poate produce sufluri audibile.'
+    }
+  },
+  'hd5': {
+    ro: {
+      question: 'Ce este numărul Reynolds și ce indică despre fluxul sanguin?',
+      options: [
+        'Măsoară temperatura sângelui',
+        'Raportul dintre forțele inerciale și cele viscoase; valori înalte indică flux turbulent',
+        'Numărul de celule roșii din sânge',
+        'Presiunea din aortă',
+        'Frecvența cardiacă'
+      ],
+      explanation: 'Numărul Reynolds este un număr adimensional care prevede turbulența; când este >2000-2500, fluxul devine turbulent datorită vitezei mari, razei mari sau vâscozității scăzute.'
+    }
+  },
+  'hd6': {
+    ro: {
+      question: 'De ce viteza fluxului sanguin este cea mai lentă în capilare în ciuda diametrului lor mic?',
+      options: [
+        'Capilarele au rezistența cea mai mare',
+        'Aria transversală totală a tuturor capilarelor combinate este cea mai mare, reducând viteza',
+        'Inima pompează mai încet către capilare',
+        'Capilarele au valve',
+        'Sângele se oprește în capilare'
+      ],
+      explanation: 'Deși fiecare capilar este îngust, aria transversală totală a tuturor capilarelor din organism este enormă, reducând viteza conform principiului continuității (Q = A × v).'
+    }
   }
 };
