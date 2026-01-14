@@ -690,3 +690,228 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
   }
 }
 
+export interface UserProgressData {
+  id: string;
+  userId: string;
+  totalQuestionsAnswered: number;
+  correctAnswers: number;
+  studyTimeSeconds: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyProgressData {
+  id: string;
+  userId: string;
+  date: string;
+  questionsAnswered: number;
+  correctAnswers: number;
+  studyTimeSeconds: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function useUserProgress(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['userProgress', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+
+      console.log('[Supabase] Fetching user progress for:', userId);
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('[Supabase] No user progress found, will create on first update');
+          return null;
+        }
+        console.error('[Supabase] Error fetching user progress:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        totalQuestionsAnswered: data.total_questions_answered,
+        correctAnswers: data.correct_answers,
+        studyTimeSeconds: data.study_time_seconds,
+        currentStreak: data.current_streak,
+        longestStreak: data.longest_streak,
+        lastActivityDate: data.last_activity_date,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      } as UserProgressData;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useUpsertUserProgress() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      totalQuestionsAnswered: number;
+      correctAnswers: number;
+      studyTimeSeconds: number;
+      currentStreak: number;
+      longestStreak: number;
+      lastActivityDate: string | null;
+    }) => {
+      console.log('[Supabase] Upserting user progress for:', input.userId);
+
+      const { data, error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: input.userId,
+          total_questions_answered: input.totalQuestionsAnswered,
+          correct_answers: input.correctAnswers,
+          study_time_seconds: input.studyTimeSeconds,
+          current_streak: input.currentStreak,
+          longest_streak: input.longestStreak,
+          last_activity_date: input.lastActivityDate,
+        }, {
+          onConflict: 'user_id',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error upserting user progress:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] User progress upserted successfully');
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['userProgress', variables.userId] });
+    },
+  });
+}
+
+export function useDailyProgress(userId: string | undefined, date: string) {
+  return useQuery({
+    queryKey: ['dailyProgress', userId, date],
+    queryFn: async () => {
+      if (!userId) return null;
+
+      console.log('[Supabase] Fetching daily progress for:', userId, date);
+      const { data, error } = await supabase
+        .from('daily_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', date)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('[Supabase] No daily progress found for date:', date);
+          return null;
+        }
+        console.error('[Supabase] Error fetching daily progress:', error);
+        throw error;
+      }
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        date: data.date,
+        questionsAnswered: data.questions_answered,
+        correctAnswers: data.correct_answers,
+        studyTimeSeconds: data.study_time_seconds,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      } as DailyProgressData;
+    },
+    enabled: !!userId && !!date,
+  });
+}
+
+export function useWeeklyProgress(userId: string | undefined, startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: ['weeklyProgress', userId, startDate, endDate],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      console.log('[Supabase] Fetching weekly progress for:', userId, startDate, 'to', endDate);
+      const { data, error } = await supabase
+        .from('daily_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('[Supabase] Error fetching weekly progress:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'daily records');
+
+      return (data || []).map((day: any) => ({
+        id: day.id,
+        userId: day.user_id,
+        date: day.date,
+        questionsAnswered: day.questions_answered,
+        correctAnswers: day.correct_answers,
+        studyTimeSeconds: day.study_time_seconds,
+        createdAt: day.created_at,
+        updatedAt: day.updated_at,
+      })) as DailyProgressData[];
+    },
+    enabled: !!userId && !!startDate && !!endDate,
+  });
+}
+
+export function useUpsertDailyProgress() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      date: string;
+      questionsAnswered: number;
+      correctAnswers: number;
+      studyTimeSeconds: number;
+    }) => {
+      console.log('[Supabase] Upserting daily progress for:', input.userId, input.date);
+
+      const { data, error } = await supabase
+        .from('daily_progress')
+        .upsert({
+          user_id: input.userId,
+          date: input.date,
+          questions_answered: input.questionsAnswered,
+          correct_answers: input.correctAnswers,
+          study_time_seconds: input.studyTimeSeconds,
+        }, {
+          onConflict: 'user_id,date',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error upserting daily progress:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Daily progress upserted successfully');
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['dailyProgress', variables.userId, variables.date] });
+      queryClient.invalidateQueries({ queryKey: ['weeklyProgress', variables.userId] });
+    },
+  });
+}
+

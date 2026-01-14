@@ -3,6 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
 import { monitoring } from '@/lib/monitoring';
+import { useAuth } from './AuthProvider';
+import { 
+  useUserProgress, 
+  useUpsertUserProgress, 
+  useWeeklyProgress, 
+  useUpsertDailyProgress 
+} from '@/lib/supabase-hooks';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
 const SESSION_STATE_KEY = 'quiz_session_state';
@@ -125,6 +132,8 @@ function getDefaultDailyProgress(): DailyProgress {
 }
 
 export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizProgressContextValue>(() => {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(getDefaultDailyProgress());
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
   const [allTimeStats, setAllTimeStats] = useState<AllTimeStats>(getDefaultAllTimeStats());
@@ -132,6 +141,16 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   const [weeklyHistory, setWeeklyHistory] = useState<DailyHistoryEntry[]>([]);
   const [lastSessionInfo, setLastSessionInfo] = useState<LastSessionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const cloudProgressQuery = useUserProgress(userId);
+  const cloudWeeklyQuery = useWeeklyProgress(
+    userId,
+    getLast7Days()[0],
+    getTodayDateString()
+  );
+  const upsertUserProgressMutation = useUpsertUserProgress();
+  const upsertDailyProgressMutation = useUpsertDailyProgress();
 
   const updateStreak = useCallback(async () => {
     const today = getTodayDateString();
@@ -215,7 +234,71 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   useEffect(() => {
     const loadProgress = async () => {
       try {
-        console.log('[QuizProgress] Loading daily progress...');
+        console.log('[QuizProgress] Loading progress from cloud and local...');
+        
+        if (userId && cloudProgressQuery.data) {
+          console.log('[QuizProgress] Loading from Supabase cloud');
+          setAllTimeStats({
+            totalQuestionsAnswered: cloudProgressQuery.data.totalQuestionsAnswered,
+            totalCorrectAnswers: cloudProgressQuery.data.correctAnswers,
+            totalStudyTimeSeconds: cloudProgressQuery.data.studyTimeSeconds,
+          });
+          setStreakData({
+            currentStreak: cloudProgressQuery.data.currentStreak,
+            longestStreak: cloudProgressQuery.data.longestStreak,
+            lastActiveDate: cloudProgressQuery.data.lastActivityDate || '',
+          });
+        } else {
+          console.log('[QuizProgress] Loading from local AsyncStorage');
+          const allTimeStored = await AsyncStorage.getItem(ALL_TIME_STATS_KEY);
+          if (allTimeStored) {
+            const parsedAllTime = JSON.parse(allTimeStored) as AllTimeStats;
+            console.log('[QuizProgress] Loaded all-time stats from local:', parsedAllTime);
+            setAllTimeStats(parsedAllTime);
+          }
+          
+          const streakStored = await AsyncStorage.getItem(STREAK_KEY);
+          if (streakStored) {
+            const parsedStreak = JSON.parse(streakStored) as StreakData;
+            const today = getTodayDateString();
+            const yesterday = getYesterdayDateString();
+            
+            if (parsedStreak.lastActiveDate !== today && parsedStreak.lastActiveDate !== yesterday) {
+              console.log('[QuizProgress] Streak broken, resetting to 0');
+              const resetStreak: StreakData = {
+                currentStreak: 0,
+                lastActiveDate: parsedStreak.lastActiveDate,
+                longestStreak: parsedStreak.longestStreak,
+              };
+              setStreakData(resetStreak);
+              await AsyncStorage.setItem(STREAK_KEY, JSON.stringify(resetStreak));
+            } else {
+              console.log('[QuizProgress] Loaded streak from local:', parsedStreak.currentStreak, 'days');
+              setStreakData(parsedStreak);
+            }
+          }
+        }
+
+        if (userId && cloudWeeklyQuery.data && cloudWeeklyQuery.data.length > 0) {
+          console.log('[QuizProgress] Loading weekly history from Supabase');
+          const weeklyData = cloudWeeklyQuery.data.map(day => ({
+            date: day.date,
+            questionsAnswered: day.questionsAnswered,
+            correctAnswers: day.correctAnswers,
+            studyTimeSeconds: day.studyTimeSeconds,
+          }));
+          setWeeklyHistory(weeklyData);
+        } else {
+          const weeklyStored = await AsyncStorage.getItem(WEEKLY_HISTORY_KEY);
+          if (weeklyStored) {
+            const parsedWeekly = JSON.parse(weeklyStored) as DailyHistoryEntry[];
+            const last7Days = getLast7Days();
+            const filtered = parsedWeekly.filter(entry => last7Days.includes(entry.date));
+            console.log('[QuizProgress] Loaded weekly history from local:', filtered.length, 'days');
+            setWeeklyHistory(filtered);
+          }
+        }
+
         const stored = await AsyncStorage.getItem(DAILY_PROGRESS_KEY);
         
         if (stored) {
@@ -250,45 +333,6 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           }
         }
 
-        const allTimeStored = await AsyncStorage.getItem(ALL_TIME_STATS_KEY);
-        if (allTimeStored) {
-          const parsedAllTime = JSON.parse(allTimeStored) as AllTimeStats;
-          console.log('[QuizProgress] Loaded all-time stats:', parsedAllTime);
-          setAllTimeStats(parsedAllTime);
-        } else {
-          console.log('[QuizProgress] No all-time stats, using default');
-        }
-
-        const streakStored = await AsyncStorage.getItem(STREAK_KEY);
-        if (streakStored) {
-          const parsedStreak = JSON.parse(streakStored) as StreakData;
-          const today = getTodayDateString();
-          const yesterday = getYesterdayDateString();
-          
-          if (parsedStreak.lastActiveDate !== today && parsedStreak.lastActiveDate !== yesterday) {
-            console.log('[QuizProgress] Streak broken, resetting to 0');
-            const resetStreak: StreakData = {
-              currentStreak: 0,
-              lastActiveDate: parsedStreak.lastActiveDate,
-              longestStreak: parsedStreak.longestStreak,
-            };
-            setStreakData(resetStreak);
-            await AsyncStorage.setItem(STREAK_KEY, JSON.stringify(resetStreak));
-          } else {
-            console.log('[QuizProgress] Loaded streak:', parsedStreak.currentStreak, 'days');
-            setStreakData(parsedStreak);
-          }
-        }
-
-        const weeklyStored = await AsyncStorage.getItem(WEEKLY_HISTORY_KEY);
-        if (weeklyStored) {
-          const parsedWeekly = JSON.parse(weeklyStored) as DailyHistoryEntry[];
-          const last7Days = getLast7Days();
-          const filtered = parsedWeekly.filter(entry => last7Days.includes(entry.date));
-          console.log('[QuizProgress] Loaded weekly history:', filtered.length, 'days');
-          setWeeklyHistory(filtered);
-        }
-
         const lastSessionStored = await AsyncStorage.getItem(LAST_SESSION_KEY);
         if (lastSessionStored) {
           const parsedLastSession = JSON.parse(lastSessionStored) as LastSessionInfo;
@@ -303,7 +347,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     };
 
     loadProgress();
-  }, []);
+  }, [userId, cloudProgressQuery.data, cloudWeeklyQuery.data]);
 
   const updateDailyProgress = useCallback(async (correct: boolean, questionId: string) => {
     try {
@@ -349,11 +393,45 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
       await updateStreak();
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
+
+      if (userId && !isSyncing) {
+        setIsSyncing(true);
+        try {
+          const currentAllTime = allTimeStats;
+          const currentStreak = streakData;
+          const today = getTodayDateString();
+          
+          await upsertUserProgressMutation.mutateAsync({
+            userId,
+            totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered + 1,
+            correctAnswers: correct ? currentAllTime.totalCorrectAnswers + 1 : currentAllTime.totalCorrectAnswers,
+            studyTimeSeconds: currentAllTime.totalStudyTimeSeconds,
+            currentStreak: currentStreak.currentStreak,
+            longestStreak: currentStreak.longestStreak,
+            lastActivityDate: currentStreak.lastActiveDate || null,
+          });
+
+          const todayEntry = weeklyHistory.find(e => e.date === today);
+          await upsertDailyProgressMutation.mutateAsync({
+            userId,
+            date: today,
+            questionsAnswered: (todayEntry?.questionsAnswered || 0) + 1,
+            correctAnswers: (todayEntry?.correctAnswers || 0) + (correct ? 1 : 0),
+            studyTimeSeconds: todayEntry?.studyTimeSeconds || 0,
+          });
+
+          console.log('[QuizProgress] Synced to Supabase successfully');
+        } catch (error) {
+          console.error('[QuizProgress] Error syncing to Supabase:', error);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
       monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
-  }, [updateStreak, updateWeeklyHistory]);
+  }, [updateStreak, updateWeeklyHistory, userId, isSyncing, allTimeStats, streakData, weeklyHistory, upsertUserProgressMutation, upsertDailyProgressMutation]);
 
   const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
     try {
@@ -450,10 +528,46 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       });
 
       await updateWeeklyHistory(0, 0, seconds);
+
+      if (userId && !isSyncing) {
+        setIsSyncing(true);
+        try {
+          const currentAllTime = allTimeStats;
+          const currentStreak = streakData;
+          
+          await upsertUserProgressMutation.mutateAsync({
+            userId,
+            totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered,
+            correctAnswers: currentAllTime.totalCorrectAnswers,
+            studyTimeSeconds: currentAllTime.totalStudyTimeSeconds + seconds,
+            currentStreak: currentStreak.currentStreak,
+            longestStreak: currentStreak.longestStreak,
+            lastActivityDate: currentStreak.lastActiveDate || null,
+          });
+
+          const today = getTodayDateString();
+          const todayEntry = weeklyHistory.find(e => e.date === today);
+          if (todayEntry) {
+            await upsertDailyProgressMutation.mutateAsync({
+              userId,
+              date: today,
+              questionsAnswered: todayEntry.questionsAnswered,
+              correctAnswers: todayEntry.correctAnswers,
+              studyTimeSeconds: todayEntry.studyTimeSeconds + seconds,
+            });
+          }
+
+          console.log('[QuizProgress] Study time synced to Supabase');
+        } catch (error) {
+          console.error('[QuizProgress] Error syncing study time to Supabase:', error);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
     } catch (error) {
       console.error('[QuizProgress] Error adding study time:', error);
     }
-  }, [updateWeeklyHistory]);
+  }, [updateWeeklyHistory, userId, isSyncing, allTimeStats, streakData, weeklyHistory, upsertUserProgressMutation, upsertDailyProgressMutation]);
 
   const accuracy = useMemo(() => {
     if (allTimeStats.totalQuestionsAnswered === 0) return 0;
