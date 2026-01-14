@@ -49,12 +49,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 interface Achievement {
   id: string;
   name: string;
-  icon: string;
+  icon: React.ComponentType<{ color: string; size: number; fill?: string }>;
   description: string;
   requirement: number;
   currentProgress: number;
   type: 'questions' | 'streak' | 'accuracy' | 'time';
   gradient: readonly [string, string];
+  iconColor: string;
 }
 
 type LeaderboardPeriod = 'daily' | 'weekly' | 'monthly' | 'allTime';
@@ -102,62 +103,68 @@ export default function ProfileScreen() {
     { 
       id: 'question_master', 
       name: t('achievement.questionMaster'), 
-      icon: '🎯', 
+      icon: Target, 
       description: t('achievement.questionMasterDesc'),
       requirement: 1000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
       type: 'questions',
       gradient: ['#FF6B6B', '#FF8E53'],
+      iconColor: '#FF6B6B',
     },
     { 
       id: 'streak_champion', 
       name: t('achievement.streakChampion'), 
-      icon: '🔥', 
+      icon: Flame, 
       description: t('achievement.streakChampionDesc'),
       requirement: 30,
       currentProgress: streakData.currentStreak,
       type: 'streak',
       gradient: ['#F093FB', '#F5576C'],
+      iconColor: '#F093FB',
     },
     { 
       id: 'accuracy_ace', 
       name: t('achievement.accuracyAce'), 
-      icon: '✨', 
+      icon: Zap, 
       description: t('achievement.accuracyAceDesc'),
       requirement: 80,
       currentProgress: Math.round(accuracy),
       type: 'accuracy',
       gradient: ['#4FACFE', '#00F2FE'],
+      iconColor: '#4FACFE',
     },
     { 
       id: 'study_warrior', 
       name: t('achievement.studyWarrior'), 
-      icon: '⚔️', 
+      icon: Award, 
       description: t('achievement.studyWarriorDesc'),
       requirement: 50,
       currentProgress: Math.floor(allTimeStats.totalStudyTimeSeconds / 3600),
       type: 'time',
       gradient: ['#43E97B', '#38F9D7'],
+      iconColor: '#43E97B',
     },
     { 
       id: 'anatomy_expert', 
       name: t('achievement.anatomyExpert'), 
-      icon: '🦴', 
+      icon: Trophy, 
       description: t('achievement.anatomyExpertDesc'),
       requirement: 5000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
       type: 'questions',
       gradient: ['#FA709A', '#FEE140'],
+      iconColor: '#FA709A',
     },
     { 
       id: 'dedication', 
       name: t('achievement.dedication'), 
-      icon: '💎', 
+      icon: Crown, 
       description: t('achievement.dedicationDesc'),
       requirement: 100,
       currentProgress: streakData.longestStreak,
       type: 'streak',
       gradient: ['#667EEA', '#764BA2'],
+      iconColor: '#667EEA',
     },
   ], [allTimeStats.totalQuestionsAnswered, allTimeStats.totalStudyTimeSeconds, streakData.currentStreak, streakData.longestStreak, accuracy, t]);
 
@@ -396,6 +403,7 @@ export default function ProfileScreen() {
               {achievements.map((achievement) => {
                 const isUnlocked = achievement.currentProgress >= achievement.requirement;
                 const progress = getAchievementProgress(achievement);
+                const AchievementIcon = achievement.icon;
                 
                 return (
                   <TouchableOpacity
@@ -421,10 +429,12 @@ export default function ProfileScreen() {
                           <Lock color={Colors.textMuted} size={16} />
                         </View>
                       )}
-                      <View style={styles.achievementIconContainer}>
-                        <Text style={[styles.achievementIcon, !isUnlocked && styles.achievementIconLocked]}>
-                          {achievement.icon}
-                        </Text>
+                      <View style={[styles.achievementIconContainer, { backgroundColor: isUnlocked ? `${achievement.iconColor}30` : 'rgba(255,255,255,0.08)' }]}>
+                        <AchievementIcon 
+                          color={isUnlocked ? achievement.iconColor : Colors.textMuted} 
+                          size={28}
+                          fill={isUnlocked && achievement.id.includes('streak') ? achievement.iconColor : undefined}
+                        />
                       </View>
                       <Text style={[styles.achievementName, !isUnlocked && styles.achievementNameLocked]}>
                         {achievement.name}
@@ -935,17 +945,12 @@ const styles = StyleSheet.create({
     right: 10,
   },
   achievementIconContainer: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-  },
-  achievementIcon: {
-    fontSize: 32,
-  },
-  achievementIconLocked: {
-    opacity: 0.4,
   },
   achievementName: {
     fontSize: 13,
