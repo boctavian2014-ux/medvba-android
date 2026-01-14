@@ -435,7 +435,7 @@ export default function SocialScreen() {
         >
           <View style={styles.header}>
             <View style={styles.headerTop}>
-              <View>
+              <View style={styles.headerTextContainer}>
                 <Text style={styles.title}>{t('social.community')}</Text>
                 <Text style={styles.subtitle}>{t('social.communitySubtitle')}</Text>
               </View>
@@ -1169,16 +1169,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: 16,
+    gap: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
+    minWidth: 0,
   },
   findPartnersButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 20,
     gap: 6,
     overflow: 'hidden',
+    flexShrink: 0,
   },
   findPartnersButtonText: {
     fontSize: 14,
