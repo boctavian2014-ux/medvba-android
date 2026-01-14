@@ -151,7 +151,7 @@ export default function SocialScreen() {
   const [, forceUpdate] = useState(0);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomCategory, setNewRoomCategory] = useState('upper_lower_limbs');
+  const [newRoomCategory, setNewRoomCategory] = useState('upper-lower-limbs');
   const [newRoomMaxParticipants, setNewRoomMaxParticipants] = useState('10');
   
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
@@ -317,7 +317,7 @@ export default function SocialScreen() {
 
   const resetCreateRoomForm = () => {
     setNewRoomName('');
-    setNewRoomCategory('upper_lower_limbs');
+    setNewRoomCategory('upper-lower-limbs');
     setNewRoomMaxParticipants('10');
   };
 
@@ -858,9 +858,9 @@ export default function SocialScreen() {
                 <Text style={styles.inputLabel}>{t('social.category')}</Text>
                 <View style={styles.categoryOptions}>
                   {[
-                    { id: 'upper_lower_limbs', label: getModuleName('upper-lower-limbs') },
-                    { id: 'internal_organs', label: getModuleName('internal-organs') },
-                    { id: 'head_and_neck', label: getModuleName('head-neck') },
+                    { id: 'upper-lower-limbs', label: getModuleName('upper-lower-limbs') },
+                    { id: 'internal-organs', label: getModuleName('internal-organs') },
+                    { id: 'head-neck', label: getModuleName('head-neck') },
                     { id: 'neuroanatomy', label: getModuleName('neuroanatomy') },
                   ].map(cat => (
                     <TouchableOpacity
