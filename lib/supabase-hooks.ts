@@ -424,3 +424,81 @@ export function useSendMessage() {
   });
 }
 
+export interface ZoomRequest {
+  id: string;
+  userId: string;
+  studyTopic: string;
+  preferredDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
+
+export function useZoomRequests(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['zoomRequests', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      console.log('[Supabase] Fetching zoom requests for user:', userId);
+      const { data, error } = await supabase
+        .from('zoom_requests')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('[Supabase] Error fetching zoom requests:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'zoom requests');
+
+      return (data || []).map((req: any) => ({
+        id: req.id.toString(),
+        userId: req.user_id,
+        studyTopic: req.study_topic,
+        preferredDate: req.preferred_date,
+        status: req.status as 'pending' | 'approved' | 'rejected',
+        createdAt: req.created_at,
+      })) as ZoomRequest[];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useCreateZoomRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      studyTopic: string;
+      preferredDate: string;
+    }) => {
+      console.log('[Supabase] Creating zoom request:', input.studyTopic);
+
+      const { data, error } = await supabase
+        .from('zoom_requests')
+        .insert({
+          user_id: input.userId,
+          study_topic: input.studyTopic,
+          preferred_date: input.preferredDate,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error creating zoom request:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Zoom request created:', data.id);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['zoomRequests', variables.userId] });
+    },
+  });
+}
+

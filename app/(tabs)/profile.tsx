@@ -29,12 +29,18 @@ import {
   ChevronUp,
   ChevronDown,
   Minus,
+  Video,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
 import { currentUser, leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import { useZoomRequests } from '@/lib/supabase-hooks';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -72,6 +78,7 @@ function getLast7Days(): string[] {
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
   
@@ -86,6 +93,8 @@ export default function ProfileScreen() {
     weeklyStudyTimeSeconds,
     weeklyGoalProgress,
   } = useQuizProgress();
+
+  const { data: zoomRequests = [] } = useZoomRequests(user?.id);
 
 
 
@@ -552,6 +561,63 @@ export default function ProfileScreen() {
               ))}
             </View>
           </View>
+
+          {zoomRequests.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Video color={Colors.accent} size={22} />
+                <Text style={styles.sectionTitleInline}>Zoom Session Requests</Text>
+              </View>
+              <View style={styles.zoomRequestsContainer}>
+                {zoomRequests.map((request) => {
+                  const statusColors = {
+                    pending: { bg: 'rgba(255, 184, 0, 0.15)', color: Colors.warning, icon: AlertCircle },
+                    approved: { bg: 'rgba(0, 196, 140, 0.15)', color: Colors.success, icon: CheckCircle },
+                    rejected: { bg: 'rgba(255, 59, 48, 0.15)', color: Colors.error, icon: XCircle },
+                  };
+                  const statusConfig = statusColors[request.status];
+                  const StatusIcon = statusConfig.icon;
+                  
+                  return (
+                    <View key={request.id} style={styles.zoomRequestCard}>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+                        style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+                      />
+                      <View style={styles.glassOverlay} />
+                      <View style={styles.zoomRequestHeader}>
+                        <Text style={styles.zoomRequestTopic} numberOfLines={1}>{request.studyTopic}</Text>
+                        <View style={[styles.zoomRequestStatus, { backgroundColor: statusConfig.bg }]}>
+                          <StatusIcon color={statusConfig.color} size={14} />
+                          <Text style={[styles.zoomRequestStatusText, { color: statusConfig.color }]}>
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.zoomRequestDetails}>
+                        <View style={styles.zoomRequestDetail}>
+                          <Calendar color={Colors.textSecondary} size={14} />
+                          <Text style={styles.zoomRequestDetailText}>
+                            {new Date(request.preferredDate).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </Text>
+                        </View>
+                        <View style={styles.zoomRequestDetail}>
+                          <Clock color={Colors.textSecondary} size={14} />
+                          <Text style={styles.zoomRequestDetailText}>
+                            {new Date(request.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -1159,5 +1225,54 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.textMuted,
     marginTop: 2,
+  },
+  zoomRequestsContainer: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  zoomRequestCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    padding: 16,
+    overflow: 'hidden',
+  },
+  zoomRequestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  zoomRequestTopic: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    flex: 1,
+    marginRight: 12,
+  },
+  zoomRequestStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
+  },
+  zoomRequestStatusText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+  },
+  zoomRequestDetails: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  zoomRequestDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  zoomRequestDetailText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
 });
