@@ -599,5 +599,343 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       ],
       explanation: 'Deoarece bronhia principală dreaptă este mai verticală și în linie directă cu traheea, corpurile străine aspirate tind să pătrundă în ea și se depun adesea în bronhia lobului inferior drept.'
     }
+  },
+  'hn-frontal-001': {
+    ro: {
+      question: 'Sinusul frontal drainează în cavitatea nazală prin intermediul:',
+      options: [
+        'Meatul nazal superior',
+        'Meatul nazal mediu prin hiatul semilunaris',
+        'Meatul nazal inferior',
+        'Recessul sfenoetmoidal',
+        'Direct în cavitatea nazală fără a trece printr-un meat'
+      ],
+      explanation: 'Sinusul frontal drainează prin canalul frontonazal care se deschide în partea anterioară a hiatului semilunaris din meatul nazal mediu. Acest canal traversează procesul unciform al etmoidului și se continuă cu infundibulul etmoidal.'
+    }
+  },
+  'hn-frontal-002': {
+    ro: {
+      question: 'Care dintre următoarele structuri formează partea superioară a orbitei?',
+      options: [
+        'Procesul zigomatico-frontal',
+        'Placa orbitală a osului frontal',
+        'Aripa mică a sfenoidului',
+        'Placa cribrosă a etmoidului',
+        'Concha nazală superioară'
+      ],
+      explanation: 'Placa orbitală (pars orbitalis) a osului frontal formează cea mai mare parte a peretelui superior (plafonului) orbitei. Lateral, aceasta se articulează cu zigomaticul, iar medial cu lamina papiraceea a etmoidului.'
+    }
+  },
+  'hn-frontal-003': {
+    ro: {
+      question: 'Foramenul etmoidal anterior, situat la joncțiunea dintre osul frontal și etmoid, dă trecere la:',
+      options: [
+        'Artera etmoidală posterioară și nervul etmoidal posterior',
+        'Artera etmoidală anterioară, nervul nasosiliar și vena însoțitoare',
+        'Artera oftalmică și nervul optic',
+        'Ramura nazală a nervului infraorbitar',
+        'Vena oftalmică superioară și ganglionul ciliar'
+      ],
+      explanation: 'Foramenul etmoidal anterior (încisura etmoidală anterioară completată de etmoid) transmite artera etmoidală anterioară (ramură a arterei oftalmice), vena etmoidală anterioară și nervul etmoidal anterior (ramură a nervului nasosiliar din V1), care inervează celulele etmoidale anterioare și vestibulul nazal.'
+    }
+  },
+  'hn-frontal-004': {
+    ro: {
+      question: 'Glabela reprezintă:',
+      options: [
+        'Partea mediană netedă a osului frontal deasupra suturii nazofrontale',
+        'Porțiunea laterală a osului frontal care se articulează cu zigomaticul',
+        'Marginea superioară a orbitei',
+        'Suprafața internă a osului frontal care se articulează cu etmoidul',
+        'Procesul care formează partea inferioară a frunții'
+      ],
+      explanation: 'Glabela este o proeminență ușoară, netedă, situată în linia mediană a osului frontal, deasupra rădăcinii nasului (sutura nazofrontală), între cele două arcade supraciliare. Reprezintă un reper antropometric și cefalometric important.'
+    }
+  },
+  'hn-frontal-005': {
+    ro: {
+      question: 'Care este relația dintre sinusul frontal și dura mater în regiunea frontală?',
+      options: [
+        'Sinusul frontal este situat inferior față de dura mater',
+        'Sinusul frontal este separat de fosa craniană anterioară doar prin peretele posterior osos subțire acoperit de dura mater',
+        'Sinusul frontal nu are nicio relație cu dura mater',
+        'Dura mater se extinde în interiorul sinusului frontal',
+        'Sinusul frontal este situat în grosimea durei mater'
+      ],
+      explanation: 'Sinusul frontal este separat de fosa craniană anterioară doar prin peretele posterior osos (tabla internă), care este foarte subțire. Dura mater acoperă direct această suprafață internă. În caz de traumatism sau infecție sinuzală, există risc de complicații intracraniene (meningită, abces epidural).'
+    }
+  },
+  'hn-frontal-006': {
+    ro: {
+      question: 'Sutura coronală separă:',
+      options: [
+        'Osul frontal de osul parietal',
+        'Cele două oase parietale între ele',
+        'Osul frontal de osul nazal',
+        'Osul parietal de osul occipital',
+        'Osul frontal de osul etmoid'
+      ],
+      explanation: 'Sutura coronală (sutura coronalis) este o sutură dințată care separă osul frontal anterior de cele două oase parietale posterior. Se extinde transversal peste boltă, de la pterion lateral de o parte, până la pterion de cealaltă parte.'
+    }
+  },
+  'hn-frontal-007': {
+    ro: {
+      question: 'Incisuța supraorbitară (sau foramenul supraorbitar când este complet închis) dă trecere la:',
+      options: [
+        'Nervul infraorbitar și artera infraorbitară',
+        'Nervul supraorbitar (ramură a V1) și vasele supraorbitare',
+        'Nervul supratroclear și artera dorsală a nasului',
+        'Nervul frontal și vena oftalmică superioară',
+        'Nervul etmoidal anterior și artera etmoidală anterioară'
+      ],
+      explanation: 'Incisuța supraorbitară (incisura supraorbitalis), situată la joncțiunea dintre treimea medială și cele două treimi laterale ale marginii superioare a orbitei, dă trecere nervului supraorbitar (ramură terminală a nervului frontal, din V1) și vaselor supraorbitare (arteră și venă), care inervează și vascularizează fruntea și scalp-ul anterior.'
+    }
+  },
+  'sc-ext-1': {
+    ro: {
+      question: 'La ce nivel vertebral se termină de obicei măduva spinării la adulți?',
+      options: [
+        'Vertebra T12',
+        'Nivelul vertebral L1-L2',
+        'Nivelul vertebral L3-L4',
+        'Vertebra S1',
+        'Vertebra L5'
+      ],
+      explanation: 'Măduva spinării la adulți se termină de obicei la nivelul discului intervertebral L1-L2, formând conul medular (conus medullaris). Acest lucru este semnificativ clinic pentru puncția lombară, care se efectuează în siguranță sub L3 pentru a evita lezarea măduvei spinării.'
+    }
+  },
+  'sc-ext-2': {
+    ro: {
+      question: 'Care dintre următoarele reprezintă umflătura cervicală a măduvei spinării?',
+      options: [
+        'Segmentele C1-C4',
+        'Segmentele C4-T1',
+        'Segmentele T2-T6',
+        'Segmentele L1-L3',
+        'Segmentele S1-S3'
+      ],
+      explanation: 'Umflătura cervicală se extinde de la segmentele medulare C4 la T1 și corespunde originii plexului brahial, care inervează membrele superioare. Creșterea țesutului nervos reflectă inervația motorie și senzitivă complexă necesară pentru funcția membrului superior.'
+    }
+  },
+  'sc-ext-3': {
+    ro: {
+      question: 'Filum terminale este o continuare a cărui strat meningeal?',
+      options: [
+        'Doar dura mater',
+        'Doar arahnoida mater',
+        'Pia mater',
+        'Grăsimea epidurală',
+        'Ligamentul longitudinal posterior'
+      ],
+      explanation: 'Filum terminale este un filament subțire de pia mater care se extinde de la vârful conului medular până la dorsul coccisului, ancorând măduva spinării în canalul vertebral.'
+    }
+  },
+  'pw1': {
+    ro: {
+      question: 'Infarctele lacunare sunt cauzate în mod clasic de ocluzia căror tipuri de vase?',
+      options: [
+        'Artere extracraniene mari precum carotida internă',
+        'Artere piale corticale pe suprafața creierului',
+        'Artere perforante profunde unice (penetrante) care aprovizionează structurile cerebrale profunde',
+        'Sinusurile venoase ale durei mater',
+        'Doar trunchiul arterial basilar'
+      ],
+      explanation: 'Infarctele lacunare sunt infarcte subcorticale mici cauzate de ocluzia unei singure artere penetrante profunde care aprovizionează structuri precum ganglionii bazali, talamusul și capsula internă.'
+    }
+  },
+  'pw2': {
+    ro: {
+      question: 'Care artere profunde sunt cel mai frecvent implicate în infarctele lacunare ale ganglionilor bazali și capsulei interne?',
+      options: [
+        'Arterele cerebeloase postero-inferioare',
+        'Arterele lenticulostriate (centrale anterolaterale) ale arterei cerebrale medii',
+        'Arterele cerebeloase antero-inferioare',
+        'Perforantele arterei vertebrale către bulb',
+        'Ramurile meningee ale arterei carotide externe'
+      ],
+      explanation: 'Arterele lenticulostriate laterale din segmentul M1 al arterei cerebrale medii străpung substanța perforată anterioară pentru a aproviziona ganglionii bazali și capsula internă și sunt o locație comună în infarcția lacunară.'
+    }
+  },
+  'hn-parietal-001': {
+    ro: {
+      question: 'Cele două oase parietale sunt unite între ele prin:',
+      options: [
+        'Sutura coronală',
+        'Sutura lambdoidă',
+        'Sutura sagitală',
+        'Sutura metopică',
+        'Sutura squamoasă'
+      ],
+      explanation: 'Sutura sagitală (sutura sagittalis) unește cele două oase parietale pe linia mediană a bolții craniului, extinzându-se de la bregma (joncțiunea cu sutura coronală) posterior până la lambda (joncțiunea cu sutura lambdoidă).'
+    }
+  },
+  'hn-parietal-007': {
+    ro: {
+      question: 'Linia temporală superioară de pe osul parietal oferă inserție pentru:',
+      options: [
+        'Mușchiul temporal',
+        'Mușchiul maseter',
+        'Fascia temporală (lamina superficială)',
+        'Mușchiul occipito-frontal',
+        'Mușchiul sternocleidomastoidian'
+      ],
+      explanation: 'Linia temporală superioară (linea temporalis superior) marchează locul de inserție a lamei superficiale a fasciei temporale. Sub aceasta se află linia temporală inferioară, care marchează limita superioară a inserției mușchiului temporal.'
+    }
+  },
+  'hn-parietal-008': {
+    ro: {
+      question: 'Care sutură separă osul parietal de osul occipital?',
+      options: [
+        'Sutura coronală',
+        'Sutura sagitală',
+        'Sutura lambdoidă',
+        'Sutura squamoasă',
+        'Sutura metopică'
+      ],
+      explanation: 'Sutura lambdoidă (sutura lamboidea) separă cele două oase parietale (anterior) de osul occipital (posterior). Denumirea provine de la forma sa care seamănă cu litera greacă lambda (Λ).'
+    }
+  },
+  'hn-ethmoid-001': {
+    ro: {
+      question: 'Placa cribrosă a etmoidului dă trecere la:',
+      options: [
+        'Nervul optic și artera oftalmică',
+        'Fila olfactive ale nervului olfactiv (I) și vasele etmoidale anterioare',
+        'Nervul trigemen și ganglionul trigemenal',
+        'Artera carotidă internă',
+        'Nervul oculomotor și nervul trohlear'
+      ],
+      explanation: 'Placa cribrosă (lamina cribrosa) a etmoidului este perforată de numeroase foramene mici prin care trec filele nervului olfactiv (nervul cranian I), care conectează epiteliul olfactiv nazal cu bulbul olfactiv intracranial.'
+    }
+  },
+  'hn-ethmoid-002': {
+    ro: {
+      question: 'Lamina papiraceea (lamina orbitală) a etmoidului formează:',
+      options: [
+        'Peretele lateral al orbitei',
+        'Peretele medial al orbitei',
+        'Peretele inferior al orbitei',
+        'Peretele superior al orbitei',
+        'Apexul orbitei'
+      ],
+      explanation: 'Lamina papiraceea (lamina orbitalis) este o placă osoasă foarte subțire care formează cea mai mare parte a peretelui medial al orbitei. Ea separă orbita de celulele etmoidale și este vulnerabilă la fracturi în traumatisme orbitare.'
+    }
+  },
+  'sc-ext-4': {
+    ro: {
+      question: 'Care fisură a măduvei spinării conține artera spinală anterioară?',
+      options: [
+        'Sulcus median posterior',
+        'Sulcus posterolateral',
+        'Fisura mediană anterioară',
+        'Sulcus anterolateral',
+        'Canalul central'
+      ],
+      explanation: 'Fisura mediană anterioară este un șanț longitudinal adânc pe suprafața ventrală a măduvei spinării care conține artera spinală anterioară și ramurile sale. Această arteră aprovizionează două treimi anterioare ale măduvei spinării.'
+    }
+  },
+  'sc-ext-5': {
+    ro: {
+      question: 'Ganglionii radiculari dorsali sunt localizați în ce poziție anatomică?',
+      options: [
+        'În interiorul substanței măduvei spinării',
+        'În foramenele intervertebrale',
+        'În canalul vertebral posterior de măduvă',
+        'Anterior de corpurile vertebrale',
+        'În interiorul tecii durale'
+      ],
+      explanation: 'Ganglionii radiculari dorsali, conținând corpurile celulare ale neuronilor senzitivi primari, sunt localizați în foramenele intervertebrale. Poziția lor îi face vulnerabili la compresie în afecțiuni precum hernia de disc sau stenoza foraminală.'
+    }
+  },
+  'pw3': {
+    ro: {
+      question: 'Care mecanism este cel mai clasic asociat cu accidentul vascular cerebral lacunar în arterele perforante profunde?',
+      options: [
+        'Ruptura plăcii aterosclerotice la bifurcația carotidei cu emboli mari',
+        'Lipohialinoza și necroza fibrinoidă a arterelor perforante mici, adesea legate de hipertensiunea cronică',
+        'Vasospasm izolat al arterelor corticale după hemoragie subarahnoidiană',
+        'Cardioembolism din fibrilație atrială doar',
+        'Compresia venelor în spațiul subdural'
+      ],
+      explanation: 'Accidentele vasculare cerebrale lacunare clasice sunt legate de lipohialinoza și necroza fibrinoidă în arterele perforante mici, puternic asociate cu hipertensiunea de lungă durată și boala vaselor mici.'
+    }
+  },
+  'pw4': {
+    ro: {
+      question: 'Infarctele de zonă limitrofă (watershed) apar de obicei în ce regiuni ale creierului?',
+      options: [
+        'În miezul teritoriilor arteriale majore, cum ar fi regiunea trunchiului ACM',
+        'La granițele dintre două teritorii arteriale cerebrale majore unde presiunea de perfuzie este cea mai scăzută',
+        'Doar în emisferele cerebeloase',
+        'Doar în teritoriile perforante ale trunchiului cerebral',
+        'Exclusiv în ganglionii bazali profunzi'
+      ],
+      explanation: 'Infarctele de zonă limitrofă apar la joncțiunile dintre teritoriile arteriale majore (ex. ACA-ACM, ACM-ACP sau perforante profunde-teritorii superficiale), care sunt deosebit de vulnerabile la hipoperfuzie.'
+    }
+  },
+  'her1': {
+    ro: {
+      question: 'În ce compartiment mediastinal este localizată în principal inima?',
+      options: [
+        'Mediastinul superior',
+        'Mediastinul anterior',
+        'Mediastinul mijlociu în sacul pericardic',
+        'Mediastinul posterior',
+        'Complet în afara mediastinului'
+      ],
+      explanation: 'Inima se află în interiorul pericardului fibros în mediastinul mijlociu, între plămâni și deasupra diafragmului.'
+    }
+  },
+  'her2': {
+    ro: {
+      question: 'Ce cameră formează vârful anatomic al inimii?',
+      options: [
+        'Atriul drept',
+        'Ventriculul drept',
+        'Atriul stâng',
+        'Ventriculul stâng',
+        'Sinusul coronarian'
+      ],
+      explanation: 'Vârful inimii este format de partea inferolaterală a ventriculului stâng și este orientat anterior, inferior și spre stânga.'
+    }
+  },
+  'sfr1': {
+    ro: {
+      question: 'Care pliu peritoneal atașează curbura mică a stomacului la ficat?',
+      options: [
+        'Omentul mare',
+        'Omentul mic (ligamentul hepatogastric)',
+        'Ligamentul gastrosplenic',
+        'Mezocolonul transvers',
+        'Ligamentul falciform'
+      ],
+      explanation: 'Omentul mic se extinde de la curbura mică a stomacului și duodenul proximal la ficat, ligamentul hepatogastric fiind porțiunea atașată la stomac.'
+    }
+  },
+  'sfr2': {
+    ro: {
+      question: 'Care structură formează peretele posterior al sacului mic (bursa omentală) în spatele stomacului?',
+      options: [
+        'Ficatul',
+        'Colonul transvers',
+        'Pancreasul și acoperirea sa peritoneală',
+        'Splina',
+        'Rinichiul stâng'
+      ],
+      explanation: 'Peretele posterior al sacului mic este format în principal de peritoneul care acoperă pancreasul, stomacul formând peretele anterior al acestui spațiu potențial.'
+    }
+  },
+  'sfr3': {
+    ro: {
+      question: 'Care ligament conectează curbura mare a stomacului la splină?',
+      options: [
+        'Ligamentul hepatogastric',
+        'Ligamentul gastrocolic',
+        'Ligamentul gastrosplenic (gastrolienal)',
+        'Ligamentul splenorenal',
+        'Ligamentul frenicogastric'
+      ],
+      explanation: 'Ligamentul gastrosplenic (gastrolienal) se extinde de la curbura mare a stomacului la hilul splinei, transmițând vasele gastrice scurte și vasele gastroepiploice stângi.'
+    }
   }
 };
