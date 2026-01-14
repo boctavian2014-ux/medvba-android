@@ -18,6 +18,7 @@ export const stomachFixationRelationsQuestions: Question[] = [
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'Which peritoneal fold attaches the lesser curvature of the stomach to the liver?',
+    question_ro: 'Care pliu peritoneal atașează curbura mică a stomacului la ficat?',
     options: [
       'Greater omentum',
       'Lesser omentum (hepatogastric ligament)',
@@ -25,15 +26,25 @@ export const stomachFixationRelationsQuestions: Question[] = [
       'Transverse mesocolon',
       'Falciform ligament'
     ],
+    options_ro: [
+      'Omentul mare',
+      'Omentul mic (ligamentul hepatogastric)',
+      'Ligamentul gastrosplenic',
+      'Mezocolonul transvers',
+      'Ligamentul falciform'
+    ],
     correctAnswer: 1,
     explanation:
-      'The lesser omentum extends from the lesser curvature of the stomach and proximal duodenum to the liver, with the hepatogastric ligament being the portion attached to the stomach.'
+      'The lesser omentum extends from the lesser curvature of the stomach and proximal duodenum to the liver, with the hepatogastric ligament being the portion attached to the stomach.',
+    explanation_ro:
+      'Omentul mic se extinde de la curbura mică a stomacului și duodenul proximal la ficat, ligamentul hepatogastric fiind porțiunea atașată la stomac.'
   },
   {
     id: 'sfr2',
     category: 'internal-organs',
     difficulty: 'easy',
     question: 'Which structure forms the posterior wall of the lesser sac (omental bursa) behind the stomach?',
+    question_ro: 'Care structură formează peretele posterior al sacului mic (bursa omentală) în spatele stomacului?',
     options: [
       'Liver',
       'Transverse colon',
@@ -41,15 +52,25 @@ export const stomachFixationRelationsQuestions: Question[] = [
       'Spleen',
       'Left kidney'
     ],
+    options_ro: [
+      'Ficatul',
+      'Colonul transvers',
+      'Pancreasul și acoperirea sa peritoneală',
+      'Splina',
+      'Rinichiul stâng'
+    ],
     correctAnswer: 2,
     explanation:
-      'The posterior wall of the lesser sac is formed primarily by the peritoneum covering the pancreas, with the stomach forming the anterior wall of this potential space.'
+      'The posterior wall of the lesser sac is formed primarily by the peritoneum covering the pancreas, with the stomach forming the anterior wall of this potential space.',
+    explanation_ro:
+      'Peretele posterior al sacului mic este format în principal de peritoneul care acoperă pancreasul, stomacul formând peretele anterior al acestui spațiu potențial.'
   },
   {
     id: 'sfr3',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which ligament connects the greater curvature of the stomach to the spleen?',
+    question_ro: 'Care ligament conectează curbura mare a stomacului la splină?',
     options: [
       'Hepatogastric ligament',
       'Gastrocolic ligament',
@@ -57,15 +78,25 @@ export const stomachFixationRelationsQuestions: Question[] = [
       'Splenorenal ligament',
       'Phrenicogastric ligament'
     ],
+    options_ro: [
+      'Ligamentul hepatogastric',
+      'Ligamentul gastrocolic',
+      'Ligamentul gastrosplenic (gastrolienal)',
+      'Ligamentul splenorenal',
+      'Ligamentul frenicogastric'
+    ],
     correctAnswer: 2,
     explanation:
-      'The gastrosplenic (gastrolienal) ligament extends from the greater curvature of the stomach to the hilum of the spleen, transmitting the short gastric and left gastroepiploic vessels.'
+      'The gastrosplenic (gastrolienal) ligament extends from the greater curvature of the stomach to the hilum of the spleen, transmitting the short gastric and left gastroepiploic vessels.',
+    explanation_ro:
+      'Ligamentul gastrosplenic (gastrolienal) se extinde de la curbura mare a stomacului la hilul splinei, transmițând vasele gastrice scurte și vasele gastroepiploice stângi.'
   },
   {
     id: 'sfr4',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which part of the stomach is relatively fixed in position and serves as the main anchor point?',
+    question_ro: 'Care parte a stomacului este relativ fixată în poziție și servește ca principal punct de ancoraj?',
     options: [
       'Fundus',
       'Body',
@@ -73,15 +104,25 @@ export const stomachFixationRelationsQuestions: Question[] = [
       'Cardia and gastroesophageal junction',
       'Greater curvature'
     ],
+    options_ro: [
+      'Fundul',
+      'Corpul',
+      'Antrul piloric',
+      'Cardia și joncțiunea gastroesofagiană',
+      'Curbura mare'
+    ],
     correctAnswer: 3,
     explanation:
-      'The cardia is the most fixed part of the stomach, anchored at the esophageal hiatus of the diaphragm by the phrenoesophageal ligament and surrounded by the muscular crura.'
+      'The cardia is the most fixed part of the stomach, anchored at the esophageal hiatus of the diaphragm by the phrenoesophageal ligament and surrounded by the muscular crura.',
+    explanation_ro:
+      'Cardia este partea cea mai fixată a stomacului, ancorată la hiatul esofagian al diafragmului prin ligamentul frenoesofagian și înconjurată de crurile musculare.'
   },
   {
     id: 'sfr5',
     category: 'internal-organs',
     difficulty: 'medium',
     question: 'Which structure lies immediately posterior to the stomach in the stomach bed?',
+    question_ro: 'Care structură se află imediat posterior de stomac în patul stomacului?',
     options: [
       'Right kidney and adrenal gland',
       'Pancreas, left kidney, left adrenal gland and splenic artery',
@@ -89,9 +130,18 @@ export const stomachFixationRelationsQuestions: Question[] = [
       'Liver and gallbladder',
       'Urinary bladder'
     ],
+    options_ro: [
+      'Rinichiul drept și glanda suprarenală',
+      'Pancreasul, rinichiul stâng, glanda suprarenală stângă și artera splenică',
+      'Doar colonul descendent',
+      'Ficatul și vezica biliară',
+      'Vezica urinară'
+    ],
     correctAnswer: 1,
     explanation:
-      'The stomach bed includes the pancreas, left kidney, left suprarenal gland, splenic artery, and part of the transverse mesocolon, all separated from the stomach by the lesser sac.'
+      'The stomach bed includes the pancreas, left kidney, left suprarenal gland, splenic artery, and part of the transverse mesocolon, all separated from the stomach by the lesser sac.',
+    explanation_ro:
+      'Patul stomacului include pancreasul, rinichiul stâng, glanda suprarenală stângă, artera splenică și o parte din mezocolonul transvers, toate separate de stomac prin sacul mic.'
   },
   {
     id: 'sfr6',
