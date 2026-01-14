@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     marginBottom: 20,
+    minHeight: 140,
   },
   heroContent: {
     flexDirection: 'row',
@@ -276,6 +277,7 @@ const styles = StyleSheet.create({
   heroLeft: {
     flex: 1,
     marginRight: 16,
+    justifyContent: 'center',
   },
   heroTitle: {
     fontSize: 20,
@@ -313,6 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: 16,
+    minHeight: 100,
   },
   statValue: {
     fontSize: 20,
@@ -374,6 +377,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    minHeight: 72,
+    paddingVertical: 12,
   },
   categoryIcon: {
     width: 44,
@@ -385,15 +390,18 @@ const styles = StyleSheet.create({
   categoryInfo: {
     flex: 1,
     marginLeft: 12,
+    justifyContent: 'center',
   },
   categoryName: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.text,
+    flexShrink: 1,
   },
   categoryProgress: {
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 2,
+    flexShrink: 1,
   },
 });
