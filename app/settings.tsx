@@ -8,6 +8,9 @@ import {
   Image,
   Alert,
   Platform,
+  TextInput,
+  Switch,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -30,10 +33,19 @@ import {
   Trash2,
   Globe,
   LogOut,
+  User,
+  MapPin,
+  School,
+  AlignLeft,
+  Eye,
+  EyeOff,
+  Save,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage, Language } from '@/providers/LanguageProvider';
+import { useUserProfile, useUpdateUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
+import PhotoPicker from '@/components/PhotoPicker';
 
 interface SettingsItemProps {
   icon: React.ReactNode;
@@ -76,13 +88,38 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { user, signOut, refreshProfile } = useAuth();
   const { currentLanguage, changeLanguage, t } = useLanguage();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  
+  const { data: profile } = useUserProfile(user?.id);
+  const updateProfileMutation = useUpdateUserProfile();
+
+  const [name, setName] = useState('');
+  const [city, setCity] = useState('');
+  const [university, setUniversity] = useState('');
+  const [yearOfStudy, setYearOfStudy] = useState('');
+  const [bio, setBio] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
+  const [photoUri, setPhotoUri] = useState<string | undefined>();
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     loadBlockedUsers();
   }, []);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || '');
+      setCity(profile.city || '');
+      setUniversity(profile.university || '');
+      setYearOfStudy(profile.year_of_study?.toString() || '');
+      setBio(profile.bio || '');
+      setIsPublic(profile.is_public);
+      setPhotoUri(profile.profile_photo_url || profile.avatar);
+    }
+  }, [profile]);
 
   const loadBlockedUsers = async () => {
     try {
@@ -92,6 +129,60 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error('Failed to load blocked users:', error);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+
+    if (!name.trim()) {
+      Alert.alert('Missing Information', 'Please enter your name.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      let photoUrl = profile?.profile_photo_url;
+
+      if (photoUri && photoUri !== profile?.profile_photo_url && photoUri !== profile?.avatar) {
+        setIsUploading(true);
+        try {
+          photoUrl = await uploadProfilePhoto(user.id, photoUri);
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          Alert.alert('Upload Error', 'Failed to upload photo. Saving other changes...');
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
+      await updateProfileMutation.mutateAsync({
+        userId: user.id,
+        name: name.trim(),
+        city: city.trim() || undefined,
+        university: university.trim() || undefined,
+        year_of_study: yearOfStudy ? parseInt(yearOfStudy, 10) : undefined,
+        bio: bio.trim() || undefined,
+        is_public: isPublic,
+        profile_photo_url: photoUrl,
+      });
+
+      await refreshProfile();
+
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      Alert.alert('Success', 'Your profile has been updated!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -137,6 +228,154 @@ export default function SettingsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Profile</Text>
+              <TouchableOpacity
+                style={[styles.saveProfileButton, (isSaving || isUploading) && styles.saveProfileButtonDisabled]}
+                onPress={handleSaveProfile}
+                disabled={isSaving || isUploading}
+                activeOpacity={0.7}
+              >
+                {isSaving || isUploading ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <>
+                    <Save color={Colors.primary} size={16} />
+                    <Text style={styles.saveProfileButtonText}>Save</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sectionCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.profilePhotoSection}>
+                <PhotoPicker
+                  currentPhotoUrl={photoUri}
+                  onPhotoSelected={setPhotoUri}
+                  onPhotoRemoved={() => setPhotoUri(profile?.avatar)}
+                  size={80}
+                />
+              </View>
+
+              <View style={styles.profileInputGroup}>
+                <View style={styles.inputLabel}>
+                  <User color={Colors.primary} size={18} />
+                  <Text style={styles.inputLabelText}>Name *</Text>
+                </View>
+                <TextInput
+                  style={styles.profileTextInput}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Your name"
+                  placeholderTextColor={Colors.textMuted}
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.profileInputGroup}>
+                <View style={styles.inputLabel}>
+                  <MapPin color={Colors.accent} size={18} />
+                  <Text style={styles.inputLabelText}>City</Text>
+                </View>
+                <TextInput
+                  style={styles.profileTextInput}
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="e.g., Bucharest, Cluj-Napoca"
+                  placeholderTextColor={Colors.textMuted}
+                  maxLength={100}
+                />
+              </View>
+
+              <View style={styles.profileInputGroup}>
+                <View style={styles.inputLabel}>
+                  <School color={Colors.secondary} size={18} />
+                  <Text style={styles.inputLabelText}>University/Faculty</Text>
+                </View>
+                <TextInput
+                  style={styles.profileTextInput}
+                  value={university}
+                  onChangeText={setUniversity}
+                  placeholder="e.g., Carol Davila University"
+                  placeholderTextColor={Colors.textMuted}
+                  maxLength={200}
+                />
+              </View>
+
+              <View style={styles.profileInputGroup}>
+                <View style={styles.inputLabel}>
+                  <School color={Colors.warning} size={18} />
+                  <Text style={styles.inputLabelText}>Year of Study</Text>
+                </View>
+                <View style={styles.yearSelector}>
+                  {[1, 2, 3, 4, 5, 6].map((year) => (
+                    <TouchableOpacity
+                      key={year}
+                      style={[styles.yearButton, yearOfStudy === year.toString() && styles.yearButtonActive]}
+                      onPress={() => {
+                        if (Platform.OS !== 'web') {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        }
+                        setYearOfStudy(year.toString());
+                      }}
+                    >
+                      <Text style={[styles.yearButtonText, yearOfStudy === year.toString() && styles.yearButtonTextActive]}>
+                        {year}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.profileInputGroup}>
+                <View style={styles.inputLabel}>
+                  <AlignLeft color={Colors.accentPink} size={18} />
+                  <Text style={styles.inputLabelText}>Bio</Text>
+                </View>
+                <TextInput
+                  style={[styles.profileTextInput, styles.textArea]}
+                  value={bio}
+                  onChangeText={setBio}
+                  placeholder="Tell others about yourself, your interests, study goals..."
+                  placeholderTextColor={Colors.textMuted}
+                  multiline
+                  numberOfLines={4}
+                  maxLength={500}
+                />
+                <Text style={styles.charCount}>{bio.length}/500</Text>
+              </View>
+
+              <View style={styles.privacySection}>
+                <View style={styles.privacyIcon}>
+                  {isPublic ? <Eye color={Colors.success} size={22} /> : <EyeOff color={Colors.textMuted} size={22} />}
+                </View>
+                <View style={styles.privacyInfo}>
+                  <Text style={styles.settingsItemTitle}>Public Profile</Text>
+                  <Text style={styles.settingsItemSubtitle}>
+                    {isPublic
+                      ? 'Other students can find and connect with you'
+                      : 'Your profile is hidden from study partner search'}
+                  </Text>
+                </View>
+                <Switch
+                  value={isPublic}
+                  onValueChange={(value) => {
+                    if (Platform.OS !== 'web') {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }
+                    setIsPublic(value);
+                  }}
+                  trackColor={{ false: Colors.cardBgLight, true: Colors.success }}
+                  thumbColor={Colors.text}
+                />
+              </View>
+            </View>
+          </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('settings.preferences')}</Text>
             <View style={styles.sectionCard}>
@@ -658,5 +897,120 @@ const styles = StyleSheet.create({
   languageLabelActive: {
     color: Colors.text,
     fontWeight: '700' as const,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  saveProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.cardBg,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  saveProfileButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveProfileButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  profilePhotoSection: {
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  profileInputGroup: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.glassBorder,
+  },
+  inputLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  inputLabelText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  profileTextInput: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  charCount: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    textAlign: 'right',
+    marginTop: 6,
+  },
+  yearSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  yearButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  yearButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  yearButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  yearButtonTextActive: {
+    color: Colors.text,
+    fontWeight: '700' as const,
+  },
+  privacySection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  privacyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  privacyInfo: {
+    flex: 1,
+    marginLeft: 14,
+    marginRight: 12,
   },
 });
