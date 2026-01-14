@@ -123,6 +123,8 @@ export const ro: Record<string, string> = {
   'session.copy': 'Copiază',
   'session.copied': 'Copiat',
   'session.explanationCopied': 'Explicație copiată!',
+  'session.error': 'A apărut o eroare',
+  'session.questionUnavailable': 'Întrebare indisponibilă',
   'session.resumeQuiz': 'Continui Quiz-ul?',
   'session.resumeQuizMessage': 'Ai un quiz neterminat. Vrei să continui de unde ai rămas?',
   'session.continue': 'Continuă',

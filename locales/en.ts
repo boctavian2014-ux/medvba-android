@@ -123,6 +123,8 @@ export const en: Record<string, string> = {
   'session.copy': 'Copy',
   'session.copied': 'Copied',
   'session.explanationCopied': 'Explanation copied!',
+  'session.error': 'An error occurred',
+  'session.questionUnavailable': 'Question not available',
   'session.resumeQuiz': 'Resume Quiz?',
   'session.resumeQuizMessage': 'You have an unfinished quiz. Would you like to continue where you left off?',
   'session.continue': 'Continue',

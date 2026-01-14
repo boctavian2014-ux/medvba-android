@@ -435,6 +435,20 @@ export default function QuizSessionScreen() {
         if (resume === 'true' && savedSession) {
           console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
           if (isMounted) {
+            if (!savedSession.questions || savedSession.questions.length === 0) {
+              console.error('[QuizSession] Invalid saved session: empty questions');
+              await clearSessionState();
+              router.back();
+              return;
+            }
+            
+            if (savedSession.currentIndex >= savedSession.questions.length) {
+              console.error('[QuizSession] Invalid saved session: index out of bounds');
+              await clearSessionState();
+              router.back();
+              return;
+            }
+            
             const translatedQuestions = translateQuestions(savedSession.questions, currentLanguage);
             setQuestions(translatedQuestions);
             setCurrentIndex(savedSession.currentIndex);
@@ -473,8 +487,19 @@ export default function QuizSessionScreen() {
           console.log(`[QuizSession] Selected ${selectedQuestions.length} questions`);
           
           if (isMounted) {
+            if (selectedQuestions.length === 0) {
+              console.error('[QuizSession] No questions selected');
+              setIsLoading(false);
+              return;
+            }
+            
             const translatedQuestions = translateQuestions(selectedQuestions, currentLanguage);
-            setQuestions(translatedQuestions);
+            if (!translatedQuestions || translatedQuestions.length === 0) {
+              console.error('[QuizSession] Translation failed');
+              setQuestions(selectedQuestions);
+            } else {
+              setQuestions(translatedQuestions);
+            }
             
             if (selectedQuestions.length > 0) {
               const questionIds = selectedQuestions.map(q => q.id);
@@ -513,7 +538,7 @@ export default function QuizSessionScreen() {
 
 
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = questions[currentIndex] || null;
 
   useEffect(() => {
     if (mode === 'exam' && timeLeft > 0 && !quizComplete) {
@@ -535,7 +560,10 @@ export default function QuizSessionScreen() {
   };
 
   const handleAnswerSelect = useCallback(async (index: number) => {
-    if (showResult || !currentQuestion) return;
+    if (showResult || !currentQuestion || !questions[currentIndex]) {
+      console.warn('[QuizSession] Invalid state for answer selection');
+      return;
+    }
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswer(index);
@@ -571,6 +599,12 @@ export default function QuizSessionScreen() {
   }, [showResult, currentQuestion, updateDailyProgress, answeredInSession, mode, category, questions, currentIndex, score, sessionStartedAt, saveSessionState]);
 
   const handleNext = useCallback(async () => {
+    if (!questions || questions.length === 0) {
+      console.error('[QuizSession] No questions available');
+      router.back();
+      return;
+    }
+    
     if (currentIndex < questions.length - 1) {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -594,7 +628,7 @@ export default function QuizSessionScreen() {
       console.log('[QuizSession] Quiz complete, cleared session state');
       setQuizComplete(true);
     }
-  }, [currentIndex, questions.length, fadeAnim, clearSessionState, addStudyTime]);
+  }, [currentIndex, questions, fadeAnim, clearSessionState, addStudyTime, router]);
 
   const handleClose = useCallback(async () => {
     const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
@@ -707,8 +741,24 @@ export default function QuizSessionScreen() {
     );
   }
 
-  if (!currentQuestion) {
-    return null;
+  if (!currentQuestion || !questions[currentIndex]) {
+    console.warn('[QuizSession] Current question not available, going back');
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[Colors.background, Colors.backgroundLight]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>{t('session.error')}</Text>
+            <TouchableOpacity style={styles.backButton} onPress={handleClose}>
+              <Text style={styles.backButtonText}>{t('session.goBack')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -753,14 +803,16 @@ export default function QuizSessionScreen() {
                   <Text style={styles.chapterText}>{t('session.chapter')}: {getChapterTitle(questionsWithChapters[currentIndex].chapterId)}</Text>
                 </View>
               )}
-              <View style={styles.difficultyBadge}>
-                <Text style={styles.difficultyText}>{currentQuestion.difficulty}</Text>
-              </View>
-              <Text style={styles.questionText}>{currentQuestion.question}</Text>
+              {currentQuestion.difficulty && (
+                <View style={styles.difficultyBadge}>
+                  <Text style={styles.difficultyText}>{currentQuestion.difficulty}</Text>
+                </View>
+              )}
+              <Text style={styles.questionText}>{currentQuestion.question || t('session.questionUnavailable')}</Text>
             </View>
 
             <View style={styles.optionsContainer}>
-              {currentQuestion.options.map((option, index) => {
+              {(currentQuestion.options || []).map((option, index) => {
                 const isSelected = selectedAnswer === index;
                 const isCorrect = index === currentQuestion.correctAnswer;
                 const showCorrect = showResult && isCorrect;
@@ -799,7 +851,7 @@ export default function QuizSessionScreen() {
               })}
             </View>
 
-            {showResult && (
+            {showResult && currentQuestion.explanation && (
               <GlassCard style={styles.explanationCard}>
                 <View style={styles.explanationHeader}>
                   <Text style={styles.explanationTitle}>{t('session.explanation')}</Text>
