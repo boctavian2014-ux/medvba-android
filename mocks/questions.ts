@@ -182,9 +182,12 @@ export interface Question {
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
   question: string;
+  question_ro?: string;
   options: string[];
+  options_ro?: string[];
   correctAnswer: number;
   explanation: string;
+  explanation_ro?: string;
 }
 
 export interface Category {
