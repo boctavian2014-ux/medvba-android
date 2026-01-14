@@ -120,6 +120,9 @@ export const en: Record<string, string> = {
   'session.wrong': 'Incorrect',
   'session.backToQuiz': 'Back to test modes',
   'session.percentCorrect': '{percent}% Correct',
+  'session.copy': 'Copy',
+  'session.copied': 'Copied',
+  'session.explanationCopied': 'Explanation copied!',
 
   // Module Names
   'module.upperLowerLimbs': 'Upper/Lower Limbs',

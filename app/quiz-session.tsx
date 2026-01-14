@@ -8,10 +8,12 @@ import {
   ScrollView,
   Platform,
   StatusBar as RNStatusBar,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Clock, CheckCircle, XCircle, ChevronRight } from 'lucide-react-native';
+import { X, Clock, CheckCircle, XCircle, ChevronRight, Copy } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -604,6 +606,21 @@ export default function QuizSessionScreen() {
     router.back();
   }, [router, addStudyTime]);
 
+  const handleCopyExplanation = useCallback(async () => {
+    if (!currentQuestion?.explanation) return;
+    
+    const cleanText = currentQuestion.explanation.replace(/\[(web|screenshot|image|source|ref):\d+\]/gi, '').trim();
+    
+    await Clipboard.setStringAsync(cleanText);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    if (Platform.OS === 'web') {
+      Alert.alert(t('session.copied'), t('session.explanationCopied'));
+    } else {
+      Alert.alert(t('session.explanationCopied'));
+    }
+  }, [currentQuestion, t]);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -784,7 +801,16 @@ export default function QuizSessionScreen() {
 
             {showResult && (
               <GlassCard style={styles.explanationCard}>
-                <Text style={styles.explanationTitle}>{t('session.explanation')}</Text>
+                <View style={styles.explanationHeader}>
+                  <Text style={styles.explanationTitle}>{t('session.explanation')}</Text>
+                  <TouchableOpacity 
+                    style={styles.copyButton} 
+                    onPress={handleCopyExplanation}
+                  >
+                    <Copy color={Colors.primary} size={18} />
+                    <Text style={styles.copyButtonText}>{t('session.copy')}</Text>
+                  </TouchableOpacity>
+                </View>
                 <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
               </GlassCard>
             )}
@@ -996,11 +1022,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 180, 216, 0.1)',
     borderColor: Colors.primary,
   },
+  explanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
   explanationTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
     color: Colors.primary,
-    marginBottom: 8,
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Colors.primary + '20',
+  },
+  copyButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
   explanationText: {
     fontSize: 14,

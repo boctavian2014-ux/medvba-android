@@ -120,6 +120,9 @@ export const ro: Record<string, string> = {
   'session.wrong': 'Greșit',
   'session.backToQuiz': 'Înapoi la modurile de testare',
   'session.percentCorrect': '{percent}% Corect',
+  'session.copy': 'Copiază',
+  'session.copied': 'Copiat',
+  'session.explanationCopied': 'Explicație copiată!',
 
   // Module Names
   'module.upperLowerLimbs': 'Membre Superioare și Inferioare',
