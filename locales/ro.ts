@@ -122,9 +122,9 @@ export const ro: Record<string, string> = {
   'session.percentCorrect': '{percent}% Corect',
 
   // Module Names
-  'module.upperLowerLimbs': 'Membre superioare/inferioare',
-  'module.internalOrgans': 'Organe interne',
-  'module.headNeck': 'Cap și gât',
+  'module.upperLowerLimbs': 'Membre Superioare și Inferioare',
+  'module.internalOrgans': 'Organe Interne',
+  'module.headNeck': 'Cap și Gât',
   'module.neuroanatomy': 'Neuroanatomie',
 
   // Medical Subjects
