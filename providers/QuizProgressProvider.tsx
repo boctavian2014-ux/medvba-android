@@ -462,7 +462,6 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
 
       if (userId) {
-        await checkAndGrantAchievements(userId);
         const currentAllTime = allTimeStats;
         const currentStreak = streakData;
         const today = getTodayDateString();
@@ -487,6 +486,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           }),
         ]).then(() => {
           console.log('[QuizProgress] Synced to Supabase successfully');
+          checkAndGrantAchievements(userId).catch(err => {
+            console.error('[QuizProgress] Error checking achievements:', err);
+          });
         }).catch(error => {
           console.error('[QuizProgress] Error syncing to Supabase:', error);
         });
