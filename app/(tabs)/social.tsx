@@ -148,6 +148,7 @@ export default function SocialScreen() {
   const [sessionDuration, setSessionDuration] = useState('60');
   const [sessionDate, setSessionDate] = useState('');
   const [sessionTime, setSessionTime] = useState('');
+  const [meetingUrl, setMeetingUrl] = useState('');
   const [, forceUpdate] = useState(0);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
@@ -355,6 +356,7 @@ export default function SocialScreen() {
     setSessionDuration('60');
     setSessionDate('');
     setSessionTime('');
+    setMeetingUrl('');
     setSelectedRoom(null);
   };
 
@@ -405,6 +407,7 @@ export default function SocialScreen() {
       hostName: profile?.name || 'You',
       hostAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user?.id}`,
         category: selectedRoom.category,
+        meetingUrl: meetingUrl.trim() || undefined,
       },
       {
         onSuccess: handleCreateSessionSuccess,
@@ -781,6 +784,20 @@ export default function SocialScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Meeting URL (Optional)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={meetingUrl}
+                  onChangeText={setMeetingUrl}
+                  placeholder="https://zoom.us/j/... or Google Meet link"
+                  placeholderTextColor={Colors.textMuted}
+                  autoCapitalize="none"
+                  keyboardType="url"
+                />
+                <Text style={styles.inputHint}>Add a Zoom, Google Meet, or Teams link</Text>
               </View>
             </ScrollView>
 
@@ -2049,5 +2066,10 @@ const styles = StyleSheet.create({
   },
   chatCloseButton: {
     padding: 4,
+  },
+  inputHint: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 6,
   },
 });

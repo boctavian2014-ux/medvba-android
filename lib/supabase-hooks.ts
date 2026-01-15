@@ -199,6 +199,7 @@ export function useCreateSession() {
       hostName: string;
       hostAvatar: string;
       category: string;
+      meetingUrl?: string;
     }) => {
       console.log('[Supabase] Creating session:', input.title);
 
@@ -223,6 +224,7 @@ export function useCreateSession() {
           category: input.category,
           status: 'SCHEDULED',
           attendees: [],
+          meeting_url: input.meetingUrl,
         })
         .select()
         .single();
