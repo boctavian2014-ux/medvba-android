@@ -50,6 +50,9 @@ import {
   useCreateSession,
   StudyRoom,
   StudySession,
+  useAllRecentAchievements,
+  RecentAchievementWithUser,
+  AchievementType,
 } from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -277,6 +280,7 @@ export default function SocialScreen() {
 
   const studyRoomsQuery = useStudyRooms();
   const upcomingSessionsQuery = useUpcomingSessions();
+  const recentAchievementsQuery = useAllRecentAchievements(15);
 
   const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map((room: any) => ({
     ...room,
@@ -420,9 +424,53 @@ export default function SocialScreen() {
   const isSessionHost = (session: StudySession) => session.hostId === user?.id;
 
   const upcomingSessions: StudySession[] = upcomingSessionsQuery.data ?? [];
+  const recentAchievements: RecentAchievementWithUser[] = recentAchievementsQuery.data ?? [];
+
+  const getAchievementTitle = (type: AchievementType): string => {
+    const titles: Record<AchievementType, string> = {
+      first_quiz: 'First Steps!',
+      quiz_master: 'Quiz Master',
+      perfect_score: 'Perfect Score',
+      streak_7: '7 Day Streak 🔥',
+      streak_30: '30 Day Streak 🔥🔥',
+      streak_100: '100 Day Streak 🔥🔥🔥',
+      questions_100: '100 Questions',
+      questions_500: '500 Questions',
+      questions_1000: '1000 Questions!',
+      social_butterfly: 'Social Butterfly',
+      helpful_tutor: 'Helpful Tutor',
+      room_creator: 'Room Creator',
+      early_bird: 'Early Bird',
+      night_owl: 'Night Owl',
+      weekend_warrior: 'Weekend Warrior',
+    };
+    return titles[type] || type;
+  };
+
+  const getAchievementDescription = (type: AchievementType): string => {
+    const descriptions: Record<AchievementType, string> = {
+      first_quiz: 'Completed their first quiz',
+      quiz_master: 'Mastered quiz fundamentals',
+      perfect_score: 'Achieved a perfect score',
+      streak_7: 'Maintained a 7-day study streak',
+      streak_30: 'Maintained a 30-day study streak',
+      streak_100: 'Maintained a 100-day study streak',
+      questions_100: 'Answered 100 questions',
+      questions_500: 'Answered 500 questions',
+      questions_1000: 'Answered 1000 questions',
+      social_butterfly: 'Active in the community',
+      helpful_tutor: 'Helped other students',
+      room_creator: 'Created a study room',
+      early_bird: 'Studies early in the morning',
+      night_owl: 'Studies late at night',
+      weekend_warrior: 'Studies on weekends',
+    };
+    return descriptions[type] || 'Unlocked an achievement';
+  };
   
   const filteredStudyRooms = studyRooms.filter(room => !isUserBlocked(room.hostId));
   const filteredUpcomingSessions = upcomingSessions.filter(session => !isUserBlocked(session.hostId));
+  const filteredAchievements = recentAchievements.filter(achievement => !isUserBlocked(achievement.userId));
 
   return (
     <View style={styles.container}>
@@ -629,6 +677,33 @@ export default function SocialScreen() {
               <MessageCircle color={Colors.primary} size={18} />
               <Text style={styles.sectionTitle}>{t('social.activityFeed')}</Text>
             </View>
+            
+            {filteredAchievements.map((achievement) => (
+              <GlassCard key={achievement.id} style={styles.activityCard}>
+                <View style={styles.activityHeader}>
+                  <Image source={{ uri: achievement.userAvatar }} style={styles.activityAvatar} />
+                  <View style={styles.activityUserInfo}>
+                    <Text style={styles.activityUserName}>{achievement.userName}</Text>
+                    <Text style={styles.activityTime}>
+                      {formatTimeAgo(new Date(achievement.earnedAt))}
+                    </Text>
+                  </View>
+                  <View style={styles.activityTypeIcon}>
+                    <Trophy color={Colors.accent} size={18} />
+                  </View>
+                </View>
+                
+                <Text style={styles.activityTitle}>{getAchievementTitle(achievement.achievementType)}</Text>
+                <Text style={styles.activityDescription}>
+                  {getAchievementDescription(achievement.achievementType)}
+                </Text>
+                
+                <View style={styles.achievementBadge}>
+                  <Trophy color={Colors.accent} size={14} />
+                  <Text style={styles.achievementBadgeText}>Achievement Unlocked</Text>
+                </View>
+              </GlassCard>
+            ))}
             
             {activities.map((activity) => {
               const IconComponent = activityIcons[activity.type] || Star;
@@ -2071,5 +2146,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     marginTop: 6,
+  },
+  achievementBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+    alignSelf: 'flex-start',
+  },
+  achievementBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.accent,
   },
 });

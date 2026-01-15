@@ -950,32 +950,74 @@ export function useUserAchievements(userId: string | undefined) {
   });
 }
 
+export interface RecentAchievementWithUser extends UserAchievement {
+  userName: string;
+  userAvatar: string;
+}
+
 export function useAllRecentAchievements(limit: number = 20) {
   return useQuery({
     queryKey: ['recentAchievements', limit],
     queryFn: async () => {
-      console.log('[Supabase] Fetching recent achievements from all users');
-      const { data, error } = await supabase
+      console.log('[Supabase] Fetching recent achievements from all users with user info');
+      
+      const { data: achievementsData, error: achievementsError } = await supabase
         .from('user_achievements')
         .select('*')
         .order('earned_at', { ascending: false })
         .limit(limit);
 
-      if (error) {
-        console.error('[Supabase] Error fetching recent achievements:', error);
-        throw error;
+      if (achievementsError) {
+        console.error('[Supabase] Error fetching recent achievements:', achievementsError);
+        throw achievementsError;
       }
 
-      console.log('[Supabase] Fetched', data?.length || 0, 'recent achievements');
+      if (!achievementsData || achievementsData.length === 0) {
+        console.log('[Supabase] No achievements found');
+        return [];
+      }
 
-      return (data || []).map((achievement: any) => ({
-        id: achievement.id,
-        userId: achievement.user_id,
-        achievementType: achievement.achievement_type as AchievementType,
-        earnedAt: achievement.earned_at,
-        metadata: achievement.metadata || {},
-      })) as UserAchievement[];
+      const userIds = [...new Set(achievementsData.map((a: any) => a.user_id))];
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, profile_photo_url, avatar')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('[Supabase] Error fetching user info:', usersError);
+      }
+
+      const usersMap = new Map(
+        (usersData || []).map((user: any) => [
+          user.id,
+          {
+            name: user.name || 'Student',
+            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+          },
+        ])
+      );
+
+      console.log('[Supabase] Fetched', achievementsData.length, 'recent achievements with user info');
+
+      return achievementsData.map((achievement: any) => {
+        const userInfo = usersMap.get(achievement.user_id) || {
+          name: 'Student',
+          avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${achievement.user_id}`,
+        };
+
+        return {
+          id: achievement.id,
+          userId: achievement.user_id,
+          achievementType: achievement.achievement_type as AchievementType,
+          earnedAt: achievement.earned_at,
+          metadata: achievement.metadata || {},
+          userName: userInfo.name,
+          userAvatar: userInfo.avatar,
+        };
+      }) as RecentAchievementWithUser[];
     },
+    refetchInterval: 60000,
   });
 }
 

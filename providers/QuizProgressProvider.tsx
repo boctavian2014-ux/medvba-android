@@ -8,7 +8,9 @@ import {
   useUserProgress, 
   useUpsertUserProgress, 
   useWeeklyProgress, 
-  useUpsertDailyProgress 
+  useUpsertDailyProgress,
+  useCheckAchievements,
+  useGrantAchievement
 } from '@/lib/supabase-hooks';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
@@ -151,6 +153,8 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   );
   const upsertUserProgressMutation = useUpsertUserProgress();
   const upsertDailyProgressMutation = useUpsertDailyProgress();
+  const achievementsCheckQuery = useCheckAchievements(userId);
+  const grantAchievementMutation = useGrantAchievement();
 
   const updateStreak = useCallback(async () => {
     const today = getTodayDateString();
@@ -421,6 +425,27 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           });
 
           console.log('[QuizProgress] Synced to Supabase successfully');
+          
+          await achievementsCheckQuery.refetch();
+          
+          if (achievementsCheckQuery.data?.earned && achievementsCheckQuery.data.earned.length > 0) {
+            console.log('[QuizProgress] Granting', achievementsCheckQuery.data.earned.length, 'new achievements');
+            for (const achievementType of achievementsCheckQuery.data.earned) {
+              try {
+                await grantAchievementMutation.mutateAsync({
+                  userId,
+                  achievementType,
+                  metadata: {
+                    totalQuestions: currentAllTime.totalQuestionsAnswered + 1,
+                    currentStreak: currentStreak.currentStreak,
+                  },
+                });
+                console.log('[QuizProgress] Achievement granted:', achievementType);
+              } catch (grantError) {
+                console.error('[QuizProgress] Error granting achievement:', achievementType, grantError);
+              }
+            }
+          }
         } catch (error) {
           console.error('[QuizProgress] Error syncing to Supabase:', error);
         } finally {
@@ -431,7 +456,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       console.error('[QuizProgress] Error updating daily progress:', error);
       monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
-  }, [updateStreak, updateWeeklyHistory, userId, isSyncing, allTimeStats, streakData, weeklyHistory, upsertUserProgressMutation, upsertDailyProgressMutation]);
+  }, [updateStreak, updateWeeklyHistory, userId, isSyncing, allTimeStats, streakData, weeklyHistory, upsertUserProgressMutation, upsertDailyProgressMutation, achievementsCheckQuery, grantAchievementMutation]);
 
   const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
     try {
