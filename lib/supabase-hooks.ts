@@ -684,39 +684,54 @@ export interface DailyProgressData {
 export function useUserProgress(userId: string | undefined) {
   return useQuery({
     queryKey: ['userProgress', userId],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!userId) return null;
 
       console.log('[Supabase] Fetching user progress for:', userId);
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .abortSignal(signal)
+          .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          console.log('[Supabase] No user progress found, will create on first update');
-          return null;
+        if (error) {
+          if (error.code === 'PGRST116') {
+            console.log('[Supabase] No user progress found, will create on first update');
+            return null;
+          }
+          console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+          throw error;
         }
-        console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+
+        return {
+          id: data.id,
+          userId: data.user_id,
+          totalQuestionsAnswered: data.total_questions_answered,
+          correctAnswers: data.correct_answers,
+          studyTimeSeconds: data.study_time_seconds,
+          currentStreak: data.current_streak,
+          longestStreak: data.longest_streak,
+          lastActivityDate: data.last_activity_date,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        } as UserProgressData;
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          console.log('[Supabase] User progress query was cancelled');
+          throw error;
+        }
         throw error;
       }
-
-      return {
-        id: data.id,
-        userId: data.user_id,
-        totalQuestionsAnswered: data.total_questions_answered,
-        correctAnswers: data.correct_answers,
-        studyTimeSeconds: data.study_time_seconds,
-        currentStreak: data.current_streak,
-        longestStreak: data.longest_streak,
-        lastActivityDate: data.last_activity_date,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-      } as UserProgressData;
     },
     enabled: !!userId,
+    staleTime: 30000,
+    retry: (failureCount, error: any) => {
+      if (error?.name === 'AbortError') return false;
+      return failureCount < 2;
+    },
   });
 }
 
@@ -806,37 +821,52 @@ export function useDailyProgress(userId: string | undefined, date: string) {
 export function useWeeklyProgress(userId: string | undefined, startDate: string, endDate: string) {
   return useQuery({
     queryKey: ['weeklyProgress', userId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!userId) return [];
 
       console.log('[Supabase] Fetching weekly progress for:', userId, startDate, 'to', endDate);
-      const { data, error } = await supabase
-        .from('daily_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true });
+      
+      try {
+        const { data, error } = await supabase
+          .from('daily_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .gte('date', startDate)
+          .lte('date', endDate)
+          .abortSignal(signal)
+          .order('date', { ascending: true });
 
-      if (error) {
-        console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        if (error) {
+          console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+          throw error;
+        }
+
+        console.log('[Supabase] Fetched', data?.length || 0, 'daily records');
+
+        return (data || []).map((day: any) => ({
+          id: day.id,
+          userId: day.user_id,
+          date: day.date,
+          questionsAnswered: day.questions_answered,
+          correctAnswers: day.correct_answers,
+          studyTimeSeconds: day.study_time_seconds,
+          createdAt: day.created_at,
+          updatedAt: day.updated_at,
+        })) as DailyProgressData[];
+      } catch (error: any) {
+        if (error?.name === 'AbortError') {
+          console.log('[Supabase] Weekly progress query was cancelled');
+          throw error;
+        }
         throw error;
       }
-
-      console.log('[Supabase] Fetched', data?.length || 0, 'daily records');
-
-      return (data || []).map((day: any) => ({
-        id: day.id,
-        userId: day.user_id,
-        date: day.date,
-        questionsAnswered: day.questions_answered,
-        correctAnswers: day.correct_answers,
-        studyTimeSeconds: day.study_time_seconds,
-        createdAt: day.created_at,
-        updatedAt: day.updated_at,
-      })) as DailyProgressData[];
     },
     enabled: !!userId && !!startDate && !!endDate,
+    staleTime: 30000,
+    retry: (failureCount, error: any) => {
+      if (error?.name === 'AbortError') return false;
+      return failureCount < 2;
+    },
   });
 }
 
