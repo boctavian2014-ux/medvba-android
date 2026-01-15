@@ -153,10 +153,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   );
   const upsertUserProgressMutation = useUpsertUserProgress();
   const upsertDailyProgressMutation = useUpsertDailyProgress();
+  const grantAchievementMutation = useGrantAchievement();
 
   const upsertUserProgressAsync = upsertUserProgressMutation.mutateAsync;
   const upsertDailyProgressAsync = upsertDailyProgressMutation.mutateAsync;
-  const grantAchievementMutation = useGrantAchievement();
   const grantAchievementAsync = grantAchievementMutation.mutateAsync;
 
   const updateStreak = useCallback(async () => {
@@ -239,9 +239,15 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   }, []);
 
   const checkAndGrantAchievements = useCallback(async (targetUserId: string) => {
+    if (!targetUserId) return;
+    
     try {
-      const userProgressResult = await supabase.from('user_progress').select('*').eq('user_id', targetUserId).single();
-      const achievementsResult = await supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId);
+      console.log('[QuizProgress] Checking achievements for user:', targetUserId);
+      
+      const [userProgressResult, achievementsResult] = await Promise.all([
+        supabase.from('user_progress').select('*').eq('user_id', targetUserId).single(),
+        supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId),
+      ]);
 
       if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
         console.error('[QuizProgress] Error fetching progress for achievements:', userProgressResult.error);
@@ -285,13 +291,15 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         achievementsToGrant.push('streak_100');
       }
 
-      for (const achievementType of achievementsToGrant) {
-        console.log('[QuizProgress] Granting achievement:', achievementType);
-        await grantAchievementAsync({
-          userId: targetUserId,
-          achievementType,
-          metadata: { totalQuestions, currentStreak },
-        });
+      if (achievementsToGrant.length > 0) {
+        console.log('[QuizProgress] Granting', achievementsToGrant.length, 'new achievements');
+        for (const achievementType of achievementsToGrant) {
+          await grantAchievementAsync({
+            userId: targetUserId,
+            achievementType,
+            metadata: { totalQuestions, currentStreak },
+          });
+        }
       }
     } catch (error) {
       console.error('[QuizProgress] Error checking achievements:', error);
@@ -484,11 +492,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             correctAnswers: (todayEntry?.correctAnswers || 0) + (correct ? 1 : 0),
             studyTimeSeconds: todayEntry?.studyTimeSeconds || 0,
           }),
-        ]).then(() => {
+        ]).then(async () => {
           console.log('[QuizProgress] Synced to Supabase successfully');
-          checkAndGrantAchievements(userId).catch(err => {
-            console.error('[QuizProgress] Error checking achievements:', err);
-          });
+          await checkAndGrantAchievements(userId);
         }).catch(error => {
           console.error('[QuizProgress] Error syncing to Supabase:', error);
         });
