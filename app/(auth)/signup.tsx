@@ -47,9 +47,10 @@ export default function SignUpScreen() {
       newErrors.name = t('auth.nameTooShort');
     }
 
-    if (!email.trim()) {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
       newErrors.email = t('auth.emailRequired');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedEmail)) {
       newErrors.email = t('auth.emailInvalid');
     }
 
