@@ -12,10 +12,7 @@ export interface StudyRoom {
   maxParticipants: number;
   category: string;
   isLive: boolean;
-  zoomMeetingId?: string;
-  joinUrl?: string;
-  startUrl?: string;
-  zoomStatus: 'IDLE' | 'LIVE' | 'ENDED';
+  meetingUrl?: string;
   created_at?: string;
 }
 
@@ -32,9 +29,7 @@ export interface StudySession {
   hostAvatar: string;
   category: string;
   status: 'SCHEDULED' | 'LIVE' | 'ENDED';
-  zoomMeetingId?: string;
-  joinUrl?: string;
-  startUrl?: string;
+  meetingUrl?: string;
   attendees: string[];
   created_at?: string;
 }
@@ -66,11 +61,8 @@ export function useStudyRooms() {
         participants: room.participants || 0,
         maxParticipants: room.max_participants || 20,
         category: room.category || 'general',
-        isLive: room.zoom_status === 'LIVE',
-        zoomMeetingId: room.zoom_meeting_id,
-        joinUrl: room.join_url,
-        startUrl: room.start_url,
-        zoomStatus: room.zoom_status || 'IDLE',
+        isLive: !!room.meeting_url,
+        meetingUrl: room.meeting_url,
         created_at: room.created_at,
       })) as StudyRoom[];
     },
@@ -122,21 +114,12 @@ export function useUpdateStudyRoom() {
   return useMutation({
     mutationFn: async (input: {
       roomId: string;
-      zoomMeetingId?: string;
-      joinUrl?: string;
-      startUrl?: string;
-      zoomStatus: 'IDLE' | 'LIVE' | 'ENDED';
-      isLive?: boolean;
+      meetingUrl?: string;
     }) => {
       console.log('[Supabase] Updating study room:', input.roomId);
 
-      const updateData: any = {
-        zoom_status: input.zoomStatus,
-      };
-
-      if (input.zoomMeetingId !== undefined) updateData.zoom_meeting_id = input.zoomMeetingId;
-      if (input.joinUrl !== undefined) updateData.join_url = input.joinUrl;
-      if (input.startUrl !== undefined) updateData.start_url = input.startUrl;
+      const updateData: any = {};
+      if (input.meetingUrl !== undefined) updateData.meeting_url = input.meetingUrl;
 
       const { data, error } = await supabase
         .from('study_rooms')
@@ -193,9 +176,7 @@ export function useUpcomingSessions() {
         hostAvatar: session.host_avatar,
         category: session.category,
         status: session.status,
-        zoomMeetingId: session.zoom_meeting_id,
-        joinUrl: session.join_url,
-        startUrl: session.start_url,
+        meetingUrl: session.meeting_url,
         attendees: session.attendees || [],
         created_at: session.created_at,
       })) as StudySession[];
@@ -267,17 +248,13 @@ export function useUpdateSession() {
     mutationFn: async (input: {
       sessionId: string;
       status?: 'SCHEDULED' | 'LIVE' | 'ENDED';
-      zoomMeetingId?: string;
-      joinUrl?: string;
-      startUrl?: string;
+      meetingUrl?: string;
     }) => {
       console.log('[Supabase] Updating session:', input.sessionId);
 
       const updateData: any = {};
       if (input.status !== undefined) updateData.status = input.status;
-      if (input.zoomMeetingId !== undefined) updateData.zoom_meeting_id = input.zoomMeetingId;
-      if (input.joinUrl !== undefined) updateData.join_url = input.joinUrl;
-      if (input.startUrl !== undefined) updateData.start_url = input.startUrl;
+      if (input.meetingUrl !== undefined) updateData.meeting_url = input.meetingUrl;
 
       const { data, error } = await supabase
         .from('study_sessions')
