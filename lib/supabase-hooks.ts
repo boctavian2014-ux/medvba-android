@@ -893,3 +893,220 @@ export function useUpsertDailyProgress() {
   });
 }
 
+export type AchievementType =
+  | 'first_quiz'
+  | 'quiz_master'
+  | 'perfect_score'
+  | 'streak_7'
+  | 'streak_30'
+  | 'streak_100'
+  | 'questions_100'
+  | 'questions_500'
+  | 'questions_1000'
+  | 'social_butterfly'
+  | 'helpful_tutor'
+  | 'room_creator'
+  | 'early_bird'
+  | 'night_owl'
+  | 'weekend_warrior';
+
+export interface UserAchievement {
+  id: string;
+  userId: string;
+  achievementType: AchievementType;
+  earnedAt: string;
+  metadata: Record<string, any>;
+}
+
+export function useUserAchievements(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['userAchievements', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      console.log('[Supabase] Fetching achievements for user:', userId);
+      const { data, error } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .eq('user_id', userId)
+        .order('earned_at', { ascending: false });
+
+      if (error) {
+        console.error('[Supabase] Error fetching user achievements:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'achievements');
+
+      return (data || []).map((achievement: any) => ({
+        id: achievement.id,
+        userId: achievement.user_id,
+        achievementType: achievement.achievement_type as AchievementType,
+        earnedAt: achievement.earned_at,
+        metadata: achievement.metadata || {},
+      })) as UserAchievement[];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useAllRecentAchievements(limit: number = 20) {
+  return useQuery({
+    queryKey: ['recentAchievements', limit],
+    queryFn: async () => {
+      console.log('[Supabase] Fetching recent achievements from all users');
+      const { data, error } = await supabase
+        .from('user_achievements')
+        .select('*')
+        .order('earned_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('[Supabase] Error fetching recent achievements:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'recent achievements');
+
+      return (data || []).map((achievement: any) => ({
+        id: achievement.id,
+        userId: achievement.user_id,
+        achievementType: achievement.achievement_type as AchievementType,
+        earnedAt: achievement.earned_at,
+        metadata: achievement.metadata || {},
+      })) as UserAchievement[];
+    },
+  });
+}
+
+export function useGrantAchievement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      achievementType: AchievementType;
+      metadata?: Record<string, any>;
+    }) => {
+      console.log('[Supabase] Granting achievement:', input.achievementType, 'to user:', input.userId);
+
+      const { data, error } = await supabase.rpc('grant_achievement', {
+        target_user_id: input.userId,
+        achievement_name: input.achievementType,
+        achievement_metadata: input.metadata || {},
+      });
+
+      if (error) {
+        console.error('[Supabase] Error granting achievement:', error);
+        throw error;
+      }
+
+      console.log('[Supabase] Achievement granted:', data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['userAchievements', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['recentAchievements'] });
+    },
+  });
+}
+
+export interface AchievementCheckResult {
+  earned: AchievementType[];
+  progress: Record<AchievementType, { current: number; required: number }>;
+}
+
+export function useCheckAchievements(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['checkAchievements', userId],
+    queryFn: async (): Promise<AchievementCheckResult> => {
+      if (!userId) {
+        return { earned: [], progress: {} as Record<AchievementType, { current: number; required: number }> };
+      }
+
+      console.log('[Supabase] Checking achievements for user:', userId);
+
+      const [userProgressResult, achievementsResult] = await Promise.all([
+        supabase.from('user_progress').select('*').eq('user_id', userId).single(),
+        supabase.from('user_achievements').select('achievement_type').eq('user_id', userId),
+      ]);
+
+      if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
+        console.error('[Supabase] Error fetching user progress:', userProgressResult.error);
+        throw userProgressResult.error;
+      }
+
+      if (achievementsResult.error) {
+        console.error('[Supabase] Error fetching achievements:', achievementsResult.error);
+        throw achievementsResult.error;
+      }
+
+      const progress = userProgressResult.data;
+      const earnedAchievements = new Set(
+        (achievementsResult.data || []).map((a: any) => a.achievement_type as AchievementType)
+      );
+
+      const totalQuestions = progress?.total_questions_answered || 0;
+      const currentStreak = progress?.current_streak || 0;
+
+      const earned: AchievementType[] = [];
+      const progressMap: Record<string, { current: number; required: number }> = {};
+
+      if (totalQuestions >= 1 && !earnedAchievements.has('first_quiz')) {
+        earned.push('first_quiz');
+      }
+
+      if (totalQuestions >= 100) {
+        progressMap['questions_100'] = { current: totalQuestions, required: 100 };
+        if (!earnedAchievements.has('questions_100')) earned.push('questions_100');
+      } else {
+        progressMap['questions_100'] = { current: totalQuestions, required: 100 };
+      }
+
+      if (totalQuestions >= 500) {
+        progressMap['questions_500'] = { current: totalQuestions, required: 500 };
+        if (!earnedAchievements.has('questions_500')) earned.push('questions_500');
+      } else {
+        progressMap['questions_500'] = { current: totalQuestions, required: 500 };
+      }
+
+      if (totalQuestions >= 1000) {
+        progressMap['questions_1000'] = { current: totalQuestions, required: 1000 };
+        if (!earnedAchievements.has('questions_1000')) earned.push('questions_1000');
+      } else {
+        progressMap['questions_1000'] = { current: totalQuestions, required: 1000 };
+      }
+
+      if (currentStreak >= 7) {
+        progressMap['streak_7'] = { current: currentStreak, required: 7 };
+        if (!earnedAchievements.has('streak_7')) earned.push('streak_7');
+      } else {
+        progressMap['streak_7'] = { current: currentStreak, required: 7 };
+      }
+
+      if (currentStreak >= 30) {
+        progressMap['streak_30'] = { current: currentStreak, required: 30 };
+        if (!earnedAchievements.has('streak_30')) earned.push('streak_30');
+      } else {
+        progressMap['streak_30'] = { current: currentStreak, required: 30 };
+      }
+
+      if (currentStreak >= 100) {
+        progressMap['streak_100'] = { current: currentStreak, required: 100 };
+        if (!earnedAchievements.has('streak_100')) earned.push('streak_100');
+      } else {
+        progressMap['streak_100'] = { current: currentStreak, required: 100 };
+      }
+
+      console.log('[Supabase] Achievement check complete:', earned.length, 'new achievements earned');
+      
+      return {
+        earned,
+        progress: progressMap as Record<AchievementType, { current: number; required: number }>,
+      };
+    },
+    enabled: !!userId,
+    staleTime: 30000,
+  });
+}
+
