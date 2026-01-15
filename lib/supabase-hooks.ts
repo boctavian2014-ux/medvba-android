@@ -1028,7 +1028,7 @@ export function useGrantAchievement() {
       });
 
       if (error) {
-        console.error('[Supabase] Error granting achievement:', error);
+        console.error('[Supabase] Error granting achievement:', JSON.stringify(error, null, 2));
         throw error;
       }
 
