@@ -4,7 +4,6 @@ import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
 import { monitoring } from '@/lib/monitoring';
 import { useAuth } from './AuthProvider';
-import { useQueryClient } from '@tanstack/react-query';
 import { 
   useUserProgress, 
   useUpsertUserProgress, 
@@ -145,8 +144,6 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   const [lastSessionInfo, setLastSessionInfo] = useState<LastSessionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-
-  const queryClient = useQueryClient();
   const cloudProgressQuery = useUserProgress(userId);
   const cloudWeeklyQuery = useWeeklyProgress(
     userId,
@@ -167,63 +164,58 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     currentStreakValue: number
   ) => {
     try {
-      const achievementsResult = await queryClient.fetchQuery({
-        queryKey: ['checkAchievements', targetUserId],
-        queryFn: async () => {
-          const { supabase } = await import('@/lib/supabase');
-          
-          const [userProgressResult, achievementsResult] = await Promise.all([
-            supabase.from('user_progress').select('*').eq('user_id', targetUserId).single(),
-            supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId),
-          ]);
+      const { supabase } = await import('@/lib/supabase');
+      
+      const [userProgressResult, achievementsResult] = await Promise.all([
+        supabase.from('user_progress').select('*').eq('user_id', targetUserId).single(),
+        supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId),
+      ]);
 
-          if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
-            throw userProgressResult.error;
-          }
+      if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
+        console.error('[QuizProgress] Error fetching user progress:', userProgressResult.error);
+        return;
+      }
 
-          if (achievementsResult.error) {
-            throw achievementsResult.error;
-          }
+      if (achievementsResult.error) {
+        console.error('[QuizProgress] Error fetching achievements:', achievementsResult.error);
+        return;
+      }
 
-          const progress = userProgressResult.data;
-          const earnedAchievements = new Set(
-            (achievementsResult.data || []).map((a: any) => a.achievement_type as AchievementType)
-          );
+      const progress = userProgressResult.data;
+      const earnedAchievements = new Set(
+        (achievementsResult.data || []).map((a: any) => a.achievement_type as AchievementType)
+      );
 
-          const totalQs = progress?.total_questions_answered || 0;
-          const streak = progress?.current_streak || 0;
+      const totalQs = progress?.total_questions_answered || 0;
+      const streak = progress?.current_streak || 0;
 
-          const earned: AchievementType[] = [];
+      const earned: AchievementType[] = [];
 
-          if (totalQs >= 1 && !earnedAchievements.has('first_quiz')) {
-            earned.push('first_quiz');
-          }
-          if (totalQs >= 100 && !earnedAchievements.has('questions_100')) {
-            earned.push('questions_100');
-          }
-          if (totalQs >= 500 && !earnedAchievements.has('questions_500')) {
-            earned.push('questions_500');
-          }
-          if (totalQs >= 1000 && !earnedAchievements.has('questions_1000')) {
-            earned.push('questions_1000');
-          }
-          if (streak >= 7 && !earnedAchievements.has('streak_7')) {
-            earned.push('streak_7');
-          }
-          if (streak >= 30 && !earnedAchievements.has('streak_30')) {
-            earned.push('streak_30');
-          }
-          if (streak >= 100 && !earnedAchievements.has('streak_100')) {
-            earned.push('streak_100');
-          }
+      if (totalQs >= 1 && !earnedAchievements.has('first_quiz')) {
+        earned.push('first_quiz');
+      }
+      if (totalQs >= 100 && !earnedAchievements.has('questions_100')) {
+        earned.push('questions_100');
+      }
+      if (totalQs >= 500 && !earnedAchievements.has('questions_500')) {
+        earned.push('questions_500');
+      }
+      if (totalQs >= 1000 && !earnedAchievements.has('questions_1000')) {
+        earned.push('questions_1000');
+      }
+      if (streak >= 7 && !earnedAchievements.has('streak_7')) {
+        earned.push('streak_7');
+      }
+      if (streak >= 30 && !earnedAchievements.has('streak_30')) {
+        earned.push('streak_30');
+      }
+      if (streak >= 100 && !earnedAchievements.has('streak_100')) {
+        earned.push('streak_100');
+      }
 
-          return { earned };
-        },
-      });
-
-      if (achievementsResult.earned && achievementsResult.earned.length > 0) {
-        console.log('[QuizProgress] Granting', achievementsResult.earned.length, 'new achievements');
-        for (const achievementType of achievementsResult.earned) {
+      if (earned.length > 0) {
+        console.log('[QuizProgress] Granting', earned.length, 'new achievements');
+        for (const achievementType of earned) {
           try {
             await grantAchievementAsync({
               userId: targetUserId,
@@ -242,7 +234,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     } catch (error) {
       console.error('[QuizProgress] Error checking achievements:', error);
     }
-  }, [queryClient, grantAchievementAsync]);
+  }, [grantAchievementAsync]);
 
   const updateStreak = useCallback(async () => {
     const today = getTodayDateString();
