@@ -514,7 +514,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
           console.log('[QuizProgress] Synced to Supabase successfully');
           
-          checkAndGrantAchievements(userId, currentAllTime.totalQuestionsAnswered + 1, currentStreak.currentStreak);
+          await checkAndGrantAchievements(userId, currentAllTime.totalQuestionsAnswered + 1, currentStreak.currentStreak);
         } catch (error) {
           console.error('[QuizProgress] Error syncing to Supabase:', error);
         } finally {
