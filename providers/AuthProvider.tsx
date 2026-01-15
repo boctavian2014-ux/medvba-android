@@ -57,6 +57,10 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         console.log('[Auth] User created in users table');
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[Auth] Request aborted while ensuring user exists');
+        return;
+      }
       console.error('[Auth] Error ensuring user exists:', error);
     }
   }, []);
@@ -91,7 +95,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         setProfile(userProfile);
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('[Auth] Request aborted while fetching profile');
+        return;
+      }
       console.log('[Auth] Using default profile for user:', userId);
       
       setProfile({
@@ -131,19 +139,27 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (mounted) {
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
-          
-          if (currentSession?.user) {
-            await fetchProfile(currentSession.user.id, currentSession.user.email);
+        if (!mounted) return;
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id, currentSession.user.email);
+          if (mounted) {
             monitoring.setUser(currentSession.user.id, currentSession.user.email);
           }
-          
+        }
+        
+        if (mounted) {
           setIsLoading(false);
           console.log('[Auth] Auth initialized, session:', !!currentSession);
         }
       } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('[Auth] Auth initialization aborted (component unmounted)');
+          return;
+        }
         console.error('[Auth] Error initializing auth:', error);
         if (mounted) {
           setIsLoading(false);
@@ -156,17 +172,27 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('[Auth] Auth state changed:', event);
       
-      if (mounted) {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (newSession?.user) {
+      if (!mounted) return;
+      
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      
+      if (newSession?.user) {
+        try {
           await fetchProfile(newSession.user.id, newSession.user.email);
-          monitoring.setUser(newSession.user.id, newSession.user.email);
-        } else {
-          setProfile(null);
-          monitoring.clearUser();
+          if (mounted) {
+            monitoring.setUser(newSession.user.id, newSession.user.email);
+          }
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.log('[Auth] Profile fetch aborted during auth state change');
+            return;
+          }
+          console.error('[Auth] Error fetching profile on auth state change:', error);
         }
+      } else {
+        setProfile(null);
+        monitoring.clearUser();
       }
     });
 
