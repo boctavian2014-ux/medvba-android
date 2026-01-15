@@ -57,7 +57,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         console.log('[Auth] User created in users table');
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
         console.log('[Auth] Request aborted while ensuring user exists');
         return;
       }
@@ -96,7 +96,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
         console.log('[Auth] Request aborted while fetching profile');
         return;
       }
@@ -159,7 +159,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           console.log('[Auth] Auth initialized, session:', !!currentSession);
         }
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (abortController.signal.aborted) {
+          console.log('[Auth] Auth initialization aborted (component unmounted)');
+          return;
+        }
+        if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
           console.log('[Auth] Auth initialization aborted (component unmounted)');
           return;
         }
@@ -187,7 +191,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             monitoring.setUser(newSession.user.id, newSession.user.email);
           }
         } catch (error) {
-          if (error instanceof Error && error.name === 'AbortError') {
+          if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
             console.log('[Auth] Profile fetch aborted during auth state change');
             return;
           }
