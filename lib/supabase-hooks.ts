@@ -719,9 +719,8 @@ export function useUserProgress(userId: string | undefined) {
           updatedAt: data.updated_at,
         } as UserProgressData;
       } catch (error: any) {
-        if (error?.name === 'AbortError') {
-          console.log('[Supabase] User progress query was cancelled');
-          throw error;
+        if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+          return null;
         }
         throw error;
       }
@@ -854,9 +853,8 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
           updatedAt: day.updated_at,
         })) as DailyProgressData[];
       } catch (error: any) {
-        if (error?.name === 'AbortError') {
-          console.log('[Supabase] Weekly progress query was cancelled');
-          throw error;
+        if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+          return [];
         }
         throw error;
       }
