@@ -1141,6 +1141,169 @@ export const tibialNerveQuestions: Question[] = [
   }
 ];
 
+export const commonPeronealNerveQuestions: Question[] = [
+  {
+    id: 'cpn1',
+    category: 'upper-lower-limbs',
+    difficulty: 'easy',
+    question: 'From which nerve does the common peroneal (fibular) nerve arise?',
+    options: [
+      'Femoral nerve',
+      'Obturator nerve',
+      'Sciatic nerve (lateral division)',
+      'Tibial nerve',
+      'Saphenous nerve'
+    ],
+    correctAnswer: 2,
+    explanation:
+      'The common peroneal nerve is one of the two terminal branches of the sciatic nerve, arising from its lateral division (L4–L5–S1–S2).'
+  },
+  {
+    id: 'cpn2',
+    category: 'upper-lower-limbs',
+    difficulty: 'easy',
+    question: 'Which two major branches does the common peroneal nerve divide into?',
+    options: [
+      'Medial and lateral plantar nerves',
+      'Superficial and deep peroneal (fibular) nerves',
+      'Tibial and sural nerves',
+      'Femoral and obturator nerves',
+      'Saphenous and sural nerves'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'The common peroneal nerve divides around the fibular neck into the superficial peroneal nerve (lateral compartment) and deep peroneal nerve (anterior compartment).'
+  },
+  {
+    id: 'cpn3',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Where is the common peroneal nerve most vulnerable to injury?',
+    options: [
+      'In the popliteal fossa',
+      'At the neck of the fibula, where it wraps around the bone superficially',
+      'Behind the medial malleolus',
+      'In the tarsal tunnel',
+      'At the inguinal ligament'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'The common peroneal nerve is extremely vulnerable at the fibular neck, where it is subcutaneous and can be compressed by casts, crossed legs, or trauma.'
+  },
+  {
+    id: 'cpn4',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Which muscles are innervated by the deep peroneal (fibular) nerve?',
+    options: [
+      'Posterior compartment of the leg',
+      'Anterior compartment: tibialis anterior, extensor hallucis longus, extensor digitorum longus and peroneus tertius',
+      'Lateral compartment only',
+      'Calf muscles',
+      'Intrinsic foot muscles only'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'The deep peroneal nerve innervates all muscles of the anterior compartment (dorsiflexors and toe extensors) plus extensor digitorum brevis and extensor hallucis brevis in the foot.'
+  },
+  {
+    id: 'cpn5',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Which muscles are innervated by the superficial peroneal (fibular) nerve?',
+    options: [
+      'Anterior compartment',
+      'Posterior compartment',
+      'Lateral compartment: peroneus longus and peroneus brevis',
+      'Medial compartment',
+      'No muscles'
+    ],
+    correctAnswer: 2,
+    explanation:
+      'The superficial peroneal nerve innervates the lateral compartment muscles (peroneus longus and brevis), which evert the foot and assist in plantarflexion.'
+  },
+  {
+    id: 'cpn6',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Which sensory territories do the branches of the common peroneal nerve supply?',
+    options: [
+      'Sole of the foot only',
+      'Medial leg only',
+      'Superficial peroneal: lateral leg and dorsum of foot; deep peroneal: first web space',
+      'Posterior leg only',
+      'No sensory territory'
+    ],
+    correctAnswer: 2,
+    explanation:
+      'The superficial peroneal nerve provides sensation to the lateral leg and most of the dorsum of the foot, while the deep peroneal nerve supplies the first dorsal web space.'
+  },
+  {
+    id: 'cpn7',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which clinical presentation is MOST characteristic of common peroneal nerve palsy?',
+    options: [
+      'Loss of plantarflexion',
+      'Foot drop (inability to dorsiflex foot or extend toes) and steppage gait',
+      'Loss of knee extension',
+      'Loss of hip abduction',
+      'Claw toes only'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Common peroneal nerve palsy causes foot drop due to loss of dorsiflexion (anterior compartment paralysis), requiring a high-stepping steppage gait to clear the foot.'
+  },
+  {
+    id: 'cpn8',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which functional deficit helps differentiate common peroneal nerve palsy from L5 radiculopathy?',
+    options: [
+      'Both have identical presentations',
+      'CPN palsy spares foot inversion (tibialis posterior intact); L5 radiculopathy may weaken inversion',
+      'CPN palsy affects plantarflexion',
+      'L5 radiculopathy spares dorsiflexion',
+      'No difference exists'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Common peroneal nerve palsy preserves foot inversion (tibialis posterior via tibial nerve) and plantarflexion; L5 radiculopathy may weaken inversion and often presents with back pain radiating down the leg.'
+  },
+  {
+    id: 'cpn9',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which clinical scenarios are commonly associated with common peroneal nerve injury?',
+    options: [
+      'Wrist fracture',
+      'Fibular neck fracture, tight cast or bandage, prolonged leg crossing, knee dislocation',
+      'Hip dislocation only',
+      'Ankle sprain alone',
+      'Shoulder dislocation'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Common peroneal nerve injury commonly results from fibular neck trauma, compression by casts or prolonged leg crossing, or knee dislocation/lateral tibial plateau fractures.'
+  },
+  {
+    id: 'cpn10',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'What is anterior compartment syndrome and how does it relate to the deep peroneal nerve?',
+    options: [
+      'Infection of the anterior leg',
+      'Increased pressure within the anterior compartment causing ischemia and compression of the deep peroneal nerve, leading to foot drop',
+      'Fracture of the tibia only',
+      'Isolated muscle tear',
+      'Normal exercise response'
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Anterior compartment syndrome involves elevated pressure within the anterior compartment (from trauma, exercise, or bleeding), causing ischemia and deep peroneal nerve compression, resulting in foot drop and severe pain.'
+  }
+];
+
 export const upperLimbSensoryQuestions: Question[] = [
   {
     id: 'uls1',

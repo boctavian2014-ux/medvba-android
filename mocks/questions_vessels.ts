@@ -1,5 +1,143 @@
 import type { Question } from './questions';
 
+export const lowerLimbArteryQuestions: Question[] = [
+  {
+    id: 'lla1',
+    category: 'upper-lower-limbs',
+    difficulty: 'easy',
+    question: 'The femoral artery is a continuation of which artery as it passes deep to the inguinal ligament?',
+    options: ['Common iliac artery', 'External iliac artery', 'Internal iliac artery', 'Abdominal aorta'],
+    correctAnswer: 1,
+    explanation: 'The femoral artery is the continuation of the external iliac artery as it passes beneath the inguinal ligament to enter the femoral triangle.',
+  },
+  {
+    id: 'lla2',
+    category: 'upper-lower-limbs',
+    difficulty: 'easy',
+    question: 'At what anatomical landmark does the femoral artery become the popliteal artery?',
+    options: [
+      'Inguinal ligament',
+      'Adductor hiatus (opening in adductor magnus)',
+      'Knee joint',
+      'Fibular neck'
+    ],
+    correctAnswer: 1,
+    explanation: 'The femoral artery passes through the adductor hiatus (an opening in the adductor magnus tendon) and emerges as the popliteal artery in the popliteal fossa.',
+  },
+  {
+    id: 'lla3',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Which major branch arises from the femoral artery approximately 4 cm below the inguinal ligament?',
+    options: [
+      'Deep femoral artery (profunda femoris)',
+      'Superficial epigastric artery',
+      'Anterior tibial artery',
+      'Popliteal artery'
+    ],
+    correctAnswer: 0,
+    explanation: 'The deep femoral artery (profunda femoris) is the largest branch of the femoral artery, arising laterally about 4 cm below the inguinal ligament and supplying the thigh muscles.',
+  },
+  {
+    id: 'lla4',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'At what level does the popliteal artery typically bifurcate into its terminal branches?',
+    options: [
+      'At the knee joint',
+      'At the lower border of the popliteus muscle',
+      'At the ankle',
+      'At the adductor hiatus'
+    ],
+    correctAnswer: 1,
+    explanation: 'The popliteal artery terminates at the lower border of the popliteus muscle by dividing into the anterior tibial artery and the tibioperoneal trunk.',
+  },
+  {
+    id: 'lla5',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'Which artery passes anteriorly through the interosseous membrane to supply the anterior compartment of the leg?',
+    options: [
+      'Posterior tibial artery',
+      'Anterior tibial artery',
+      'Peroneal (fibular) artery',
+      'Femoral artery'
+    ],
+    correctAnswer: 1,
+    explanation: 'The anterior tibial artery pierces the interosseous membrane to enter the anterior compartment, descending with the deep peroneal nerve to become the dorsalis pedis artery.',
+  },
+  {
+    id: 'lla6',
+    category: 'upper-lower-limbs',
+    difficulty: 'medium',
+    question: 'What is the continuation of the anterior tibial artery on the dorsum of the foot?',
+    options: [
+      'Plantar arch',
+      'Dorsalis pedis artery',
+      'Posterior tibial artery',
+      'Medial plantar artery'
+    ],
+    correctAnswer: 1,
+    explanation: 'The anterior tibial artery becomes the dorsalis pedis artery as it crosses the ankle joint, running over the dorsum of the foot where its pulse is palpable.',
+  },
+  {
+    id: 'lla7',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which artery passes posterior to the medial malleolus with the tibial nerve through the tarsal tunnel?',
+    options: [
+      'Anterior tibial artery',
+      'Dorsalis pedis artery',
+      'Posterior tibial artery',
+      'Peroneal artery'
+    ],
+    correctAnswer: 2,
+    explanation: 'The posterior tibial artery descends in the deep posterior compartment and passes behind the medial malleolus through the tarsal tunnel, dividing into medial and lateral plantar arteries.',
+  },
+  {
+    id: 'lla8',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which clinical scenario is most commonly associated with acute femoral artery occlusion?',
+    options: [
+      'Thromboembolism causing the "6 Ps": Pain, Pallor, Pulselessness, Paresthesias, Paralysis, Poikilothermia',
+      'Gradual claudication only',
+      'Asymptomatic presentation',
+      'Increased warmth and redness'
+    ],
+    correctAnswer: 0,
+    explanation: 'Acute femoral artery occlusion presents with the classic "6 Ps" indicating limb-threatening ischemia requiring urgent revascularization.',
+  },
+  {
+    id: 'lla9',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Where is the femoral pulse best palpated?',
+    options: [
+      'Lateral to the femoral nerve',
+      'At the midinguinal point (halfway between ASIS and pubic symphysis)',
+      'Behind the knee',
+      'At the ankle'
+    ],
+    correctAnswer: 1,
+    explanation: 'The femoral pulse is palpated at the midinguinal point (halfway between anterior superior iliac spine and pubic symphysis), where the artery lies on the superior pubic ramus.',
+  },
+  {
+    id: 'lla10',
+    category: 'upper-lower-limbs',
+    difficulty: 'hard',
+    question: 'Which collateral pathway is MOST important in maintaining leg perfusion when the femoral artery is gradually occluded?',
+    options: [
+      'Direct continuation of the external iliac',
+      'Anastomoses between deep femoral branches and popliteal branches (cruciate and geniculate anastomoses)',
+      'Dorsalis pedis to plantar arch',
+      'No collateral pathways exist'
+    ],
+    correctAnswer: 1,
+    explanation: 'The profunda femoris (deep femoral) branches form rich anastomoses with popliteal and geniculate branches, providing crucial collateral circulation that can maintain limb viability in chronic femoral occlusion.',
+  }
+];
+
 export const brachialArteryQuestions: Question[] = [
   {
     id: 'b1',
