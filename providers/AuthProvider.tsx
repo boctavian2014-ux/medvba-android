@@ -36,8 +36,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
-  const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name?: string) => {
+  const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted: { current: boolean }) => {
     try {
+      if (!mounted.current) return;
       console.log('[Auth] Ensuring user exists in users table:', userId);
       const { data: existingUser } = await supabase
         .from('users')
@@ -45,6 +46,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         .eq('id', userId)
         .single();
 
+      if (!mounted.current) return;
       if (!existingUser) {
         console.log('[Auth] User not found in users table, creating...');
         await supabase.from('users').insert({
@@ -54,21 +56,24 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
           created_at: new Date().toISOString(),
         });
-        console.log('[Auth] User created in users table');
+        if (mounted.current) {
+          console.log('[Auth] User created in users table');
+        }
       }
     } catch (error) {
-      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
-        console.log('[Auth] Request aborted while ensuring user exists');
+      if (!mounted.current) return;
+      if (error instanceof Error && error.message.includes('signal is aborted')) {
         return;
       }
       console.error('[Auth] Error ensuring user exists:', error);
     }
   }, []);
 
-  const fetchProfile = useCallback(async (userId: string, email: string | undefined) => {
-    await ensureUserExists(userId, email);
+  const fetchProfile = useCallback(async (userId: string, email: string | undefined, mounted: { current: boolean }) => {
+    await ensureUserExists(userId, email, undefined, mounted);
 
     try {
+      if (!mounted.current) return;
       console.log('[Auth] Fetching profile for user:', userId);
       const { data: result, error } = await supabase
         .from('user_profiles')
@@ -76,6 +81,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         .eq('id', userId)
         .single();
 
+      if (!mounted.current) return;
       if (error) throw error;
 
       if (result) {
@@ -96,8 +102,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
       }
     } catch (error) {
-      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
-        console.log('[Auth] Request aborted while fetching profile');
+      if (!mounted.current) return;
+      if (error instanceof Error && error.message.includes('signal is aborted')) {
         return;
       }
       console.log('[Auth] Using default profile for user:', userId);
@@ -129,8 +135,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const abortController = new AbortController();
+    const mountedRef = { current: true };
 
     const initializeAuth = async () => {
       try {
@@ -138,37 +143,33 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         
         await checkOnboardingStatus();
 
-        if (!mounted || abortController.signal.aborted) return;
+        if (!mountedRef.current) return;
 
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (!mounted || abortController.signal.aborted) return;
+        if (!mountedRef.current) return;
         
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user && !abortController.signal.aborted) {
-          await fetchProfile(currentSession.user.id, currentSession.user.email);
-          if (mounted && !abortController.signal.aborted) {
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id, currentSession.user.email, mountedRef);
+          if (mountedRef.current) {
             monitoring.setUser(currentSession.user.id, currentSession.user.email);
           }
         }
         
-        if (mounted && !abortController.signal.aborted) {
+        if (mountedRef.current) {
           setIsLoading(false);
           console.log('[Auth] Auth initialized, session:', !!currentSession);
         }
       } catch (error) {
-        if (abortController.signal.aborted) {
-          console.log('[Auth] Auth initialization aborted (component unmounted)');
-          return;
-        }
-        if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
-          console.log('[Auth] Auth initialization aborted (component unmounted)');
+        if (!mountedRef.current) return;
+        if (error instanceof Error && error.message.includes('signal is aborted')) {
           return;
         }
         console.error('[Auth] Error initializing auth:', error);
-        if (mounted) {
+        if (mountedRef.current) {
           setIsLoading(false);
         }
       }
@@ -179,20 +180,20 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('[Auth] Auth state changed:', event);
       
-      if (!mounted) return;
+      if (!mountedRef.current) return;
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
       if (newSession?.user) {
         try {
-          await fetchProfile(newSession.user.id, newSession.user.email);
-          if (mounted) {
+          await fetchProfile(newSession.user.id, newSession.user.email, mountedRef);
+          if (mountedRef.current) {
             monitoring.setUser(newSession.user.id, newSession.user.email);
           }
         } catch (error) {
-          if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('signal is aborted'))) {
-            console.log('[Auth] Profile fetch aborted during auth state change');
+          if (!mountedRef.current) return;
+          if (error instanceof Error && error.message.includes('signal is aborted')) {
             return;
           }
           console.error('[Auth] Error fetching profile on auth state change:', error);
@@ -204,8 +205,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     });
 
     return () => {
-      mounted = false;
-      abortController.abort();
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
   }, [fetchProfile, checkOnboardingStatus]);
@@ -346,7 +346,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfile(user.id, user.email);
+      const mountedRef = { current: true };
+      await fetchProfile(user.id, user.email, mountedRef);
     }
   }, [user, fetchProfile]);
 
