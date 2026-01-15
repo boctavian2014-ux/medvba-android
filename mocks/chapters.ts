@@ -180,6 +180,11 @@ import {
 } from './questions_neuro_ear';
 
 import {
+  facialNerveQuestions,
+  vestibulocochlearNerveQuestions
+} from './questions_cranial_nerves';
+
+import {
   thoracicTracheaBronchiQuestions,
   mainBronchiQuestions,
   lungApexRelationsQuestions,
@@ -625,6 +630,8 @@ export const neuroanatomyChapters: ModuleChapters = {
     { id: 'auditory-tube', name: 'Auditory (pharyngotympanic) tube', questions: auditorTubeQuestions },
     { id: 'inner-ear', name: 'Inner ear (vestibule, cochlea, semicircular canals)', questions: innerEarQuestions },
     { id: 'taste-receptors', name: 'Gustatory receptors and mucosa', questions: tasteReceptorsQuestions },
+    { id: 'cn-vii-facial', name: 'CN VII – Facial nerve', questions: facialNerveQuestions },
+    { id: 'cn-viii-vestibulocochlear', name: 'CN VIII – Vestibulocochlear nerve', questions: vestibulocochlearNerveQuestions },
   ]
 };
 
