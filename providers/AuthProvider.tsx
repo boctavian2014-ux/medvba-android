@@ -130,6 +130,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   useEffect(() => {
     let mounted = true;
+    const abortController = new AbortController();
 
     const initializeAuth = async () => {
       try {
@@ -137,21 +138,23 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         
         await checkOnboardingStatus();
 
+        if (!mounted || abortController.signal.aborted) return;
+
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (!mounted) return;
+        if (!mounted || abortController.signal.aborted) return;
         
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user) {
+        if (currentSession?.user && !abortController.signal.aborted) {
           await fetchProfile(currentSession.user.id, currentSession.user.email);
-          if (mounted) {
+          if (mounted && !abortController.signal.aborted) {
             monitoring.setUser(currentSession.user.id, currentSession.user.email);
           }
         }
         
-        if (mounted) {
+        if (mounted && !abortController.signal.aborted) {
           setIsLoading(false);
           console.log('[Auth] Auth initialized, session:', !!currentSession);
         }
@@ -198,6 +201,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
     return () => {
       mounted = false;
+      abortController.abort();
       subscription.unsubscribe();
     };
   }, [fetchProfile, checkOnboardingStatus]);
