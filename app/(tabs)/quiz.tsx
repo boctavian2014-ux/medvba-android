@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,7 +22,6 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
@@ -44,7 +42,6 @@ export default function QuizScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showResumeDialog, setShowResumeDialog] = useState(false);
   const { 
     isPremium, 
     canStartQuiz, 
@@ -57,7 +54,7 @@ export default function QuizScreen() {
   const remainingQuizzes = getRemainingQuizzes();
 
   useEffect(() => {
-    const checkResumeDialog = async () => {
+    const checkOldSession = async () => {
       if (hasActiveSession && sessionState) {
         const sessionDate = new Date(sessionState.startedAt);
         const now = new Date();
@@ -66,29 +63,11 @@ export default function QuizScreen() {
         if (hoursDiff > 24) {
           console.log('[Quiz] Session older than 24 hours, clearing');
           clearSessionState();
-          return;
         }
-        
-        const justExited = await AsyncStorage.getItem('quiz_just_exited');
-        if (justExited) {
-          const exitTime = parseInt(justExited, 10);
-          const timeSinceExit = Date.now() - exitTime;
-          
-          if (timeSinceExit < 2000) {
-            console.log('[Quiz] User just exited, not showing resume dialog');
-            await AsyncStorage.removeItem('quiz_just_exited');
-            return;
-          }
-          
-          await AsyncStorage.removeItem('quiz_just_exited');
-        }
-        
-        console.log('[Quiz] Active session found, showing resume dialog');
-        setShowResumeDialog(true);
       }
     };
     
-    checkResumeDialog();
+    checkOldSession();
   }, [hasActiveSession, sessionState, clearSessionState]);
 
   const handleCategorySelect = (categoryId: string) => {
@@ -96,25 +75,7 @@ export default function QuizScreen() {
     setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
   };
 
-  const handleResumeQuiz = () => {
-    setShowResumeDialog(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    console.log('[Quiz] User chose to resume quiz');
-    router.push({
-      pathname: '/quiz-session' as any,
-      params: { 
-        category: sessionState?.category || 'mixed',
-        mode: sessionState?.mode || 'quick',
-        resume: 'true'
-      }
-    });
-  };
 
-  const handleStartNewQuiz = async () => {
-    setShowResumeDialog(false);
-    await clearSessionState();
-    console.log('[Quiz] User chose to start new quiz, cleared session');
-  };
 
   const handleStartQuiz = async (mode: QuizMode) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -157,40 +118,6 @@ export default function QuizScreen() {
         style={StyleSheet.absoluteFill}
       />
       
-      <Modal
-        visible={showResumeDialog}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowResumeDialog(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t('session.resumeQuiz')}</Text>
-            <Text style={styles.modalMessage}>{t('session.resumeQuizMessage')}</Text>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonSecondary]}
-                onPress={handleStartNewQuiz}
-              >
-                <Text style={styles.modalButtonTextSecondary}>{t('session.startNew')}</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonPrimary]}
-                onPress={handleResumeQuiz}
-              >
-                <LinearGradient
-                  colors={[Colors.primary, Colors.primaryDark]}
-                  style={styles.modalButtonGradient}
-                >
-                  <Text style={styles.modalButtonTextPrimary}>{t('session.continue')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView 
           showsVerticalScrollIndicator={false}
@@ -567,68 +494,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  modalButtonSecondary: {
-    backgroundColor: Colors.cardBgLight,
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalButtonPrimary: {
-    overflow: 'hidden',
-  },
-  modalButtonGradient: {
-    paddingVertical: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalButtonTextSecondary: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  modalButtonTextPrimary: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.text,
   },
 });
