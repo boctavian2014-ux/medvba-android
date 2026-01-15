@@ -23,6 +23,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
@@ -56,19 +57,38 @@ export default function QuizScreen() {
   const remainingQuizzes = getRemainingQuizzes();
 
   useEffect(() => {
-    if (hasActiveSession && sessionState) {
-      const sessionDate = new Date(sessionState.startedAt);
-      const now = new Date();
-      const hoursDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursDiff > 24) {
-        console.log('[Quiz] Session older than 24 hours, clearing');
-        clearSessionState();
-      } else {
+    const checkResumeDialog = async () => {
+      if (hasActiveSession && sessionState) {
+        const sessionDate = new Date(sessionState.startedAt);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursDiff > 24) {
+          console.log('[Quiz] Session older than 24 hours, clearing');
+          clearSessionState();
+          return;
+        }
+        
+        const justExited = await AsyncStorage.getItem('quiz_just_exited');
+        if (justExited) {
+          const exitTime = parseInt(justExited, 10);
+          const timeSinceExit = Date.now() - exitTime;
+          
+          if (timeSinceExit < 2000) {
+            console.log('[Quiz] User just exited, not showing resume dialog');
+            await AsyncStorage.removeItem('quiz_just_exited');
+            return;
+          }
+          
+          await AsyncStorage.removeItem('quiz_just_exited');
+        }
+        
         console.log('[Quiz] Active session found, showing resume dialog');
         setShowResumeDialog(true);
       }
-    }
+    };
+    
+    checkResumeDialog();
   }, [hasActiveSession, sessionState, clearSessionState]);
 
   const handleCategorySelect = (categoryId: string) => {

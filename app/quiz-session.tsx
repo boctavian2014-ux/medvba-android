@@ -636,6 +636,8 @@ export default function QuizSessionScreen() {
       await addStudyTime(elapsedSeconds);
       console.log('[QuizSession] Session closed. Time spent:', elapsedSeconds, 'seconds');
     }
+    
+    await AsyncStorage.setItem('quiz_just_exited', Date.now().toString());
     console.log('[QuizSession] Closing quiz, session state preserved for resume');
     router.replace('/(tabs)/quiz' as any);
   }, [addStudyTime, router]);
