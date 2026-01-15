@@ -48,7 +48,7 @@ export function useStudyRooms() {
 
       if (error) {
         console.error('[Supabase] Error fetching study rooms:', error);
-        throw error;
+        return [];
       }
 
       console.log('[Supabase] Fetched', data?.length || 0, 'study rooms');
@@ -68,6 +68,7 @@ export function useStudyRooms() {
       })) as StudyRoom[];
     },
     refetchInterval: 30000,
+    retry: false,
   });
 }
 
@@ -159,7 +160,7 @@ export function useUpcomingSessions() {
 
       if (error) {
         console.error('[Supabase] Error fetching sessions:', error);
-        throw error;
+        return [];
       }
 
       console.log('[Supabase] Fetched', data?.length || 0, 'upcoming sessions');
@@ -183,6 +184,7 @@ export function useUpcomingSessions() {
       })) as StudySession[];
     },
     refetchInterval: 30000,
+    retry: false,
   });
 }
 
