@@ -4,11 +4,14 @@ import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
 import { monitoring } from '@/lib/monitoring';
 import { useAuth } from './AuthProvider';
+import { supabase } from '@/lib/supabase';
 import { 
   useUserProgress, 
   useUpsertUserProgress, 
   useWeeklyProgress, 
-  useUpsertDailyProgress
+  useUpsertDailyProgress,
+  useGrantAchievement,
+  type AchievementType
 } from '@/lib/supabase-hooks';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
@@ -153,6 +156,8 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
   const upsertUserProgressAsync = upsertUserProgressMutation.mutateAsync;
   const upsertDailyProgressAsync = upsertDailyProgressMutation.mutateAsync;
+  const grantAchievementMutation = useGrantAchievement();
+  const grantAchievementAsync = grantAchievementMutation.mutateAsync;
 
   const updateStreak = useCallback(async () => {
     const today = getTodayDateString();
@@ -232,6 +237,66 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       return updated;
     });
   }, []);
+
+  const checkAndGrantAchievements = useCallback(async (targetUserId: string) => {
+    try {
+      const userProgressResult = await supabase.from('user_progress').select('*').eq('user_id', targetUserId).single();
+      const achievementsResult = await supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId);
+
+      if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
+        console.error('[QuizProgress] Error fetching progress for achievements:', userProgressResult.error);
+        return;
+      }
+
+      if (achievementsResult.error) {
+        console.error('[QuizProgress] Error fetching achievements:', achievementsResult.error);
+        return;
+      }
+
+      const progress = userProgressResult.data;
+      const earnedAchievements = new Set(
+        (achievementsResult.data || []).map((a: any) => a.achievement_type as AchievementType)
+      );
+
+      const totalQuestions = progress?.total_questions_answered || 0;
+      const currentStreak = progress?.current_streak || 0;
+
+      const achievementsToGrant: AchievementType[] = [];
+
+      if (totalQuestions >= 1 && !earnedAchievements.has('first_quiz')) {
+        achievementsToGrant.push('first_quiz');
+      }
+      if (totalQuestions >= 100 && !earnedAchievements.has('questions_100')) {
+        achievementsToGrant.push('questions_100');
+      }
+      if (totalQuestions >= 500 && !earnedAchievements.has('questions_500')) {
+        achievementsToGrant.push('questions_500');
+      }
+      if (totalQuestions >= 1000 && !earnedAchievements.has('questions_1000')) {
+        achievementsToGrant.push('questions_1000');
+      }
+      if (currentStreak >= 7 && !earnedAchievements.has('streak_7')) {
+        achievementsToGrant.push('streak_7');
+      }
+      if (currentStreak >= 30 && !earnedAchievements.has('streak_30')) {
+        achievementsToGrant.push('streak_30');
+      }
+      if (currentStreak >= 100 && !earnedAchievements.has('streak_100')) {
+        achievementsToGrant.push('streak_100');
+      }
+
+      for (const achievementType of achievementsToGrant) {
+        console.log('[QuizProgress] Granting achievement:', achievementType);
+        await grantAchievementAsync({
+          userId: targetUserId,
+          achievementType,
+          metadata: { totalQuestions, currentStreak },
+        });
+      }
+    } catch (error) {
+      console.error('[QuizProgress] Error checking achievements:', error);
+    }
+  }, [grantAchievementAsync]);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -397,6 +462,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
 
       if (userId) {
+        await checkAndGrantAchievements(userId);
         const currentAllTime = allTimeStats;
         const currentStreak = streakData;
         const today = getTodayDateString();
@@ -429,7 +495,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       console.error('[QuizProgress] Error updating daily progress:', error);
       monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
-  }, [updateStreak, updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync]);
+  }, [updateStreak, updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
 
   const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
     try {
