@@ -71,7 +71,7 @@ export const ro: Record<string, string> = {
   'home.continueLearning': 'Continuă sesiunea de studiu',
   'home.questionsToday': 'Ai completat {current}/{goal} întrebări azi',
   'home.startQuiz': 'Începe test grilă',
-  'home.continueQuiz': 'Continuă',
+  'home.continueQuiz': 'Continuă de unde ai rămas',
   'home.today': 'azi',
   'home.accuracy': 'Acuratețe',
   'home.questions': 'Întrebări',

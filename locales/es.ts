@@ -71,7 +71,7 @@ export const es: Record<string, string> = {
   'home.continueLearning': 'Continuar sesión de estudio',
   'home.questionsToday': 'Has completado {current}/{goal} preguntas hoy',
   'home.startQuiz': 'Iniciar cuestionario',
-  'home.continueQuiz': 'Continuar',
+  'home.continueQuiz': 'Continuar donde lo dejaste',
   'home.today': 'hoy',
   'home.accuracy': 'Precisión',
   'home.questions': 'Preguntas',
