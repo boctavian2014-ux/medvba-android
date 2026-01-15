@@ -702,6 +702,9 @@ export function useUserProgress(userId: string | undefined) {
             console.log('[Supabase] No user progress found, will create on first update');
             return null;
           }
+          if (error.message?.includes('AbortError') || error.message?.includes('aborted')) {
+            return null;
+          }
           console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
           throw error;
         }
@@ -836,6 +839,9 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
           .order('date', { ascending: true });
 
         if (error) {
+          if (error.message?.includes('AbortError') || error.message?.includes('aborted')) {
+            return [];
+          }
           console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
           throw error;
         }
