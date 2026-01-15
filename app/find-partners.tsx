@@ -18,7 +18,8 @@ import * as Haptics from 'expo-haptics';
 import { X, Search, MapPin, School, Users, BookOpen, Filter } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
-import { useStudyPartners, UserProfile } from '@/lib/supabase-hooks';
+import { useStudyPartners } from '@/lib/supabase-hooks';
+import type { UserAccount } from '@/types/user';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function FindPartnersScreen() {
@@ -87,7 +88,7 @@ export default function FindPartnersScreen() {
     setSelectedUniversity(undefined);
   };
 
-  const renderPartnerCard = (partner: UserProfile) => (
+  const renderPartnerCard = (partner: UserAccount) => (
     <GlassCard key={partner.id} style={styles.partnerCard}>
       <View style={styles.partnerHeader}>
         <Image source={{ uri: partner.avatar }} style={styles.partnerAvatar} />

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
+import type { UserAccount } from '@/types/user';
 
 export interface StudyRoom {
   id: string;
@@ -481,20 +482,6 @@ export function useCreateZoomRequest() {
   });
 }
 
-export interface UserProfile {
-  id: string;
-  email?: string;
-  name: string;
-  avatar: string;
-  city?: string;
-  university?: string;
-  year_of_study?: number;
-  bio?: string;
-  is_public: boolean;
-  profile_photo_url?: string;
-  created_at: string;
-}
-
 export function useStudyPartners(filters?: {
   city?: string;
   university?: string;
@@ -545,7 +532,7 @@ export function useStudyPartners(filters?: {
         is_public: user.is_public ?? true,
         profile_photo_url: user.profile_photo_url,
         created_at: user.created_at,
-      })) as UserProfile[];
+      })) as UserAccount[];
     },
   });
 }
@@ -580,7 +567,7 @@ export function useUserProfile(userId: string | undefined) {
         is_public: data.is_public ?? true,
         profile_photo_url: data.profile_photo_url,
         created_at: data.created_at,
-      } as UserProfile;
+      } as UserAccount;
     },
     enabled: !!userId,
   });

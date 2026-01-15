@@ -5,22 +5,9 @@ import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 
 import { monitoring } from '@/lib/monitoring';
+import type { UserProfile } from '@/types/user';
 
 const ONBOARDING_COMPLETE_KEY = '@medix_onboarding_complete';
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  avatar: string;
-  rank: number;
-  points: number;
-  streak: number;
-  questionsAnswered: number;
-  accuracy: number;
-  studyHours: number;
-  badges: string[];
-  joinedAt: string;
-}
 
 interface AuthState {
   session: Session | null;
