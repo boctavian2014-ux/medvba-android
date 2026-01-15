@@ -428,44 +428,44 @@ export default function SocialScreen() {
 
   const getAchievementTitle = (type: AchievementType): string => {
     const titles: Record<AchievementType, string> = {
-      first_quiz: 'First Steps!',
-      quiz_master: 'Quiz Master',
-      perfect_score: 'Perfect Score',
-      streak_7: '7 Day Streak 🔥',
-      streak_30: '30 Day Streak 🔥🔥',
-      streak_100: '100 Day Streak 🔥🔥🔥',
-      questions_100: '100 Questions',
-      questions_500: '500 Questions',
-      questions_1000: '1000 Questions!',
-      social_butterfly: 'Social Butterfly',
-      helpful_tutor: 'Helpful Tutor',
-      room_creator: 'Room Creator',
-      early_bird: 'Early Bird',
-      night_owl: 'Night Owl',
-      weekend_warrior: 'Weekend Warrior',
+      first_quiz: t('achievement.firstQuiz'),
+      quiz_master: t('achievement.quizMaster'),
+      perfect_score: t('achievement.perfectScore'),
+      streak_7: t('achievement.streak7'),
+      streak_30: t('achievement.streak30'),
+      streak_100: t('achievement.streak100'),
+      questions_100: t('achievement.questions100'),
+      questions_500: t('achievement.questions500'),
+      questions_1000: t('achievement.questions1000'),
+      social_butterfly: t('achievement.socialButterfly'),
+      helpful_tutor: t('achievement.helpfulTutor'),
+      room_creator: t('achievement.roomCreator'),
+      early_bird: t('achievement.earlyBird'),
+      night_owl: t('achievement.nightOwl'),
+      weekend_warrior: t('achievement.weekendWarrior'),
     };
     return titles[type] || type;
   };
 
   const getAchievementDescription = (type: AchievementType): string => {
     const descriptions: Record<AchievementType, string> = {
-      first_quiz: 'Completed their first quiz',
-      quiz_master: 'Mastered quiz fundamentals',
-      perfect_score: 'Achieved a perfect score',
-      streak_7: 'Maintained a 7-day study streak',
-      streak_30: 'Maintained a 30-day study streak',
-      streak_100: 'Maintained a 100-day study streak',
-      questions_100: 'Answered 100 questions',
-      questions_500: 'Answered 500 questions',
-      questions_1000: 'Answered 1000 questions',
-      social_butterfly: 'Active in the community',
-      helpful_tutor: 'Helped other students',
-      room_creator: 'Created a study room',
-      early_bird: 'Studies early in the morning',
-      night_owl: 'Studies late at night',
-      weekend_warrior: 'Studies on weekends',
+      first_quiz: t('achievement.firstQuizDesc'),
+      quiz_master: t('achievement.quizMasterDesc'),
+      perfect_score: t('achievement.perfectScoreDesc'),
+      streak_7: t('achievement.streak7Desc'),
+      streak_30: t('achievement.streak30Desc'),
+      streak_100: t('achievement.streak100Desc'),
+      questions_100: t('achievement.questions100Desc'),
+      questions_500: t('achievement.questions500Desc'),
+      questions_1000: t('achievement.questions1000Desc'),
+      social_butterfly: t('achievement.socialButterflyDesc'),
+      helpful_tutor: t('achievement.helpfulTutorDesc'),
+      room_creator: t('achievement.roomCreatorDesc'),
+      early_bird: t('achievement.earlyBirdDesc'),
+      night_owl: t('achievement.nightOwlDesc'),
+      weekend_warrior: t('achievement.weekendWarriorDesc'),
     };
-    return descriptions[type] || 'Unlocked an achievement';
+    return descriptions[type] || t('social.achievementUnlocked');
   };
   
   const filteredStudyRooms = studyRooms.filter(room => !isUserBlocked(room.hostId));
@@ -511,7 +511,7 @@ export default function SocialScreen() {
                   end={{ x: 1, y: 0 }}
                 />
                 <User color={Colors.text} size={18} />
-                <Text style={styles.findPartnersButtonText}>Find Partners</Text>
+                <Text style={styles.findPartnersButtonText}>{t('social.findPartners')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -700,7 +700,7 @@ export default function SocialScreen() {
                 
                 <View style={styles.achievementBadge}>
                   <Trophy color={Colors.accent} size={14} />
-                  <Text style={styles.achievementBadgeText}>Achievement Unlocked</Text>
+                  <Text style={styles.achievementBadgeText}>{t('social.achievementUnlocked')}</Text>
                 </View>
               </GlassCard>
             ))}
@@ -862,17 +862,17 @@ export default function SocialScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Meeting URL (Optional)</Text>
+                <Text style={styles.inputLabel}>{t('social.meetingUrlOptional')}</Text>
                 <TextInput
                   style={styles.textInput}
                   value={meetingUrl}
                   onChangeText={setMeetingUrl}
-                  placeholder="https://zoom.us/j/... or Google Meet link"
+                  placeholder={t('social.meetingUrlPlaceholder')}
                   placeholderTextColor={Colors.textMuted}
                   autoCapitalize="none"
                   keyboardType="url"
                 />
-                <Text style={styles.inputHint}>Add a Zoom, Google Meet, or Teams link</Text>
+                <Text style={styles.inputHint}>{t('social.meetingUrlHint')}</Text>
               </View>
             </ScrollView>
 
