@@ -191,8 +191,13 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       });
 
       if (error) {
-        console.error('[Auth] Sign up error:', error);
-        monitoring.logError(new Error(error.message), { context: 'signup' });
+        console.error('[Auth] Sign up error:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          name: error.name,
+        });
+        monitoring.logError(new Error(error.message), { context: 'signup', errorCode: error.code });
         return { error };
       }
 
@@ -247,8 +252,13 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       });
 
       if (error) {
-        console.error('[Auth] Sign in error:', error);
-        monitoring.logError(new Error(error.message), { context: 'signin' });
+        console.error('[Auth] Sign in error:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          name: error.name,
+        });
+        monitoring.logError(new Error(error.message), { context: 'signin', errorCode: error.code });
       } else {
         monitoring.logEvent('user_signin', { email });
       }

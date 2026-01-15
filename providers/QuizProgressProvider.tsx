@@ -186,26 +186,24 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             });
             console.log('[QuizProgress] Granted achievement:', achievementType);
           } catch (error: any) {
-            console.error('[QuizProgress] Error granting achievement:', achievementType, {
-              message: error?.message,
+            console.error('[QuizProgress] Error granting achievement:', achievementType, JSON.stringify({
+              message: error?.message || String(error),
               code: error?.code,
               details: error?.details,
               hint: error?.hint,
               name: error?.name,
-              error: error,
-            });
+            }, null, 2));
           }
         }
       }
     } catch (error: any) {
-      console.error('[QuizProgress] Error checking achievements:', {
-        message: error?.message,
+      console.error('[QuizProgress] Error checking achievements:', JSON.stringify({
+        message: error?.message || String(error),
         code: error?.code,
         details: error?.details,
         hint: error?.hint,
         name: error?.name,
-        error: error,
-      });
+      }, null, 2));
     }
   }, [userId, achievementCheckQuery, grantAchievementMutation, allTimeStats, streakData, accuracy]);
 
