@@ -1028,8 +1028,19 @@ export function useGrantAchievement() {
       });
 
       if (error) {
-        console.error('[Supabase] Error granting achievement:', JSON.stringify(error, null, 2));
+        console.error('[Supabase] RPC error granting achievement:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        });
         throw error;
+      }
+
+      if (data && typeof data === 'object' && 'success' in data && !data.success) {
+        const errorMsg = data.error || 'Unknown error granting achievement';
+        console.error('[Supabase] Achievement function returned error:', errorMsg);
+        throw new Error(errorMsg);
       }
 
       console.log('[Supabase] Achievement granted:', data);
