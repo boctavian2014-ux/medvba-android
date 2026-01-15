@@ -98,7 +98,6 @@ export function useCreateStudyRoom() {
           name: input.name,
           host_id: input.hostId,
           category: input.category,
-          max_participants: input.maxParticipants,
         })
         .select()
         .single();
