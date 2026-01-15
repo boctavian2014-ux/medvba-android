@@ -47,7 +47,7 @@ export function useStudyRooms() {
         .limit(20);
 
       if (error) {
-        console.error('[Supabase] Error fetching study rooms:', error);
+        console.error('[Supabase] Error fetching study rooms:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         return [];
       }
 
@@ -97,7 +97,7 @@ export function useCreateStudyRoom() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error creating study room:', error);
+        console.error('[Supabase] Error creating study room:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -131,7 +131,7 @@ export function useUpdateStudyRoom() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error updating study room:', error);
+        console.error('[Supabase] Error updating study room:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -159,7 +159,7 @@ export function useUpcomingSessions() {
         .limit(20);
 
       if (error) {
-        console.error('[Supabase] Error fetching sessions:', error);
+        console.error('[Supabase] Error fetching sessions:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         return [];
       }
 
@@ -233,7 +233,7 @@ export function useCreateSession() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error creating session:', error);
+        console.error('[Supabase] Error creating session:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -269,7 +269,7 @@ export function useUpdateSession() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error updating session:', error);
+        console.error('[Supabase] Error updating session:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -315,7 +315,7 @@ export function useRoomMessages(roomId: string) {
         .limit(100);
 
       if (error) {
-        console.error('[Supabase] Error fetching messages:', error);
+        console.error('[Supabase] Error fetching messages:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         setIsLoading(false);
         return;
       }
@@ -396,7 +396,7 @@ export function useSendMessage() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error sending message:', error);
+        console.error('[Supabase] Error sending message:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -429,7 +429,7 @@ export function useZoomRequests(userId: string | undefined) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('[Supabase] Error fetching zoom requests:', error);
+        console.error('[Supabase] Error fetching zoom requests:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -471,7 +471,7 @@ export function useCreateZoomRequest() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error creating zoom request:', error);
+        console.error('[Supabase] Error creating zoom request:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -516,7 +516,7 @@ export function useStudyPartners(filters?: {
         .limit(50);
 
       if (error) {
-        console.error('[Supabase] Error fetching study partners:', error);
+        console.error('[Supabase] Error fetching study partners:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -553,7 +553,7 @@ export function useUserProfile(userId: string | undefined) {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error fetching user profile:', error);
+        console.error('[Supabase] Error fetching user profile:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -608,7 +608,7 @@ export function useUpdateUserProfile() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error updating user profile:', error);
+        console.error('[Supabase] Error updating user profile:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -641,7 +641,7 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
       });
 
     if (uploadError) {
-      console.error('[Supabase] Error uploading photo:', uploadError);
+      console.error('[Supabase] Error uploading photo:', JSON.stringify({ message: uploadError.message }));
       throw uploadError;
     }
 
@@ -651,8 +651,8 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
 
     console.log('[Supabase] Photo uploaded successfully:', urlData.publicUrl);
     return urlData.publicUrl;
-  } catch (error) {
-    console.error('[Supabase] Error in uploadProfilePhoto:', error);
+  } catch (error: any) {
+    console.error('[Supabase] Error in uploadProfilePhoto:', JSON.stringify({ message: error?.message, stack: error?.stack }));
     throw error;
   }
 }
@@ -699,7 +699,7 @@ export function useUserProgress(userId: string | undefined) {
           console.log('[Supabase] No user progress found, will create on first update');
           return null;
         }
-        console.error('[Supabase] Error fetching user progress:', error);
+        console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -752,7 +752,7 @@ export function useUpsertUserProgress() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error upserting user progress:', error);
+        console.error('[Supabase] Error upserting user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -784,7 +784,7 @@ export function useDailyProgress(userId: string | undefined, date: string) {
           console.log('[Supabase] No daily progress found for date:', date);
           return null;
         }
-        console.error('[Supabase] Error fetching daily progress:', error);
+        console.error('[Supabase] Error fetching daily progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -819,7 +819,7 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
         .order('date', { ascending: true });
 
       if (error) {
-        console.error('[Supabase] Error fetching weekly progress:', error);
+        console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -868,7 +868,7 @@ export function useUpsertDailyProgress() {
         .single();
 
       if (error) {
-        console.error('[Supabase] Error upserting daily progress:', error);
+        console.error('[Supabase] Error upserting daily progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -921,7 +921,7 @@ export function useUserAchievements(userId: string | undefined) {
         .order('earned_at', { ascending: false });
 
       if (error) {
-        console.error('[Supabase] Error fetching user achievements:', error);
+        console.error('[Supabase] Error fetching user achievements:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
 
@@ -957,7 +957,7 @@ export function useAllRecentAchievements(limit: number = 20) {
         .limit(limit);
 
       if (achievementsError) {
-        console.error('[Supabase] Error fetching recent achievements:', achievementsError);
+        console.error('[Supabase] Error fetching recent achievements:', JSON.stringify({ message: achievementsError.message, code: achievementsError.code, details: achievementsError.details }));
         throw achievementsError;
       }
 
@@ -974,7 +974,7 @@ export function useAllRecentAchievements(limit: number = 20) {
         .in('id', userIds);
 
       if (usersError) {
-        console.error('[Supabase] Error fetching user info:', usersError);
+        console.error('[Supabase] Error fetching user info:', JSON.stringify({ message: usersError.message, code: usersError.code, details: usersError.details }));
       }
 
       const usersMap = new Map(
@@ -1075,12 +1075,12 @@ export function useCheckAchievements(userId: string | undefined) {
       ]);
 
       if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
-        console.error('[Supabase] Error fetching user progress:', userProgressResult.error);
+        console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: userProgressResult.error.message, code: userProgressResult.error.code, details: userProgressResult.error.details }));
         throw userProgressResult.error;
       }
 
       if (achievementsResult.error) {
-        console.error('[Supabase] Error fetching achievements:', achievementsResult.error);
+        console.error('[Supabase] Error fetching achievements:', JSON.stringify({ message: achievementsResult.error.message, code: achievementsResult.error.code, details: achievementsResult.error.details }));
         throw achievementsResult.error;
       }
 
