@@ -8,9 +8,7 @@ import {
   useUserProgress, 
   useUpsertUserProgress, 
   useWeeklyProgress, 
-  useUpsertDailyProgress,
-  useGrantAchievement,
-  type AchievementType
+  useUpsertDailyProgress
 } from '@/lib/supabase-hooks';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
@@ -152,89 +150,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   );
   const upsertUserProgressMutation = useUpsertUserProgress();
   const upsertDailyProgressMutation = useUpsertDailyProgress();
-  const grantAchievementMutation = useGrantAchievement();
 
-  const grantAchievementAsync = grantAchievementMutation.mutateAsync;
   const upsertUserProgressAsync = upsertUserProgressMutation.mutateAsync;
   const upsertDailyProgressAsync = upsertDailyProgressMutation.mutateAsync;
-
-  const checkAndGrantAchievements = useCallback(async (
-    targetUserId: string,
-    totalQuestions: number,
-    currentStreakValue: number
-  ) => {
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      
-      const [userProgressResult, achievementsResult] = await Promise.all([
-        supabase.from('user_progress').select('*').eq('user_id', targetUserId).single(),
-        supabase.from('user_achievements').select('achievement_type').eq('user_id', targetUserId),
-      ]);
-
-      if (userProgressResult.error && userProgressResult.error.code !== 'PGRST116') {
-        console.error('[QuizProgress] Error fetching user progress:', userProgressResult.error);
-        return;
-      }
-
-      if (achievementsResult.error) {
-        console.error('[QuizProgress] Error fetching achievements:', achievementsResult.error);
-        return;
-      }
-
-      const progress = userProgressResult.data;
-      const earnedAchievements = new Set(
-        (achievementsResult.data || []).map((a: any) => a.achievement_type as AchievementType)
-      );
-
-      const totalQs = progress?.total_questions_answered || 0;
-      const streak = progress?.current_streak || 0;
-
-      const earned: AchievementType[] = [];
-
-      if (totalQs >= 1 && !earnedAchievements.has('first_quiz')) {
-        earned.push('first_quiz');
-      }
-      if (totalQs >= 100 && !earnedAchievements.has('questions_100')) {
-        earned.push('questions_100');
-      }
-      if (totalQs >= 500 && !earnedAchievements.has('questions_500')) {
-        earned.push('questions_500');
-      }
-      if (totalQs >= 1000 && !earnedAchievements.has('questions_1000')) {
-        earned.push('questions_1000');
-      }
-      if (streak >= 7 && !earnedAchievements.has('streak_7')) {
-        earned.push('streak_7');
-      }
-      if (streak >= 30 && !earnedAchievements.has('streak_30')) {
-        earned.push('streak_30');
-      }
-      if (streak >= 100 && !earnedAchievements.has('streak_100')) {
-        earned.push('streak_100');
-      }
-
-      if (earned.length > 0) {
-        console.log('[QuizProgress] Granting', earned.length, 'new achievements');
-        for (const achievementType of earned) {
-          try {
-            await grantAchievementAsync({
-              userId: targetUserId,
-              achievementType,
-              metadata: {
-                totalQuestions,
-                currentStreak: currentStreakValue,
-              },
-            });
-            console.log('[QuizProgress] Achievement granted:', achievementType);
-          } catch (grantError) {
-            console.error('[QuizProgress] Error granting achievement:', achievementType, grantError);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('[QuizProgress] Error checking achievements:', error);
-    }
-  }, [grantAchievementAsync]);
 
   const updateStreak = useCallback(async () => {
     const today = getTodayDateString();
@@ -479,44 +397,39 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
 
       if (userId) {
-        (async () => {
-          try {
-            const currentAllTime = allTimeStats;
-            const currentStreak = streakData;
-            const today = getTodayDateString();
-            
-            await upsertUserProgressAsync({
-              userId,
-              totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered + 1,
-              correctAnswers: correct ? currentAllTime.totalCorrectAnswers + 1 : currentAllTime.totalCorrectAnswers,
-              studyTimeSeconds: currentAllTime.totalStudyTimeSeconds,
-              currentStreak: currentStreak.currentStreak,
-              longestStreak: currentStreak.longestStreak,
-              lastActivityDate: currentStreak.lastActiveDate || null,
-            });
-
-            const todayEntry = weeklyHistory.find(e => e.date === today);
-            await upsertDailyProgressAsync({
-              userId,
-              date: today,
-              questionsAnswered: (todayEntry?.questionsAnswered || 0) + 1,
-              correctAnswers: (todayEntry?.correctAnswers || 0) + (correct ? 1 : 0),
-              studyTimeSeconds: todayEntry?.studyTimeSeconds || 0,
-            });
-
-            console.log('[QuizProgress] Synced to Supabase successfully');
-            
-            await checkAndGrantAchievements(userId, currentAllTime.totalQuestionsAnswered + 1, currentStreak.currentStreak);
-          } catch (error) {
-            console.error('[QuizProgress] Error syncing to Supabase:', error);
-          }
-        })();
+        const currentAllTime = allTimeStats;
+        const currentStreak = streakData;
+        const today = getTodayDateString();
+        const todayEntry = weeklyHistory.find(e => e.date === today);
+        
+        Promise.all([
+          upsertUserProgressAsync({
+            userId,
+            totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered + 1,
+            correctAnswers: correct ? currentAllTime.totalCorrectAnswers + 1 : currentAllTime.totalCorrectAnswers,
+            studyTimeSeconds: currentAllTime.totalStudyTimeSeconds,
+            currentStreak: currentStreak.currentStreak,
+            longestStreak: currentStreak.longestStreak,
+            lastActivityDate: currentStreak.lastActiveDate || null,
+          }),
+          upsertDailyProgressAsync({
+            userId,
+            date: today,
+            questionsAnswered: (todayEntry?.questionsAnswered || 0) + 1,
+            correctAnswers: (todayEntry?.correctAnswers || 0) + (correct ? 1 : 0),
+            studyTimeSeconds: todayEntry?.studyTimeSeconds || 0,
+          }),
+        ]).then(() => {
+          console.log('[QuizProgress] Synced to Supabase successfully');
+        }).catch(error => {
+          console.error('[QuizProgress] Error syncing to Supabase:', error);
+        });
       }
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
       monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
-  }, [updateStreak, updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
+  }, [updateStreak, updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync]);
 
   const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
     try {
@@ -615,38 +528,40 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       await updateWeeklyHistory(0, 0, seconds);
 
       if (userId) {
-        (async () => {
-          try {
-            const currentAllTime = allTimeStats;
-            const currentStreak = streakData;
-            
-            await upsertUserProgressAsync({
+        const currentAllTime = allTimeStats;
+        const currentStreak = streakData;
+        const today = getTodayDateString();
+        const todayEntry = weeklyHistory.find(e => e.date === today);
+        
+        const promises = [
+          upsertUserProgressAsync({
+            userId,
+            totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered,
+            correctAnswers: currentAllTime.totalCorrectAnswers,
+            studyTimeSeconds: currentAllTime.totalStudyTimeSeconds + seconds,
+            currentStreak: currentStreak.currentStreak,
+            longestStreak: currentStreak.longestStreak,
+            lastActivityDate: currentStreak.lastActiveDate || null,
+          })
+        ];
+
+        if (todayEntry) {
+          promises.push(
+            upsertDailyProgressAsync({
               userId,
-              totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered,
-              correctAnswers: currentAllTime.totalCorrectAnswers,
-              studyTimeSeconds: currentAllTime.totalStudyTimeSeconds + seconds,
-              currentStreak: currentStreak.currentStreak,
-              longestStreak: currentStreak.longestStreak,
-              lastActivityDate: currentStreak.lastActiveDate || null,
-            });
+              date: today,
+              questionsAnswered: todayEntry.questionsAnswered,
+              correctAnswers: todayEntry.correctAnswers,
+              studyTimeSeconds: todayEntry.studyTimeSeconds + seconds,
+            })
+          );
+        }
 
-            const today = getTodayDateString();
-            const todayEntry = weeklyHistory.find(e => e.date === today);
-            if (todayEntry) {
-              await upsertDailyProgressAsync({
-                userId,
-                date: today,
-                questionsAnswered: todayEntry.questionsAnswered,
-                correctAnswers: todayEntry.correctAnswers,
-                studyTimeSeconds: todayEntry.studyTimeSeconds + seconds,
-              });
-            }
-
-            console.log('[QuizProgress] Study time synced to Supabase');
-          } catch (error) {
-            console.error('[QuizProgress] Error syncing study time to Supabase:', error);
-          }
-        })();
+        Promise.all(promises).then(() => {
+          console.log('[QuizProgress] Study time synced to Supabase');
+        }).catch(error => {
+          console.error('[QuizProgress] Error syncing study time to Supabase:', error);
+        });
       }
     } catch (error) {
       console.error('[QuizProgress] Error adding study time:', error);
