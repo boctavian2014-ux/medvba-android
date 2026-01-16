@@ -60,6 +60,8 @@ export default function RoomChat({ roomId, roomName }: RoomChatProps) {
     sendMessageMutation.mutate({
       roomId,
       userId: user.id,
+      userName: profile?.name || user.email || 'Anonymous',
+      userAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
       message: messageText.trim(),
     }, {
       onSuccess: () => {
