@@ -37,9 +37,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
           return;
         }
 
-        const apiKey = Platform.select({
-          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
-          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
+        const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || Platform.select({
+          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
         });
 
         if (!apiKey) {
