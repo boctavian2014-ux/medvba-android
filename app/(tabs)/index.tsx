@@ -110,7 +110,7 @@ export default function HomeScreen() {
               />
               <View>
                 <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
-                <Text style={[styles.userName, { color: colors.text }]}>{currentUser.name.split(' ')[0]} 👋</Text>
+                <Text style={[styles.userName, { color: colors.text }]}>{currentUser.name.split(' ')[0]}</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
