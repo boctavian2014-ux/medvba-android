@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FileText, UserCheck, AlertTriangle, Scale, ShieldX, Ban } from 'lucide-react-native';
+import { Stack } from 'expo-router';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -49,6 +50,7 @@ export default function TermsOfServiceScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: t('settings.termsOfService') }} />
       <LinearGradient
         colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}

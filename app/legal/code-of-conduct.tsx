@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Heart, Users, AlertOctagon, Flag, ShieldCheck, MessageCircle } from 'lucide-react-native';
+import { Stack } from 'expo-router';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
@@ -44,6 +45,7 @@ export default function CodeOfConductScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: t('settings.codeOfConduct') }} />
       <LinearGradient
         colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
