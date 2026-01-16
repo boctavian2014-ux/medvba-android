@@ -264,8 +264,22 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             joined_at: new Date().toISOString(),
           });
           console.log('[Auth] User and profile created successfully');
-        } catch (profileError) {
-          console.error('[Auth] Error creating user/profile:', profileError);
+        } catch (profileError: any) {
+          console.error('[Auth] Error creating user/profile:', {
+            message: profileError?.message,
+            code: profileError?.code,
+            details: profileError?.details,
+            hint: profileError?.hint,
+            stack: profileError?.stack,
+          });
+          monitoring.logError(
+            new Error(`Database error saving new user: ${profileError?.message || 'Unknown error'}`),
+            { 
+              context: 'signup_db', 
+              errorCode: profileError?.code,
+              details: profileError?.details,
+            }
+          );
         }
       }
 
