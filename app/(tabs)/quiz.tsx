@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 32,
     marginTop: 8,
   },
   title: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   modesSection: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
   section: {
     marginBottom: 24,
@@ -332,8 +332,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modesGrid: {
-    gap: 12,
-    marginTop: 12,
+    gap: 16,
+    marginTop: 16,
   },
   modeCard: {
     borderRadius: 16,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   examCard: {
-    marginTop: 4,
+    marginTop: 0,
   },
   examGradient: {
     paddingVertical: 24,
