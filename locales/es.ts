@@ -171,6 +171,7 @@ export const es: Record<string, string> = {
   'achievement.dedication': 'Dedicación',
   'achievement.dedicationDesc': 'Racha de 100 días',
   'profile.upgradeToPremium': 'Pasar a Premium',
+  'profile.premiumMember': 'Miembro Premium',
   'profile.questions': 'Preguntas',
   'profile.accuracy': 'Precisión',
   'profile.studyTime': 'Tiempo de estudio',

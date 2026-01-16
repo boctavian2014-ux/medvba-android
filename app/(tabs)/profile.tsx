@@ -41,6 +41,7 @@ import { currentUser, leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useZoomRequests } from '@/lib/supabase-hooks';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -81,6 +82,7 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { isPremium } = useSubscription();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
@@ -323,17 +325,34 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-            <TouchableOpacity style={styles.premiumButton} activeOpacity={0.8}>
-              <LinearGradient
-                colors={[colors.warning, '#FF9500', '#FFB800']}
-                style={styles.premiumGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+            {!isPremium ? (
+              <TouchableOpacity 
+                style={styles.premiumButton} 
+                activeOpacity={0.8}
+                onPress={() => router.push('/paywall' as any)}
               >
-                <Crown color={colors.background} size={18} />
-                <Text style={styles.premiumButtonText}>{t('profile.upgradeToPremium')}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={[colors.warning, '#FF9500', '#FFB800']}
+                  style={styles.premiumGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Crown color={colors.background} size={18} />
+                  <Text style={styles.premiumButtonText}>{t('profile.upgradeToPremium')}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.premiumBadge}>
+                <LinearGradient
+                  colors={['rgba(255, 215, 0, 0.2)', 'rgba(255, 149, 0, 0.15)']}
+                  style={[StyleSheet.absoluteFill, { borderRadius: 14 }]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
+                <Crown color={colors.warning} size={18} fill={colors.warning} />
+                <Text style={styles.premiumBadgeText}>{t('profile.premiumMember')}</Text>
+              </View>
+            )}
           </View>
 
 
@@ -851,6 +870,22 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     fontSize: 16,
     fontWeight: '700' as const,
     color: colors.background,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    overflow: 'hidden',
+  },
+  premiumBadgeText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: colors.warning,
   },
 
   statsGrid: {

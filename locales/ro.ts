@@ -171,6 +171,7 @@ export const ro: Record<string, string> = {
   'achievement.dedication': 'Dedicație',
   'achievement.dedicationDesc': 'Streak de 100 de zile',
   'profile.upgradeToPremium': 'Treci la Premium',
+  'profile.premiumMember': 'Membru Premium',
   'profile.questions': 'Întrebări',
   'profile.accuracy': 'Precizie',
   'profile.studyTime': 'Timp de studiu',
