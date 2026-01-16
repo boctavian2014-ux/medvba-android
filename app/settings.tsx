@@ -210,7 +210,7 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight, colors.background]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />

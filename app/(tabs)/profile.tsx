@@ -255,7 +255,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight, colors.background]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
