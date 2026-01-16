@@ -9,8 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FileText, UserCheck, AlertTriangle, Scale, ShieldX, Ban } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
-const LAST_UPDATED = 'January 12, 2026';
+const LAST_UPDATED_EN = 'January 12, 2026';
+const LAST_UPDATED_RO = '12 ianuarie 2026';
 const COMPANY_NAME = 'Dev AI LTD';
 const COMPANY_ADDRESS = 'Bogdan Voivoda, № 1, Ruse 7002, Ruse Region, Ruse Municipality, Bulgaria';
 const CONTACT_EMAIL = 'contact@devaieood.com';
@@ -40,7 +42,10 @@ function Section({ icon, title, children }: SectionProps) {
 
 export default function TermsOfServiceScreen() {
   const { colors } = useTheme();
+  const { t, currentLanguage } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  
+  const lastUpdatedDate = currentLanguage === 'ro' ? LAST_UPDATED_RO : LAST_UPDATED_EN;
 
   return (
     <View style={styles.container}>
@@ -61,179 +66,156 @@ export default function TermsOfServiceScreen() {
               />
               <FileText color={colors.text} size={32} />
             </View>
-            <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
+            <Text style={styles.lastUpdated}>{t('terms.lastUpdated').replace('{date}', lastUpdatedDate)}</Text>
           </View>
 
           <Text style={styles.intro}>
-            By using MedixStudyHub, you agree to these Terms of Service. Please read them carefully 
-            before using the application.
+            {t('terms.intro')}
           </Text>
 
           <Section
             icon={<UserCheck color={colors.primary} size={20} />}
-            title="Account Responsibilities"
+            title={t('terms.accountResponsibilities')}
           >
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Account Creation:</Text> You must provide accurate and 
-              complete information when creating an account. You are responsible for maintaining 
-              the confidentiality of your account credentials.
+              <Text style={styles.bold}>{t('terms.accountCreation')}</Text> {t('terms.accountCreationDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Age Requirement:</Text> You must be at least 13 years old 
-              to use this service. Users under 18 should have parental consent.
+              <Text style={styles.bold}>{t('terms.ageRequirement')}</Text> {t('terms.ageRequirementDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Account Security:</Text> You are responsible for all 
-              activities that occur under your account. Notify us immediately of any unauthorized 
-              use at {CONTACT_EMAIL}.
+              <Text style={styles.bold}>{t('terms.accountSecurity')}</Text> {t('terms.accountSecurityDesc').replace('{email}', CONTACT_EMAIL)}
             </Text>
           </Section>
 
           <Section
             icon={<AlertTriangle color={colors.warning} size={20} />}
-            title="Acceptable Use"
+            title={t('terms.acceptableUse')}
           >
             <Text style={styles.paragraph}>
-              When using MedixStudyHub, you agree NOT to:
+              {t('terms.acceptableUseIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Share quiz answers or content outside the app</Text>
-              <Text style={styles.bulletItem}>• Use automated tools or bots to access the service</Text>
-              <Text style={styles.bulletItem}>• Attempt to manipulate leaderboards or statistics</Text>
-              <Text style={styles.bulletItem}>• Harass, bully, or intimidate other users</Text>
-              <Text style={styles.bulletItem}>• Share inappropriate content in study rooms</Text>
-              <Text style={styles.bulletItem}>• Impersonate other users or medical professionals</Text>
-              <Text style={styles.bulletItem}>• Use the app for commercial purposes without permission</Text>
-              <Text style={styles.bulletItem}>• Circumvent any security measures</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse1')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse2')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse3')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse4')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse5')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse6')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse7')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.acceptableUse8')}</Text>
             </View>
           </Section>
 
           <Section
             icon={<Scale color={colors.accent} size={20} />}
-            title="Intellectual Property"
+            title={t('terms.intellectualProperty')}
           >
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Our Content:</Text> All quiz questions, educational 
-              materials, graphics, and software are owned by {COMPANY_NAME} or our licensors. 
-              You may not reproduce, distribute, or create derivative works without permission.
+              <Text style={styles.bold}>{t('terms.ourContent')}</Text> {t('terms.ourContentDesc').replace('{company}', COMPANY_NAME)}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>User Content:</Text> You retain ownership of any content 
-              you create (such as study notes). By posting content in public areas, you grant us 
-              a non-exclusive license to display that content.
+              <Text style={styles.bold}>{t('terms.userContent')}</Text> {t('terms.userContentDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Medical Disclaimer:</Text> Content is for educational 
-              purposes only and should not be considered medical advice. Always consult healthcare 
-              professionals for medical decisions.
+              <Text style={styles.bold}>{t('terms.medicalDisclaimer')}</Text> {t('terms.medicalDisclaimerDesc')}
             </Text>
           </Section>
 
           <Section
             icon={<Ban color={colors.error} size={20} />}
-            title="Account Termination"
+            title={t('terms.accountTermination')}
           >
             <Text style={styles.paragraph}>
-              We may suspend or terminate your account if you:
+              {t('terms.terminationIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Violate these Terms of Service</Text>
-              <Text style={styles.bulletItem}>• Violate our Code of Conduct</Text>
-              <Text style={styles.bulletItem}>• Engage in fraudulent activity</Text>
-              <Text style={styles.bulletItem}>• Fail to pay for premium subscriptions</Text>
-              <Text style={styles.bulletItem}>• Create multiple accounts to abuse the system</Text>
+              <Text style={styles.bulletItem}>• {t('terms.termination1')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.termination2')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.termination3')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.termination4')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.termination5')}</Text>
             </View>
             <Text style={styles.paragraph}>
-              You may delete your account at any time through the app settings. Upon termination, 
-              your right to use the service immediately ceases.
+              {t('terms.terminationUser')}
             </Text>
           </Section>
 
           <Section
             icon={<ShieldX color={colors.accentPink} size={20} />}
-            title="Disclaimer of Warranties"
+            title={t('terms.disclaimerOfWarranties')}
           >
             <Text style={styles.paragraph}>
-              THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY 
-              KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+              {t('terms.warrantyIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Merchantability or fitness for a particular purpose</Text>
-              <Text style={styles.bulletItem}>• Accuracy or completeness of quiz content</Text>
-              <Text style={styles.bulletItem}>• Uninterrupted or error-free service</Text>
-              <Text style={styles.bulletItem}>• Security of data transmission</Text>
+              <Text style={styles.bulletItem}>• {t('terms.warranty1')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.warranty2')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.warranty3')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.warranty4')}</Text>
             </View>
             <Text style={styles.paragraph}>
-              We do not guarantee that using our app will result in passing any medical examination.
+              {t('terms.warrantyExam')}
             </Text>
           </Section>
 
           <Section
             icon={<Scale color={colors.warning} size={20} />}
-            title="Limitation of Liability"
+            title={t('terms.limitationOfLiability')}
           >
             <Text style={styles.paragraph}>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, {COMPANY_NAME} SHALL NOT BE LIABLE FOR:
+              {t('terms.liabilityIntro').replace('{company}', COMPANY_NAME)}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Indirect, incidental, or consequential damages</Text>
-              <Text style={styles.bulletItem}>• Loss of data or business interruption</Text>
-              <Text style={styles.bulletItem}>• Damages from reliance on educational content</Text>
-              <Text style={styles.bulletItem}>• Actions of other users in study rooms</Text>
+              <Text style={styles.bulletItem}>• {t('terms.liability1')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.liability2')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.liability3')}</Text>
+              <Text style={styles.bulletItem}>• {t('terms.liability4')}</Text>
             </View>
             <Text style={styles.paragraph}>
-              Our total liability shall not exceed the amount you paid for the service in the 
-              past 12 months.
+              {t('terms.liabilityTotal')}
             </Text>
           </Section>
 
           <Section
             icon={<FileText color={colors.primary} size={20} />}
-            title="Subscription & Payments"
+            title={t('terms.subscriptionPayments')}
           >
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Premium Features:</Text> Some features require a paid 
-              subscription. Prices are displayed before purchase.
+              <Text style={styles.bold}>{t('terms.premiumFeatures')}</Text> {t('terms.premiumFeaturesDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Billing:</Text> Subscriptions are billed through the 
-              App Store or Google Play. Renewal occurs automatically unless cancelled 24 hours 
-              before the end of the current period.
+              <Text style={styles.bold}>{t('terms.billing')}</Text> {t('terms.billingDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Refunds:</Text> Refund requests are handled by Apple or 
-              Google according to their policies.
+              <Text style={styles.bold}>{t('terms.refunds')}</Text> {t('terms.refundsDesc')}
             </Text>
           </Section>
 
           <Section
             icon={<Scale color={colors.accent} size={20} />}
-            title="Governing Law"
+            title={t('terms.governingLaw')}
           >
             <Text style={styles.paragraph}>
-              These Terms shall be governed by the laws of the Republic of Bulgaria. Any disputes 
-              shall be resolved in the courts of the Republic of Bulgaria.
+              {t('terms.governingLawDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              If any provision of these Terms is found unenforceable, the remaining provisions 
-              will continue in effect.
+              {t('terms.governingLawEnforcement')}
             </Text>
           </Section>
 
           <Section
             icon={<FileText color={colors.accentPink} size={20} />}
-            title="Changes to Terms"
+            title={t('terms.changesToTerms')}
           >
             <Text style={styles.paragraph}>
-              We reserve the right to modify these Terms at any time. Material changes will be 
-              notified through the app or via email. Continued use after changes constitutes 
-              acceptance of the new Terms.
+              {t('terms.changesToTermsDesc')}
             </Text>
           </Section>
 
           <View style={styles.contactSection}>
-            <Text style={styles.contactTitle}>Questions?</Text>
-            <Text style={styles.contactText}>Contact us at:</Text>
+            <Text style={styles.contactTitle}>{t('terms.questions')}</Text>
+            <Text style={styles.contactText}>{t('terms.questionsContact')}</Text>
             <View style={styles.contactBox}>
               <Text style={styles.contactInfo}>{COMPANY_NAME}</Text>
               <Text style={styles.contactInfo}>{COMPANY_ADDRESS}</Text>
@@ -242,8 +224,7 @@ export default function TermsOfServiceScreen() {
           </View>
 
           <Text style={styles.footer}>
-            By using MedixStudyHub, you acknowledge that you have read, understood, and agree 
-            to be bound by these Terms of Service.
+            {t('terms.footer')}
           </Text>
         </ScrollView>
       </SafeAreaView>
