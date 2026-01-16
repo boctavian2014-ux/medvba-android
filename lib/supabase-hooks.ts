@@ -1231,3 +1231,418 @@ export function useCheckAchievements(userId: string | undefined) {
   });
 }
 
+export interface DirectChat {
+  id: string;
+  isGroup: boolean;
+  title?: string;
+  createdBy: string;
+  createdAt: string;
+  participants: UserAccount[];
+}
+
+export interface DirectChatMessage {
+  id: string;
+  chatId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  content: string;
+  createdAt: string;
+}
+
+export function useDirectChats(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['directChats', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      console.log('[Supabase] Fetching direct chats for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('direct_chat_participants')
+        .select(`
+          chat_id,
+          direct_chats!inner (
+            id,
+            is_group,
+            title,
+            created_by,
+            created_at
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[Supabase] Error fetching direct chats:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        return [];
+      }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'chats');
+
+      return (data || []).map((item: any) => ({
+        id: item.direct_chats.id,
+        isGroup: item.direct_chats.is_group,
+        title: item.direct_chats.title,
+        createdBy: item.direct_chats.created_by,
+        createdAt: item.direct_chats.created_at,
+        participants: [],
+      })) as DirectChat[];
+    },
+    enabled: !!userId,
+    staleTime: 30000,
+  });
+}
+
+export function useCreateDirectChat() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      createdBy: string;
+      participantIds: string[];
+      title?: string;
+      showInFeed: boolean;
+    }) => {
+      console.log('[Supabase] Creating direct chat with participants:', input.participantIds.length);
+
+      const isGroup = input.participantIds.length > 1;
+      
+      const { data: chatData, error: chatError } = await supabase
+        .from('direct_chats')
+        .insert({
+          is_group: isGroup,
+          title: input.title,
+          created_by: input.createdBy,
+        })
+        .select()
+        .single();
+
+      if (chatError) {
+        console.error('[Supabase] Error creating chat:', JSON.stringify({ message: chatError.message, code: chatError.code, details: chatError.details }));
+        throw chatError;
+      }
+
+      const allParticipants = [input.createdBy, ...input.participantIds];
+      const participantRecords = allParticipants.map((userId, index) => ({
+        chat_id: chatData.id,
+        user_id: userId,
+        role: index === 0 ? 'owner' : 'member',
+      }));
+
+      const { error: participantsError } = await supabase
+        .from('direct_chat_participants')
+        .insert(participantRecords);
+
+      if (participantsError) {
+        console.error('[Supabase] Error adding participants:', JSON.stringify({ message: participantsError.message, code: participantsError.code, details: participantsError.details }));
+        throw participantsError;
+      }
+
+      if (input.showInFeed) {
+        const { error: feedError } = await supabase
+          .from('activity_feed')
+          .insert({
+            actor_id: input.createdBy,
+            type: 'started_chat',
+            chat_id: chatData.id,
+            payload: {
+              chatId: chatData.id,
+              participantCount: allParticipants.length,
+              title: input.title,
+              isGroup,
+            },
+          });
+
+        if (feedError) {
+          console.error('[Supabase] Error creating feed item:', JSON.stringify({ message: feedError.message, code: feedError.code, details: feedError.details }));
+        }
+      }
+
+      console.log('[Supabase] Direct chat created:', chatData.id);
+      return chatData;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['directChats', variables.createdBy] });
+      queryClient.invalidateQueries({ queryKey: ['activityFeed'] });
+    },
+  });
+}
+
+export function useGetOrCreateDirectChat() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      currentUserId: string;
+      otherUserId: string;
+    }) => {
+      console.log('[Supabase] Getting or creating 1-on-1 chat between:', input.currentUserId, 'and', input.otherUserId);
+
+      const { data: existingChats, error: searchError } = await supabase
+        .from('direct_chat_participants')
+        .select(`
+          chat_id,
+          direct_chats!inner (
+            id,
+            is_group,
+            created_at
+          )
+        `)
+        .eq('user_id', input.currentUserId);
+
+      if (searchError) {
+        console.error('[Supabase] Error searching for existing chat:', JSON.stringify({ message: searchError.message, code: searchError.code, details: searchError.details }));
+        throw searchError;
+      }
+
+      if (existingChats && existingChats.length > 0) {
+        for (const chat of existingChats) {
+          const chatId = (chat as any).direct_chats.id;
+          const isGroup = (chat as any).direct_chats.is_group;
+          
+          if (!isGroup) {
+            const { data: participants, error: participantsError } = await supabase
+              .from('direct_chat_participants')
+              .select('user_id')
+              .eq('chat_id', chatId);
+
+            if (!participantsError && participants && participants.length === 2) {
+              const userIds = participants.map((p: any) => p.user_id);
+              if (userIds.includes(input.currentUserId) && userIds.includes(input.otherUserId)) {
+                console.log('[Supabase] Found existing 1-on-1 chat:', chatId);
+                return { id: chatId, created: false };
+              }
+            }
+          }
+        }
+      }
+
+      console.log('[Supabase] No existing chat found, creating new one');
+      const { data: newChat, error: createError } = await supabase
+        .from('direct_chats')
+        .insert({
+          is_group: false,
+          title: null,
+          created_by: input.currentUserId,
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('[Supabase] Error creating new chat:', JSON.stringify({ message: createError.message, code: createError.code, details: createError.details }));
+        throw createError;
+      }
+
+      const { error: participantsError } = await supabase
+        .from('direct_chat_participants')
+        .insert([
+          { chat_id: newChat.id, user_id: input.currentUserId, role: 'owner' },
+          { chat_id: newChat.id, user_id: input.otherUserId, role: 'member' },
+        ]);
+
+      if (participantsError) {
+        console.error('[Supabase] Error adding participants:', JSON.stringify({ message: participantsError.message, code: participantsError.code, details: participantsError.details }));
+        throw participantsError;
+      }
+
+      console.log('[Supabase] Created new 1-on-1 chat:', newChat.id);
+      return { id: newChat.id, created: true };
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['directChats', variables.currentUserId] });
+    },
+  });
+}
+
+export function useDirectChatMessages(chatId: string | undefined) {
+  const [messages, setMessages] = useState<DirectChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!chatId) {
+      setMessages([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchMessages = async () => {
+      console.log('[Supabase] Fetching messages for chat:', chatId);
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from('direct_chat_messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.error('[Supabase] Error fetching chat messages:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        setIsLoading(false);
+        return;
+      }
+
+      const formattedMessages: DirectChatMessage[] = (data || []).map((msg: any) => ({
+        id: msg.id,
+        chatId: msg.chat_id,
+        userId: msg.user_id,
+        userName: 'User',
+        userAvatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${msg.user_id}`,
+        content: msg.content,
+        createdAt: msg.created_at,
+      }));
+
+      setMessages(formattedMessages);
+      setIsLoading(false);
+      console.log('[Supabase] Loaded', formattedMessages.length, 'chat messages');
+    };
+
+    fetchMessages();
+
+    const channel = supabase
+      .channel(`direct-chat:${chatId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_chat_messages',
+          filter: `chat_id=eq.${chatId}`,
+        },
+        async (payload) => {
+          console.log('[Supabase] New chat message received:', payload);
+          
+          const newMessage: DirectChatMessage = {
+            id: payload.new.id,
+            chatId: payload.new.chat_id,
+            userId: payload.new.user_id,
+            userName: 'User',
+            userAvatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${payload.new.user_id}`,
+            content: payload.new.content,
+            createdAt: payload.new.created_at,
+          };
+          setMessages((prev) => [...prev, newMessage]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[Supabase] Unsubscribing from chat:', chatId);
+      supabase.removeChannel(channel);
+    };
+  }, [chatId]);
+
+  return { messages, isLoading };
+}
+
+export function useSendDirectMessage() {
+  return useMutation({
+    mutationFn: async (input: {
+      chatId: string;
+      userId: string;
+      content: string;
+    }) => {
+      console.log('[Supabase] Sending message to chat:', input.chatId);
+
+      const { data, error } = await supabase
+        .from('direct_chat_messages')
+        .insert({
+          chat_id: input.chatId,
+          user_id: input.userId,
+          content: input.content,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error sending chat message:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        throw error;
+      }
+
+      console.log('[Supabase] Chat message sent:', data.id);
+      return data;
+    },
+  });
+}
+
+export type ActivityFeedType = 'achievement' | 'started_chat' | 'joined_room' | 'milestone';
+
+export interface ActivityFeedItem {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorAvatar: string;
+  type: ActivityFeedType;
+  chatId?: string;
+  payload: Record<string, any>;
+  createdAt: string;
+}
+
+export function useActivityFeed(limit: number = 50) {
+  return useQuery({
+    queryKey: ['activityFeed', limit],
+    queryFn: async () => {
+      console.log('[Supabase] Fetching activity feed');
+
+      const { data: feedData, error: feedError } = await supabase
+        .from('activity_feed')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (feedError) {
+        console.error('[Supabase] Error fetching activity feed:', JSON.stringify({ message: feedError.message, code: feedError.code, details: feedError.details }));
+        return [];
+      }
+
+      if (!feedData || feedData.length === 0) {
+        return [];
+      }
+
+      const actorIds = [...new Set(feedData.map((item: any) => item.actor_id))];
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, profile_photo_url, avatar')
+        .in('id', actorIds);
+
+      if (usersError) {
+        console.error('[Supabase] Error fetching activity feed users:', JSON.stringify({ message: usersError.message, code: usersError.code, details: usersError.details }));
+      }
+
+      const usersMap = new Map(
+        (usersData || []).map((user: any) => [
+          user.id,
+          {
+            name: user.name || 'Student',
+            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+          },
+        ])
+      );
+
+      console.log('[Supabase] Fetched', feedData.length, 'activity feed items');
+
+      return feedData.map((item: any) => {
+        const userInfo = usersMap.get(item.actor_id) || {
+          name: 'Student',
+          avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${item.actor_id}`,
+        };
+
+        return {
+          id: item.id,
+          actorId: item.actor_id,
+          actorName: userInfo.name,
+          actorAvatar: userInfo.avatar,
+          type: item.type as ActivityFeedType,
+          chatId: item.chat_id,
+          payload: item.payload || {},
+          createdAt: item.created_at,
+        };
+      }) as ActivityFeedItem[];
+    },
+    staleTime: 30000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+  });
+}
+
