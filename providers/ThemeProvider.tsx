@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { darkColors, lightColors } from '@/constants/colors';
@@ -23,6 +23,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then(stored => {
+      console.log('[ThemeProvider] Loaded preference from storage:', stored);
       if (stored === 'light' || stored === 'dark' || stored === 'system') {
         setPreferenceState(stored);
       }
@@ -33,23 +34,39 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const setPreference = (value: ThemePreference) => {
+    console.log('[ThemeProvider] Setting preference to:', value);
     setPreferenceState(value);
     AsyncStorage.setItem(THEME_KEY, value).catch((error) => {
       console.error('Failed to save theme preference:', error);
     });
   };
 
-  const colorScheme: 'light' | 'dark' =
-    preference === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : preference;
+  const colorScheme: 'light' | 'dark' = useMemo(() => {
+    if (preference === 'system') {
+      return systemScheme === 'dark' ? 'dark' : 'light';
+    }
+    return preference === 'light' ? 'light' : 'dark';
+  }, [preference, systemScheme]);
 
-  const colors = colorScheme === 'dark' ? darkColors : lightColors;
+  const colors = useMemo(() => {
+    return colorScheme === 'dark' ? darkColors : lightColors;
+  }, [colorScheme]);
+
+  useEffect(() => {
+    console.log('[ThemeProvider] State updated - preference:', preference, 'systemScheme:', systemScheme, 'computed colorScheme:', colorScheme);
+  }, [preference, systemScheme, colorScheme]);
+
+  const value = useMemo(
+    () => ({ preference, setPreference, colorScheme, colors }),
+    [preference, colorScheme, colors]
+  );
 
   if (!isLoaded) {
     return null;
   }
 
   return (
-    <ThemeContext.Provider value={{ preference, setPreference, colorScheme, colors }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
