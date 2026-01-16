@@ -39,25 +39,23 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted: { current: boolean }) => {
     try {
       if (!mounted.current) return;
-      console.log('[Auth] Ensuring user exists in users table:', userId);
-      const { data: existingUser } = await supabase
-        .from('users')
+      console.log('[Auth] Checking if profile exists for user:', userId);
+      const { data: existingProfile } = await supabase
+        .from('profiles')
         .select('id')
         .eq('id', userId)
         .single();
 
       if (!mounted.current) return;
-      if (!existingUser) {
-        console.log('[Auth] User not found in users table, creating...');
-        await supabase.from('users').insert({
+      if (!existingProfile) {
+        console.log('[Auth] Profile not found, creating...');
+        await supabase.from('profiles').insert({
           id: userId,
-          email: email || '',
           name: name || 'Student',
           avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
-          created_at: new Date().toISOString(),
         });
         if (mounted.current) {
-          console.log('[Auth] User created in users table');
+          console.log('[Auth] Profile created');
         }
       }
     } catch (error) {
@@ -65,7 +63,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       if (error instanceof Error && error.message.includes('signal is aborted')) {
         return;
       }
-      console.error('[Auth] Error ensuring user exists:', error);
+      console.error('[Auth] Error ensuring profile exists:', error);
     }
   }, []);
 
@@ -76,7 +74,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       if (!mounted.current) return;
       console.log('[Auth] Fetching profile for user:', userId);
       const { data: result, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -85,18 +83,30 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       if (error) throw error;
 
       if (result) {
+        const { data: progressData } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (!mounted.current) return;
+
         const userProfile: UserProfile = {
           id: result.id,
           name: result.name || 'Student',
           avatar: result.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
-          rank: result.rank || 0,
-          points: result.points || 0,
-          streak: result.streak || 0,
-          questionsAnswered: result.questions_answered || 0,
-          accuracy: Number(result.accuracy || 0),
-          studyHours: Number(result.study_hours || 0),
-          badges: result.badges || [],
-          joinedAt: result.joined_at || new Date().toISOString(),
+          rank: 0,
+          points: progressData?.total_questions_answered || 0,
+          streak: progressData?.current_streak || 0,
+          questionsAnswered: progressData?.total_questions_answered || 0,
+          accuracy: progressData?.correct_answers && progressData?.total_questions_answered 
+            ? (progressData.correct_answers / progressData.total_questions_answered) * 100 
+            : 0,
+          studyHours: progressData?.study_time_seconds 
+            ? Number((progressData.study_time_seconds / 3600).toFixed(1)) 
+            : 0,
+          badges: [],
+          joinedAt: result.created_at || new Date().toISOString(),
         };
         setProfile(userProfile);
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
@@ -214,7 +224,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     try {
       console.log('[Auth] Signing up user:', email);
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -236,52 +246,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       }
 
       monitoring.logEvent('user_signup', { email });
-
-      if (data.user) {
-        try {
-          console.log('[Auth] Creating user in Supabase...');
-          
-          await supabase.from('users').insert({
-            id: data.user.id,
-            email: data.user.email,
-            name,
-            avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
-            created_at: new Date().toISOString(),
-          });
-          
-          console.log('[Auth] Creating user profile in Supabase...');
-          await supabase.from('user_profiles').insert({
-            id: data.user.id,
-            name,
-            avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
-            rank: 0,
-            points: 0,
-            streak: 0,
-            questions_answered: 0,
-            accuracy: 0,
-            study_hours: 0,
-            badges: [],
-            joined_at: new Date().toISOString(),
-          });
-          console.log('[Auth] User and profile created successfully');
-        } catch (profileError: any) {
-          console.error('[Auth] Error creating user/profile:', {
-            message: profileError?.message,
-            code: profileError?.code,
-            details: profileError?.details,
-            hint: profileError?.hint,
-            stack: profileError?.stack,
-          });
-          monitoring.logError(
-            new Error(`Database error saving new user: ${profileError?.message || 'Unknown error'}`),
-            { 
-              context: 'signup_db', 
-              errorCode: profileError?.code,
-              details: profileError?.details,
-            }
-          );
-        }
-      }
+      console.log('[Auth] User created successfully, database triggers will create profile automatically');
 
       return { error: null };
     } catch (error) {
