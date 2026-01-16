@@ -311,38 +311,48 @@ export function useRoomMessages(roomId: string) {
       console.log('[Supabase] Fetching messages for room:', roomId);
       setIsLoading(true);
 
-      const { data, error } = await supabase
+      const { data: messagesData, error: messagesError } = await supabase
         .from('room_messages')
-        .select(`
-          id,
-          room_id,
-          user_id,
-          message,
-          created_at,
-          profiles(
-            name,
-            avatar
-          )
-        `)
+        .select('id, room_id, user_id, message, created_at')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true })
         .limit(100);
 
-      if (error) {
-        console.error('[Supabase] Error fetching messages:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+      if (messagesError) {
+        console.error('[Supabase] Error fetching messages:', JSON.stringify({ message: messagesError.message, code: messagesError.code, details: messagesError.details }));
         setIsLoading(false);
         return;
       }
 
-      const formattedMessages: RoomMessage[] = (data || []).map((msg: any) => ({
-        id: msg.id,
-        roomId: msg.room_id,
-        userId: msg.user_id,
-        userName: msg.profiles?.name || 'Anonymous',
-        userAvatar: msg.profiles?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=' + msg.user_id,
-        message: msg.message,
-        createdAt: msg.created_at,
-      }));
+      if (!messagesData || messagesData.length === 0) {
+        setMessages([]);
+        setIsLoading(false);
+        console.log('[Supabase] No messages found');
+        return;
+      }
+
+      const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, name, avatar')
+        .in('id', userIds);
+
+      const profilesMap = new Map(
+        (profilesData || []).map(profile => [profile.id, profile])
+      );
+
+      const formattedMessages: RoomMessage[] = messagesData.map((msg: any) => {
+        const profile = profilesMap.get(msg.user_id);
+        return {
+          id: msg.id,
+          roomId: msg.room_id,
+          userId: msg.user_id,
+          userName: profile?.name || 'Anonymous',
+          userAvatar: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=' + msg.user_id,
+          message: msg.message,
+          createdAt: msg.created_at,
+        };
+      });
 
       setMessages(formattedMessages);
       setIsLoading(false);
