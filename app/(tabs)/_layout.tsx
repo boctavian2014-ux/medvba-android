@@ -6,10 +6,11 @@ import { useTheme } from "@/providers/ThemeProvider";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, colorScheme } = useTheme();
 
   return (
     <Tabs
+      key={colorScheme}
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,

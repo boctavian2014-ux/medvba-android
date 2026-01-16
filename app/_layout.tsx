@@ -80,7 +80,13 @@ function RootLayoutNav() {
   return (
     <>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        key={colorScheme}
+        screenOptions={{ 
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background }
+        }}
+      >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
