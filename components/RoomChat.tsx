@@ -60,8 +60,6 @@ export default function RoomChat({ roomId, roomName }: RoomChatProps) {
     sendMessageMutation.mutate({
       roomId,
       userId: user.id,
-      userName: profile.name,
-      userAvatar: profile.avatar,
       message: messageText.trim(),
     }, {
       onSuccess: () => {

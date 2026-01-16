@@ -313,7 +313,17 @@ export function useRoomMessages(roomId: string) {
 
       const { data, error } = await supabase
         .from('room_messages')
-        .select('*')
+        .select(`
+          id,
+          room_id,
+          user_id,
+          message,
+          created_at,
+          profiles:user_id (
+            name,
+            avatar
+          )
+        `)
         .eq('room_id', roomId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -328,8 +338,8 @@ export function useRoomMessages(roomId: string) {
         id: msg.id,
         roomId: msg.room_id,
         userId: msg.user_id,
-        userName: msg.user_name,
-        userAvatar: msg.user_avatar,
+        userName: msg.profiles?.name || 'Anonymous',
+        userAvatar: msg.profiles?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=' + msg.user_id,
         message: msg.message,
         createdAt: msg.created_at,
       }));
@@ -351,14 +361,21 @@ export function useRoomMessages(roomId: string) {
           table: 'room_messages',
           filter: `room_id=eq.${roomId}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('[Supabase] New message received:', payload);
+          
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, avatar')
+            .eq('id', payload.new.user_id)
+            .single();
+          
           const newMessage: RoomMessage = {
             id: payload.new.id,
             roomId: payload.new.room_id,
             userId: payload.new.user_id,
-            userName: payload.new.user_name,
-            userAvatar: payload.new.user_avatar,
+            userName: profile?.name || 'Anonymous',
+            userAvatar: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=' + payload.new.user_id,
             message: payload.new.message,
             createdAt: payload.new.created_at,
           };
@@ -381,8 +398,6 @@ export function useSendMessage() {
     mutationFn: async (input: {
       roomId: string;
       userId: string;
-      userName: string;
-      userAvatar: string;
       message: string;
     }) => {
       console.log('[Supabase] Sending message to room:', input.roomId);
@@ -392,8 +407,6 @@ export function useSendMessage() {
         .insert({
           room_id: input.roomId,
           user_id: input.userId,
-          user_name: input.userName,
-          user_avatar: input.userAvatar,
           message: input.message,
         })
         .select()
