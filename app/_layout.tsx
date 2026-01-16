@@ -15,7 +15,9 @@ import { monitoring } from "@/lib/monitoring";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Ignore - splash screen not available in this environment
+});
 monitoring.init();
 
 const queryClient = new QueryClient({
@@ -58,12 +60,10 @@ function useProtectedRoute() {
 
     if (!splashHidden) {
       setSplashHidden(true);
-      setTimeout(async () => {
-        try {
-          await SplashScreen.hideAsync();
-        } catch {
-          // Ignore splash screen errors - they happen when native splash isn't registered
-        }
+      setTimeout(() => {
+        SplashScreen.hideAsync().catch(() => {
+          // Ignore - splash screen not available in this environment
+        });
       }, 100);
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden]);
