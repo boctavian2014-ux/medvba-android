@@ -186,6 +186,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             });
             console.log('[QuizProgress] Granted achievement:', achievementType);
           } catch (error: any) {
+            if (error?.message?.includes('already has this achievement')) {
+              console.log('[QuizProgress] Achievement already granted:', achievementType);
+              continue;
+            }
             console.error('[QuizProgress] Error granting achievement:', achievementType, JSON.stringify({
               message: error?.message || String(error),
               code: error?.code,
@@ -289,33 +293,39 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadProgress = async () => {
       try {
         console.log('[QuizProgress] Loading progress from cloud and local...');
         
+        if (!isMounted) return;
+
         if (userId && cloudProgressQuery.data) {
           console.log('[QuizProgress] Loading from Supabase cloud');
-          setAllTimeStats({
-            totalQuestionsAnswered: cloudProgressQuery.data.totalQuestionsAnswered,
-            totalCorrectAnswers: cloudProgressQuery.data.correctAnswers,
-            totalStudyTimeSeconds: cloudProgressQuery.data.studyTimeSeconds,
-          });
-          setStreakData({
-            currentStreak: cloudProgressQuery.data.currentStreak,
-            longestStreak: cloudProgressQuery.data.longestStreak,
-            lastActiveDate: cloudProgressQuery.data.lastActivityDate || '',
-          });
+          if (isMounted) {
+            setAllTimeStats({
+              totalQuestionsAnswered: cloudProgressQuery.data.totalQuestionsAnswered,
+              totalCorrectAnswers: cloudProgressQuery.data.correctAnswers,
+              totalStudyTimeSeconds: cloudProgressQuery.data.studyTimeSeconds,
+            });
+            setStreakData({
+              currentStreak: cloudProgressQuery.data.currentStreak,
+              longestStreak: cloudProgressQuery.data.longestStreak,
+              lastActiveDate: cloudProgressQuery.data.lastActivityDate || '',
+            });
+          }
         } else {
           console.log('[QuizProgress] Loading from local AsyncStorage');
           const allTimeStored = await AsyncStorage.getItem(ALL_TIME_STATS_KEY);
-          if (allTimeStored) {
+          if (isMounted && allTimeStored) {
             const parsedAllTime = JSON.parse(allTimeStored) as AllTimeStats;
             console.log('[QuizProgress] Loaded all-time stats from local:', parsedAllTime);
             setAllTimeStats(parsedAllTime);
           }
           
           const streakStored = await AsyncStorage.getItem(STREAK_KEY);
-          if (streakStored) {
+          if (isMounted && streakStored) {
             const parsedStreak = JSON.parse(streakStored) as StreakData;
             const today = getTodayDateString();
             const yesterday = getYesterdayDateString();
@@ -336,6 +346,8 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           }
         }
 
+        if (!isMounted) return;
+
         if (userId && cloudWeeklyQuery.data && cloudWeeklyQuery.data.length > 0) {
           console.log('[QuizProgress] Loading weekly history from Supabase');
           const weeklyData = cloudWeeklyQuery.data.map(day => ({
@@ -344,10 +356,12 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             correctAnswers: day.correctAnswers,
             studyTimeSeconds: day.studyTimeSeconds,
           }));
-          setWeeklyHistory(weeklyData);
+          if (isMounted) {
+            setWeeklyHistory(weeklyData);
+          }
         } else {
           const weeklyStored = await AsyncStorage.getItem(WEEKLY_HISTORY_KEY);
-          if (weeklyStored) {
+          if (isMounted && weeklyStored) {
             const parsedWeekly = JSON.parse(weeklyStored) as DailyHistoryEntry[];
             const last7Days = getLast7Days();
             const filtered = parsedWeekly.filter(entry => last7Days.includes(entry.date));
@@ -356,9 +370,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           }
         }
 
+        if (!isMounted) return;
+
         const stored = await AsyncStorage.getItem(DAILY_PROGRESS_KEY);
         
-        if (stored) {
+        if (isMounted && stored) {
           const parsed = JSON.parse(stored) as DailyProgress;
           const today = getTodayDateString();
           
@@ -375,8 +391,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           console.log('[QuizProgress] No stored progress, using default');
         }
 
+        if (!isMounted) return;
+
         const sessionStored = await AsyncStorage.getItem(SESSION_STATE_KEY);
-        if (sessionStored) {
+        if (isMounted && sessionStored) {
           const parsedSession = JSON.parse(sessionStored) as SessionState;
           const sessionDate = parsedSession.startedAt.split('T')[0];
           const today = getTodayDateString();
@@ -390,8 +408,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           }
         }
 
+        if (!isMounted) return;
+
         const lastSessionStored = await AsyncStorage.getItem(LAST_SESSION_KEY);
-        if (lastSessionStored) {
+        if (isMounted && lastSessionStored) {
           const parsedLastSession = JSON.parse(lastSessionStored) as LastSessionInfo;
           console.log('[QuizProgress] Loaded last session:', parsedLastSession.category, parsedLastSession.mode);
           setLastSessionInfo(parsedLastSession);
@@ -399,11 +419,17 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       } catch (error) {
         console.error('[QuizProgress] Error loading progress:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadProgress();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, cloudProgressQuery.data, cloudWeeklyQuery.data]);
 
   const updateDailyProgress = useCallback(async (correct: boolean, questionId: string) => {

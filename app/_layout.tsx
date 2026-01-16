@@ -13,11 +13,26 @@ import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { monitoring } from "@/lib/monitoring";
 import colors from "@/constants/colors";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 monitoring.init();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60000,
+      gcTime: 300000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 function useProtectedRoute() {
   const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
@@ -110,21 +125,23 @@ const styles = StyleSheet.create({
 
 export default function RootLayout() {
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LanguageProvider>
-            <SubscriptionProvider>
-              <QuizProgressProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <StatusBar style="light" />
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </QuizProgressProvider>
-            </SubscriptionProvider>
-          </LanguageProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ErrorBoundary>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <LanguageProvider>
+              <SubscriptionProvider>
+                <QuizProgressProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <StatusBar style="light" />
+                    <RootLayoutNav />
+                  </GestureHandlerRootView>
+                </QuizProgressProvider>
+              </SubscriptionProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ErrorBoundary>
   );
 }

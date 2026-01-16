@@ -67,7 +67,9 @@ export function useStudyRooms() {
         created_at: room.created_at,
       })) as StudyRoom[];
     },
-    refetchInterval: 30000,
+    staleTime: 30000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 }
@@ -183,7 +185,9 @@ export function useUpcomingSessions() {
         created_at: session.created_at,
       })) as StudySession[];
     },
-    refetchInterval: 30000,
+    staleTime: 30000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 }
@@ -690,6 +694,11 @@ export function useUserProgress(userId: string | undefined) {
       console.log('[Supabase] Fetching user progress for:', userId);
       
       try {
+        if (signal?.aborted) {
+          console.log('[Supabase] Request aborted before starting');
+          return null;
+        }
+
         const { data, error } = await supabase
           .from('user_progress')
           .select('*')
@@ -697,15 +706,14 @@ export function useUserProgress(userId: string | undefined) {
           .abortSignal(signal)
           .single();
 
+        if (signal?.aborted) {
+          console.log('[Supabase] Request aborted after fetch');
+          return null;
+        }
+
         if (error) {
           if (error.code === 'PGRST116') {
             console.log('[Supabase] No user progress found, will create on first update');
-            return null;
-          }
-          const errorStr = JSON.stringify(error);
-          if (error.message?.includes('AbortError') || error.message?.includes('aborted') || 
-              error.details?.includes('AbortError') || error.details?.includes('aborted') ||
-              errorStr.includes('AbortError') || errorStr.includes('aborted')) {
             return null;
           }
           console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
@@ -725,18 +733,22 @@ export function useUserProgress(userId: string | undefined) {
           updatedAt: data.updated_at,
         } as UserProgressData;
       } catch (error: any) {
-        if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+        if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
+          console.log('[Supabase] Query aborted gracefully');
           return null;
         }
         throw error;
       }
     },
     enabled: !!userId,
-    staleTime: 30000,
+    staleTime: 60000,
+    gcTime: 300000,
     retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError') return false;
-      return failureCount < 2;
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return false;
+      return failureCount < 1;
     },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
@@ -832,6 +844,11 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
       console.log('[Supabase] Fetching weekly progress for:', userId, startDate, 'to', endDate);
       
       try {
+        if (signal?.aborted) {
+          console.log('[Supabase] Request aborted before starting');
+          return [];
+        }
+
         const { data, error } = await supabase
           .from('daily_progress')
           .select('*')
@@ -841,13 +858,12 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
           .abortSignal(signal)
           .order('date', { ascending: true });
 
+        if (signal?.aborted) {
+          console.log('[Supabase] Request aborted after fetch');
+          return [];
+        }
+
         if (error) {
-          const errorStr = JSON.stringify(error);
-          if (error.message?.includes('AbortError') || error.message?.includes('aborted') || 
-              error.details?.includes('AbortError') || error.details?.includes('aborted') ||
-              errorStr.includes('AbortError') || errorStr.includes('aborted')) {
-            return [];
-          }
           console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
           throw error;
         }
@@ -865,18 +881,22 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
           updatedAt: day.updated_at,
         })) as DailyProgressData[];
       } catch (error: any) {
-        if (error?.name === 'AbortError' || error?.message?.includes('aborted')) {
+        if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
+          console.log('[Supabase] Query aborted gracefully');
           return [];
         }
         throw error;
       }
     },
     enabled: !!userId && !!startDate && !!endDate,
-    staleTime: 30000,
+    staleTime: 60000,
+    gcTime: 300000,
     retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError') return false;
-      return failureCount < 2;
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return false;
+      return failureCount < 1;
     },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
@@ -987,7 +1007,8 @@ export interface RecentAchievementWithUser extends UserAchievement {
 export function useAllRecentAchievements(limit: number = 20) {
   return useQuery({
     queryKey: ['recentAchievements', limit],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
+      if (signal?.aborted) return [];
       console.log('[Supabase] Fetching recent achievements from all users with user info');
       
       const { data: achievementsData, error: achievementsError } = await supabase
@@ -1046,7 +1067,9 @@ export function useAllRecentAchievements(limit: number = 20) {
         };
       }) as RecentAchievementWithUser[];
     },
-    refetchInterval: 60000,
+    staleTime: 60000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -1102,7 +1125,10 @@ export interface AchievementCheckResult {
 export function useCheckAchievements(userId: string | undefined) {
   return useQuery({
     queryKey: ['checkAchievements', userId],
-    queryFn: async (): Promise<AchievementCheckResult> => {
+    queryFn: async ({ signal }): Promise<AchievementCheckResult> => {
+      if (signal?.aborted) {
+        return { earned: [], progress: {} as Record<AchievementType, { current: number; required: number }> };
+      }
       if (!userId) {
         return { earned: [], progress: {} as Record<AchievementType, { current: number; required: number }> };
       }
@@ -1189,7 +1215,10 @@ export function useCheckAchievements(userId: string | undefined) {
       };
     },
     enabled: !!userId,
-    staleTime: 30000,
+    staleTime: 60000,
+    gcTime: 300000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 }
 
