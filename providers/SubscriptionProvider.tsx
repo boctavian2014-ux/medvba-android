@@ -44,7 +44,8 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
         if (!apiKey) {
           console.error('[RevenueCat] API key not found for platform:', Platform.OS);
-          console.error('[RevenueCat] Please set EXPO_PUBLIC_REVENUECAT_TEST_API_KEY or platform-specific keys');
+          console.error('[RevenueCat] EXPO_PUBLIC_REVENUECAT_TEST_API_KEY:', process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY ? 'SET' : 'NOT SET');
+          setState(prev => ({ ...prev, isLoading: false }));
           return;
         }
 
