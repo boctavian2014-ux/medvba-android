@@ -167,9 +167,8 @@ export default function FindPartnersScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
-        locations={[0, 0.5, 1]}
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.header}>
