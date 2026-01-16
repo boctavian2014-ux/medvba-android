@@ -18,7 +18,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useSubscriptionStatus } from '@/lib/supabase-hooks';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
-import StreakBadge from '@/components/StreakBadge';
 import PremiumBadge from '@/components/PremiumBadge';
 import { currentUser } from '@/mocks/users';
 import { categories } from '@/mocks/questions';
@@ -125,7 +124,6 @@ export default function HomeScreen() {
                   <Text style={[styles.upgradeButtonText, { color: colors.warning }]}>Upgrade</Text>
                 </TouchableOpacity>
               )}
-              <StreakBadge streak={currentUser.streak} />
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
               </TouchableOpacity>
