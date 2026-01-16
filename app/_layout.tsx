@@ -63,10 +63,12 @@ function useProtectedRoute(splashAvailable: boolean) {
 
     if (!splashHidden && splashAvailable) {
       setSplashHidden(true);
-      setTimeout(() => {
-        SplashScreen.hideAsync().catch(() => {
-          // Ignore - splash screen not available
-        });
+      setTimeout(async () => {
+        try {
+          await SplashScreen.hideAsync();
+        } catch {
+          // Ignore - splash screen not available or already hidden
+        }
       }, 100);
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden, splashAvailable]);
