@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Heart, Users, AlertOctagon, Flag, ShieldCheck, MessageCircle } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 const LAST_UPDATED = 'January 12, 2026';
 const CONTACT_EMAIL = 'contact@devaieood.com';
@@ -38,6 +39,7 @@ function Section({ icon, title, children }: SectionProps) {
 
 export default function CodeOfConductScreen() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -59,12 +61,11 @@ export default function CodeOfConductScreen() {
               />
               <Heart color={colors.text} size={32} />
             </View>
-            <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
+            <Text style={styles.lastUpdated}>{t('conduct.lastUpdated').replace('{date}', LAST_UPDATED)}</Text>
           </View>
 
           <Text style={styles.intro}>
-            MedixStudyHub is a community of medical students supporting each other. This Code of 
-            Conduct ensures a safe, respectful, and productive learning environment for everyone.
+            {t('conduct.intro')}
           </Text>
 
           <View style={styles.highlightBox}>
@@ -72,115 +73,114 @@ export default function CodeOfConductScreen() {
               colors={['rgba(0, 196, 140, 0.15)', 'rgba(0, 245, 212, 0.1)']}
               style={StyleSheet.absoluteFill}
             />
-            <Text style={styles.highlightTitle}>Our Core Values</Text>
+            <Text style={styles.highlightTitle}>{t('conduct.coreValues')}</Text>
             <Text style={styles.highlightText}>
-              Respect • Integrity • Collaboration • Inclusivity • Excellence
+              {t('conduct.coreValuesText')}
             </Text>
           </View>
 
           <Section
             icon={<Users color={colors.primary} size={20} />}
-            title="Study Room Behavior"
+            title={t('conduct.studyRoomBehavior')}
           >
-            <Text style={styles.subheading}>Expected Behavior:</Text>
+            <Text style={styles.subheading}>{t('conduct.expectedBehavior')}</Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>✓ Be respectful and courteous to all participants</Text>
-              <Text style={styles.bulletItem}>✓ Keep discussions relevant to studying and learning</Text>
-              <Text style={styles.bulletItem}>✓ Use appropriate language at all times</Text>
-              <Text style={styles.bulletItem}>✓ Mute your microphone when not speaking</Text>
-              <Text style={styles.bulletItem}>✓ Use appropriate virtual backgrounds</Text>
-              <Text style={styles.bulletItem}>✓ Help fellow students when they have questions</Text>
-              <Text style={styles.bulletItem}>✓ Report any technical issues promptly</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected1')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected2')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected3')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected4')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected5')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected6')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.expected7')}</Text>
             </View>
             
-            <Text style={[styles.subheading, { marginTop: 16 }]}>Prohibited Behavior:</Text>
+            <Text style={[styles.subheading, { marginTop: 16 }]}>{t('conduct.prohibitedBehavior')}</Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItemRed}>✗ Sharing inappropriate or offensive content</Text>
-              <Text style={styles.bulletItemRed}>✗ Recording sessions without consent</Text>
-              <Text style={styles.bulletItemRed}>✗ Disrupting study sessions intentionally</Text>
-              <Text style={styles.bulletItemRed}>✗ Sharing personal information of others</Text>
-              <Text style={styles.bulletItemRed}>✗ Using study rooms for non-educational purposes</Text>
+              <Text style={styles.bulletItemRed}>{t('conduct.prohibited1')}</Text>
+              <Text style={styles.bulletItemRed}>{t('conduct.prohibited2')}</Text>
+              <Text style={styles.bulletItemRed}>{t('conduct.prohibited3')}</Text>
+              <Text style={styles.bulletItemRed}>{t('conduct.prohibited4')}</Text>
+              <Text style={styles.bulletItemRed}>{t('conduct.prohibited5')}</Text>
             </View>
           </Section>
 
           <Section
             icon={<AlertOctagon color={colors.error} size={20} />}
-            title="Zero Tolerance Policy"
+            title={t('conduct.zeroTolerance')}
           >
             <Text style={styles.paragraph}>
-              We have <Text style={styles.bold}>ZERO TOLERANCE</Text> for the following behaviors. 
-              Violations will result in immediate account suspension:
+              {t('conduct.zeroToleranceIntro').replace('ZERO TOLERANCE', `<bold>ZERO TOLERANCE</bold>`)}
             </Text>
             <View style={styles.warningBox}>
-              <Text style={styles.warningItem}>🚫 Harassment or bullying of any kind</Text>
-              <Text style={styles.warningItem}>🚫 Discrimination based on race, gender, religion, nationality, or any other characteristic</Text>
-              <Text style={styles.warningItem}>🚫 Sexual harassment or inappropriate advances</Text>
-              <Text style={styles.warningItem}>🚫 Threats of violence or harm</Text>
-              <Text style={styles.warningItem}>🚫 Sharing explicit or pornographic content</Text>
-              <Text style={styles.warningItem}>🚫 Doxxing or revealing personal information</Text>
-              <Text style={styles.warningItem}>🚫 Hate speech or slurs</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance1')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance2')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance3')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance4')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance5')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance6')}</Text>
+              <Text style={styles.warningItem}>{t('conduct.zeroTolerance7')}</Text>
             </View>
           </Section>
 
           <Section
             icon={<ShieldCheck color={colors.success} size={20} />}
-            title="Consequences of Violations"
+            title={t('conduct.consequences')}
           >
             <Text style={styles.paragraph}>
-              Violations of this Code of Conduct will be addressed according to severity:
+              {t('conduct.consequencesIntro')}
             </Text>
             
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 184, 0, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: colors.warning }]}>Level 1</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.warning }]}>{t('conduct.level1')}</Text>
               </View>
               <View style={styles.consequenceContent}>
-                <Text style={styles.consequenceTitle}>Warning</Text>
-                <Text style={styles.consequenceDesc}>First minor offense - written warning via email</Text>
+                <Text style={styles.consequenceTitle}>{t('conduct.level1Title')}</Text>
+                <Text style={styles.consequenceDesc}>{t('conduct.level1Desc')}</Text>
               </View>
             </View>
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 149, 0, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: colors.streakOrange }]}>Level 2</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.streakOrange }]}>{t('conduct.level2')}</Text>
               </View>
               <View style={styles.consequenceContent}>
-                <Text style={styles.consequenceTitle}>Temporary Suspension</Text>
-                <Text style={styles.consequenceDesc}>24-72 hour suspension from study rooms</Text>
+                <Text style={styles.consequenceTitle}>{t('conduct.level2Title')}</Text>
+                <Text style={styles.consequenceDesc}>{t('conduct.level2Desc')}</Text>
               </View>
             </View>
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 107, 157, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: colors.accentPink }]}>Level 3</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.accentPink }]}>{t('conduct.level3')}</Text>
               </View>
               <View style={styles.consequenceContent}>
-                <Text style={styles.consequenceTitle}>Extended Suspension</Text>
-                <Text style={styles.consequenceDesc}>7-30 day suspension from all social features</Text>
+                <Text style={styles.consequenceTitle}>{t('conduct.level3Title')}</Text>
+                <Text style={styles.consequenceDesc}>{t('conduct.level3Desc')}</Text>
               </View>
             </View>
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 71, 87, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: colors.error }]}>Level 4</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.error }]}>{t('conduct.level4')}</Text>
               </View>
               <View style={styles.consequenceContent}>
-                <Text style={styles.consequenceTitle}>Permanent Ban</Text>
-                <Text style={styles.consequenceDesc}>Account termination without refund</Text>
+                <Text style={styles.consequenceTitle}>{t('conduct.level4Title')}</Text>
+                <Text style={styles.consequenceDesc}>{t('conduct.level4Desc')}</Text>
               </View>
             </View>
 
             <Text style={styles.note}>
-              Note: Severe violations (zero tolerance items) may result in immediate Level 4 action.
+              {t('conduct.note')}
             </Text>
           </Section>
 
           <Section
             icon={<Flag color={colors.accentPink} size={20} />}
-            title="How to Report Violations"
+            title={t('conduct.reportViolations')}
           >
             <Text style={styles.paragraph}>
-              If you witness or experience any violation of this Code of Conduct:
+              {t('conduct.reportIntro')}
             </Text>
             <View style={styles.reportSteps}>
               <View style={styles.reportStep}>
@@ -188,7 +188,7 @@ export default function CodeOfConductScreen() {
                   <Text style={styles.stepNumberText}>1</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  During a study room session, use the in-app report button to flag inappropriate behavior
+                  {t('conduct.reportStep1')}
                 </Text>
               </View>
               <View style={styles.reportStep}>
@@ -196,7 +196,7 @@ export default function CodeOfConductScreen() {
                   <Text style={styles.stepNumberText}>2</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  Email us at {CONTACT_EMAIL} with details and any screenshots
+                  {t('conduct.reportStep2').replace('{email}', CONTACT_EMAIL)}
                 </Text>
               </View>
               <View style={styles.reportStep}>
@@ -204,29 +204,29 @@ export default function CodeOfConductScreen() {
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  Our team will review and respond within 24-48 hours
+                  {t('conduct.reportStep3')}
                 </Text>
               </View>
             </View>
             <Text style={styles.paragraph}>
-              All reports are confidential. We do not tolerate retaliation against reporters.
+              {t('conduct.reportConfidential')}
             </Text>
           </Section>
 
           <Section
             icon={<MessageCircle color={colors.accent} size={20} />}
-            title="Creating a Positive Environment"
+            title={t('conduct.positiveEnvironment')}
           >
             <Text style={styles.paragraph}>
-              Help us build a supportive learning community:
+              {t('conduct.positiveIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>💡 Share study tips and resources</Text>
-              <Text style={styles.bulletItem}>🤝 Offer help to struggling students</Text>
-              <Text style={styles.bulletItem}>🎉 Celebrate others&apos; achievements</Text>
-              <Text style={styles.bulletItem}>📚 Stay focused on educational goals</Text>
-              <Text style={styles.bulletItem}>🌟 Be a role model for new members</Text>
-              <Text style={styles.bulletItem}>❤️ Show empathy and understanding</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive1')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive2')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive3')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive4')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive5')}</Text>
+              <Text style={styles.bulletItem}>{t('conduct.positive6')}</Text>
             </View>
           </Section>
 
@@ -235,16 +235,14 @@ export default function CodeOfConductScreen() {
               colors={['rgba(0, 180, 216, 0.2)', 'rgba(2, 62, 138, 0.15)']}
               style={StyleSheet.absoluteFill}
             />
-            <Text style={styles.commitmentTitle}>Our Commitment to You</Text>
+            <Text style={styles.commitmentTitle}>{t('conduct.commitment')}</Text>
             <Text style={styles.commitmentText}>
-              We are committed to providing a safe, inclusive, and harassment-free learning 
-              environment. We will enforce this Code of Conduct fairly and consistently.
+              {t('conduct.commitmentText')}
             </Text>
           </View>
 
           <Text style={styles.footer}>
-            By using MedixStudyHub, you agree to abide by this Code of Conduct. Thank you for 
-            helping us maintain a positive learning community.
+            {t('conduct.footer')}
           </Text>
         </ScrollView>
       </SafeAreaView>
