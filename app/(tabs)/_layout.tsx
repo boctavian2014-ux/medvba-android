@@ -2,19 +2,20 @@ import { Tabs } from "expo-router";
 import { Home, BookOpen, Users, MessageCircle, User } from "lucide-react-native";
 import React from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Colors from "@/constants/colors";
+import { useTheme } from "@/providers/ThemeProvider";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: Colors.backgroundLight,
-          borderTopColor: Colors.glassBorder,
+          backgroundColor: colors.backgroundLight,
+          borderTopColor: colors.glassBorder,
           borderTopWidth: 1,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -9,19 +9,21 @@ interface GlassCardProps {
 }
 
 export default function GlassCard({ children, style, variant = 'default' }: GlassCardProps) {
+  const { colors } = useTheme();
+  
   const getBackgroundColor = () => {
     switch (variant) {
       case 'light':
-        return Colors.cardBgLight;
+        return colors.cardBgLight;
       case 'accent':
         return 'rgba(0, 180, 216, 0.15)';
       default:
-        return Colors.cardBg;
+        return colors.cardBg;
     }
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: getBackgroundColor() }, style]}>
+    <View style={[styles.card, { backgroundColor: getBackgroundColor(), borderColor: colors.glassBorder }, style]}>
       {children}
     </View>
   );
@@ -31,7 +33,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
     padding: 16,
     overflow: 'hidden',
   },

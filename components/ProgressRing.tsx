@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface ProgressRingProps {
   progress: number;
@@ -16,10 +16,12 @@ export default function ProgressRing({
   progress,
   size = 80,
   strokeWidth = 8,
-  color = Colors.primary,
+  color,
   showPercentage = true,
   label,
 }: ProgressRingProps) {
+  const { colors } = useTheme();
+  const ringColor = color || colors.primary;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -31,7 +33,7 @@ export default function ProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={Colors.cardBgLight}
+          stroke={colors.cardBgLight}
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -39,7 +41,7 @@ export default function ProgressRing({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={color}
+          stroke={ringColor}
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
@@ -50,8 +52,8 @@ export default function ProgressRing({
       </Svg>
       {showPercentage && (
         <View style={[styles.labelContainer, { width: size, height: size }]}>
-          <Text style={styles.percentage}>{Math.round(progress)}%</Text>
-          {label && <Text style={styles.label}>{label}</Text>}
+          <Text style={[styles.percentage, { color: colors.text }]}>{Math.round(progress)}%</Text>
+          {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
         </View>
       )}
     </View>
@@ -70,12 +72,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   percentage: {
-    color: Colors.text,
     fontSize: 18,
     fontWeight: '700' as const,
   },
   label: {
-    color: Colors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },

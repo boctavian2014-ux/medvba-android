@@ -22,10 +22,10 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import { categories } from '@/mocks/questions';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { useTheme } from '@/providers/ThemeProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 
@@ -41,6 +41,7 @@ type QuizMode = 'practice' | 'exam' | 'quick';
 export default function QuizScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
+  const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { 
     isPremium, 
@@ -112,9 +113,9 @@ export default function QuizScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={[Colors.background, Colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
       
@@ -124,14 +125,14 @@ export default function QuizScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t('quiz.title')}</Text>
-            <Text style={styles.subtitle}>{t('quiz.subtitle')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('quiz.title')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('quiz.subtitle')}</Text>
           </View>
 
           {!isPremium && (
             <GlassCard style={styles.freeLimitBanner}>
               <View style={styles.freeLimitContent}>
-                <Text style={styles.freeLimitText}>
+                <Text style={[styles.freeLimitText, { color: colors.textSecondary }]}>
                   {remainingQuizzes > 0 
                     ? t('quiz.freeQuizzesRemaining').replace('{remaining}', String(remainingQuizzes)).replace('{total}', String(FREE_QUIZ_LIMIT))
                     : t('quiz.dailyLimitReached')}
@@ -141,8 +142,8 @@ export default function QuizScreen() {
                     style={styles.upgradeMiniButton}
                     onPress={() => router.push('/paywall')}
                   >
-                    <Crown color={Colors.warning} size={14} />
-                    <Text style={styles.upgradeMiniText}>Upgrade</Text>
+                    <Crown color={colors.warning} size={14} />
+                    <Text style={[styles.upgradeMiniText, { color: colors.warning }]}>Upgrade</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -150,20 +151,20 @@ export default function QuizScreen() {
           )}
 
           <View style={styles.modesSection}>
-            <Text style={styles.sectionTitle}>{t('quiz.quizModes')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('quiz.quizModes')}</Text>
             <View style={styles.modesGrid}>
               <TouchableOpacity 
                 style={styles.modeCard}
                 onPress={() => handleStartQuiz('quick')}
               >
                 <LinearGradient
-                  colors={[Colors.primary, Colors.primaryDark]}
+                  colors={[colors.primary, colors.primaryDark]}
                   style={styles.modeGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Zap color={Colors.text} size={28} />
-                  <Text style={styles.modeTitle}>{t('quiz.quickQuiz')}</Text>
+                  <Zap color={colors.text} size={28} />
+                  <Text style={[styles.modeTitle, { color: colors.text }]}>{t('quiz.quickQuiz')}</Text>
                   <Text style={styles.modeSubtitle}>{t('quiz.quickQuizCount')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -178,12 +179,12 @@ export default function QuizScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Clock color={Colors.text} size={28} />
-                  <Text style={styles.modeTitle}>{t('quiz.practice')}</Text>
+                  <Clock color={colors.text} size={28} />
+                  <Text style={[styles.modeTitle, { color: colors.text }]}>{t('quiz.practice')}</Text>
                   <Text style={styles.modeSubtitle}>{t('quiz.practiceCount')}</Text>
                   {!isPremium && (
                     <View style={styles.premiumBadge}>
-                      <Lock color={Colors.warning} size={12} />
+                      <Lock color={colors.warning} size={12} />
                     </View>
                   )}
                 </LinearGradient>
@@ -194,22 +195,22 @@ export default function QuizScreen() {
                 onPress={() => handleStartQuiz('exam')}
               >
                 <LinearGradient
-                  colors={[Colors.secondary, '#012A5E']}
+                  colors={[colors.secondary, '#012A5E']}
                   style={[styles.modeGradient, styles.examGradient]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Trophy color={Colors.warning} size={32} />
+                  <Trophy color={colors.warning} size={32} />
                   <View style={styles.examContent}>
-                    <Text style={styles.modeTitle}>{t('quiz.examSimulation')}</Text>
+                    <Text style={[styles.modeTitle, { color: colors.text }]}>{t('quiz.examSimulation')}</Text>
                     <Text style={styles.modeSubtitle}>{t('quiz.examDetails')}</Text>
                   </View>
                   {!isPremium ? (
                     <View style={styles.premiumBadge}>
-                      <Lock color={Colors.warning} size={12} />
+                      <Lock color={colors.warning} size={12} />
                     </View>
                   ) : (
-                    <ChevronRight color={Colors.text} size={24} />
+                    <ChevronRight color={colors.text} size={24} />
                   )}
                 </LinearGradient>
               </TouchableOpacity>
@@ -217,8 +218,8 @@ export default function QuizScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('quiz.categories')}</Text>
-            <Text style={styles.sectionSubtitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('quiz.categories')}</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
               {selectedCategory ? t('quiz.tapToDeselect') : t('quiz.selectCategory')}
             </Text>
             
@@ -244,11 +245,11 @@ export default function QuizScreen() {
                       <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '25' }]}>
                         <IconComponent color={category.color} size={28} />
                       </View>
-                      <Text style={styles.categoryName}>{getModuleName(category.id)}</Text>
-                      <Text style={styles.categoryCount}>
+                      <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
+                      <Text style={[styles.categoryCount, { color: colors.textSecondary }]}>
                         {category.questionCount.toLocaleString()} Q
                       </Text>
-                      <View style={styles.categoryProgressBar}>
+                      <View style={[styles.categoryProgressBar, { backgroundColor: colors.cardBgLight }]}>
                         <View 
                           style={[
                             styles.categoryProgressFill, 
@@ -256,7 +257,7 @@ export default function QuizScreen() {
                           ]} 
                         />
                       </View>
-                      <Text style={styles.categoryProgressText}>{progress.toFixed(0)}%</Text>
+                      <Text style={[styles.categoryProgressText, { color: colors.textMuted }]}>{progress.toFixed(0)}%</Text>
                     </GlassCard>
                   </TouchableOpacity>
                 );
@@ -266,23 +267,23 @@ export default function QuizScreen() {
 
           <GlassCard style={styles.statsCard}>
             <View style={styles.statsHeader}>
-              <Text style={styles.statsTitle}>28,055+</Text>
-              <Text style={styles.statsSubtitle}>{t('quiz.totalQuestions')}</Text>
+              <Text style={[styles.statsTitle, { color: colors.primary }]}>28,055+</Text>
+              <Text style={[styles.statsSubtitle, { color: colors.textSecondary }]}>{t('quiz.totalQuestions')}</Text>
             </View>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statItemValue}>4</Text>
-                <Text style={styles.statItemLabel}>{t('quiz.languages')}</Text>
+                <Text style={[styles.statItemValue, { color: colors.text }]}>4</Text>
+                <Text style={[styles.statItemLabel, { color: colors.textSecondary }]}>{t('quiz.languages')}</Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statItemValue}>3</Text>
-                <Text style={styles.statItemLabel}>{t('quiz.difficultyLevels')}</Text>
+                <Text style={[styles.statItemValue, { color: colors.text }]}>3</Text>
+                <Text style={[styles.statItemLabel, { color: colors.textSecondary }]}>{t('quiz.difficultyLevels')}</Text>
               </View>
-              <View style={styles.statDivider} />
+              <View style={[styles.statDivider, { backgroundColor: colors.glassBorder }]} />
               <View style={styles.statItem}>
-                <Text style={styles.statItemValue}>∞</Text>
-                <Text style={styles.statItemLabel}>{t('quiz.practiceUnlimited')}</Text>
+                <Text style={[styles.statItemValue, { color: colors.text }]}>∞</Text>
+                <Text style={[styles.statItemLabel, { color: colors.textSecondary }]}>{t('quiz.practiceUnlimited')}</Text>
               </View>
             </View>
           </GlassCard>
@@ -295,7 +296,6 @@ export default function QuizScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   safeArea: {
     flex: 1,
@@ -311,11 +311,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   subtitle: {
     fontSize: 15,
-    color: Colors.textSecondary,
     marginTop: 4,
   },
   modesSection: {
@@ -327,12 +325,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: 16,
   },
   modesGrid: {
@@ -352,7 +348,6 @@ const styles = StyleSheet.create({
   modeTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   modeSubtitle: {
     fontSize: 13,
@@ -393,18 +388,15 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
     marginBottom: 4,
   },
   categoryCount: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginBottom: 8,
   },
   categoryProgressBar: {
     width: '80%',
     height: 4,
-    backgroundColor: Colors.cardBgLight,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -414,7 +406,6 @@ const styles = StyleSheet.create({
   },
   categoryProgressText: {
     fontSize: 11,
-    color: Colors.textMuted,
     marginTop: 6,
   },
   statsCard: {
@@ -427,11 +418,9 @@ const styles = StyleSheet.create({
   statsTitle: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: Colors.primary,
   },
   statsSubtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   statsRow: {
     flexDirection: 'row',
@@ -444,17 +433,14 @@ const styles = StyleSheet.create({
   statItemValue: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   statItemLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.glassBorder,
   },
   freeLimitBanner: {
     marginBottom: 16,
@@ -469,7 +455,6 @@ const styles = StyleSheet.create({
   },
   freeLimitText: {
     fontSize: 14,
-    color: Colors.warning,
     fontWeight: '500' as const,
     flex: 1,
   },
@@ -485,7 +470,6 @@ const styles = StyleSheet.create({
   upgradeMiniText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.warning,
   },
   premiumBadge: {
     width: 28,

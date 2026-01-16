@@ -41,8 +41,8 @@ import {
   EyeOff,
   Save,
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
+import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage, Language } from '@/providers/LanguageProvider';
 import { useUserProfile, useUpdateUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
 import PhotoPicker from '@/components/PhotoPicker';
@@ -56,6 +56,7 @@ interface SettingsItemProps {
 }
 
 function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: SettingsItemProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity 
       style={[styles.settingsItem, showBorder && styles.settingsItemBorder]} 
@@ -64,10 +65,10 @@ function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: Set
     >
       <View style={styles.settingsItemIcon}>{icon}</View>
       <View style={styles.settingsItemContent}>
-        <Text style={styles.settingsItemTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingsItemSubtitle}>{subtitle}</Text>}
+        <Text style={[styles.settingsItemTitle, { color: colors.text }]}>{title}</Text>
+        {subtitle && <Text style={[styles.settingsItemSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>}
       </View>
-      <ChevronRight color={Colors.textMuted} size={20} />
+      <ChevronRight color={colors.textMuted} size={20} />
     </TouchableOpacity>
   );
 }
@@ -90,6 +91,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { user, signOut, refreshProfile } = useAuth();
   const { currentLanguage, changeLanguage, t } = useLanguage();
+  const { colors } = useTheme();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   
   const { data: profile } = useUserProfile(user?.id);
@@ -206,21 +208,21 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('settings.title')}</Text>
+        <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('settings.title')}</Text>
           <TouchableOpacity 
-            style={styles.closeButton} 
+            style={[styles.closeButton, { backgroundColor: colors.cardBg, borderColor: colors.glassBorder }]} 
             onPress={() => router.back()}
             activeOpacity={0.7}
           >
-            <X color={Colors.text} size={24} />
+            <X color={colors.text} size={24} />
           </TouchableOpacity>
         </View>
 
@@ -230,19 +232,19 @@ export default function SettingsScreen() {
         >
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>My Profile</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>My Profile</Text>
               <TouchableOpacity
-                style={[styles.saveProfileButton, (isSaving || isUploading) && styles.saveProfileButtonDisabled]}
+                style={[styles.saveProfileButton, { backgroundColor: colors.cardBg, borderColor: colors.primary }, (isSaving || isUploading) && styles.saveProfileButtonDisabled]}
                 onPress={handleSaveProfile}
                 disabled={isSaving || isUploading}
                 activeOpacity={0.7}
               >
                 {isSaving || isUploading ? (
-                  <ActivityIndicator size="small" color={Colors.primary} />
+                  <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
                   <>
-                    <Save color={Colors.primary} size={16} />
-                    <Text style={styles.saveProfileButtonText}>Save</Text>
+                    <Save color={colors.primary} size={16} />
+                    <Text style={[styles.saveProfileButtonText, { color: colors.primary }]}>Save</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -252,7 +254,7 @@ export default function SettingsScreen() {
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
-              <View style={styles.profilePhotoSection}>
+              <View style={[styles.profilePhotoSection, { borderBottomColor: colors.glassBorder }]}>
                 <PhotoPicker
                   currentPhotoUrl={photoUri}
                   onPhotoSelected={setPhotoUri}
@@ -261,61 +263,61 @@ export default function SettingsScreen() {
                 />
               </View>
 
-              <View style={styles.profileInputGroup}>
+              <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
-                  <User color={Colors.primary} size={18} />
-                  <Text style={styles.inputLabelText}>Name *</Text>
+                  <User color={colors.primary} size={18} />
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>Name *</Text>
                 </View>
                 <TextInput
-                  style={styles.profileTextInput}
+                  style={[styles.profileTextInput, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={name}
                   onChangeText={setName}
                   placeholder="Your name"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   maxLength={100}
                 />
               </View>
 
-              <View style={styles.profileInputGroup}>
+              <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
-                  <MapPin color={Colors.accent} size={18} />
-                  <Text style={styles.inputLabelText}>City</Text>
+                  <MapPin color={colors.accent} size={18} />
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>City</Text>
                 </View>
                 <TextInput
-                  style={styles.profileTextInput}
+                  style={[styles.profileTextInput, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={city}
                   onChangeText={setCity}
                   placeholder="e.g., Bucharest, Cluj-Napoca"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   maxLength={100}
                 />
               </View>
 
-              <View style={styles.profileInputGroup}>
+              <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
-                  <School color={Colors.secondary} size={18} />
-                  <Text style={styles.inputLabelText}>University/Faculty</Text>
+                  <School color={colors.secondary} size={18} />
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>University/Faculty</Text>
                 </View>
                 <TextInput
-                  style={styles.profileTextInput}
+                  style={[styles.profileTextInput, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={university}
                   onChangeText={setUniversity}
                   placeholder="e.g., Carol Davila University"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   maxLength={200}
                 />
               </View>
 
-              <View style={styles.profileInputGroup}>
+              <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
-                  <School color={Colors.warning} size={18} />
-                  <Text style={styles.inputLabelText}>Year of Study</Text>
+                  <School color={colors.warning} size={18} />
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>Year of Study</Text>
                 </View>
                 <View style={styles.yearSelector}>
                   {[1, 2, 3, 4, 5, 6].map((year) => (
                     <TouchableOpacity
                       key={year}
-                      style={[styles.yearButton, yearOfStudy === year.toString() && styles.yearButtonActive]}
+                      style={[styles.yearButton, { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: colors.glassBorder }, yearOfStudy === year.toString() && { backgroundColor: colors.primary, borderColor: colors.primary }]}
                       onPress={() => {
                         if (Platform.OS !== 'web') {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -323,7 +325,7 @@ export default function SettingsScreen() {
                         setYearOfStudy(year.toString());
                       }}
                     >
-                      <Text style={[styles.yearButtonText, yearOfStudy === year.toString() && styles.yearButtonTextActive]}>
+                      <Text style={[styles.yearButtonText, { color: colors.textSecondary }, yearOfStudy === year.toString() && { color: colors.text, fontWeight: '700' as const }]}>
                         {year}
                       </Text>
                     </TouchableOpacity>
@@ -331,27 +333,27 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              <View style={styles.profileInputGroup}>
+              <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
-                  <AlignLeft color={Colors.accentPink} size={18} />
-                  <Text style={styles.inputLabelText}>Bio</Text>
+                  <AlignLeft color={colors.accentPink} size={18} />
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>Bio</Text>
                 </View>
                 <TextInput
-                  style={[styles.profileTextInput, styles.textArea]}
+                  style={[styles.profileTextInput, styles.textArea, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={bio}
                   onChangeText={setBio}
                   placeholder="Tell others about yourself, your interests, study goals..."
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={4}
                   maxLength={500}
                 />
-                <Text style={styles.charCount}>{bio.length}/500</Text>
+                <Text style={[styles.charCount, { color: colors.textMuted }]}>{bio.length}/500</Text>
               </View>
 
               <View style={styles.privacySection}>
                 <View style={styles.privacyIcon}>
-                  {isPublic ? <Eye color={Colors.success} size={22} /> : <EyeOff color={Colors.textMuted} size={22} />}
+                  {isPublic ? <Eye color={colors.success} size={22} /> : <EyeOff color={colors.textMuted} size={22} />}
                 </View>
                 <View style={styles.privacyInfo}>
                   <Text style={styles.settingsItemTitle}>Public Profile</Text>
@@ -369,31 +371,31 @@ export default function SettingsScreen() {
                     }
                     setIsPublic(value);
                   }}
-                  trackColor={{ false: Colors.cardBgLight, true: Colors.success }}
-                  thumbColor={Colors.text}
+                  trackColor={{ false: colors.cardBgLight, true: colors.success }}
+                  thumbColor={colors.text}
                 />
               </View>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.preferences')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.preferences')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
-              <View style={styles.languageSection}>
+              <View style={[styles.languageSection, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.languageSectionHeader}>
                   <View style={styles.settingsItemIcon}>
-                    <Globe color={Colors.primary} size={22} />
+                    <Globe color={colors.primary} size={22} />
                   </View>
                   <View style={styles.settingsItemContent}>
                     <Text style={styles.settingsItemTitle}>{t('settings.language')}</Text>
                     <Text style={styles.settingsItemSubtitle}>{t('settings.languageSubtitle')}</Text>
                   </View>
                 </View>
-                <View style={styles.languageSelector}>
+                <View style={[styles.languageSelector, { borderColor: colors.glassBorder }]}>
                   {languages.map((lang) => {
                     const isActive = currentLanguage === lang.code;
                     return (
@@ -413,7 +415,7 @@ export default function SettingsScreen() {
                       >
                         {isActive && (
                           <LinearGradient
-                            colors={[Colors.primary, Colors.secondary]}
+                            colors={[colors.primary, colors.secondary]}
                             style={StyleSheet.absoluteFill}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
@@ -432,13 +434,13 @@ export default function SettingsScreen() {
                 </View>
               </View>
               <SettingsItem
-                icon={<Bell color={Colors.primary} size={22} />}
+                icon={<Bell color={colors.primary} size={22} />}
                 title={t('settings.notifications')}
                 subtitle={t('settings.notificationsSubtitle')}
                 onPress={() => router.push('/notifications')}
               />
               <SettingsItem
-                icon={<Moon color={Colors.accent} size={22} />}
+                icon={<Moon color={colors.accent} size={22} />}
                 title={t('settings.appearance')}
                 subtitle={t('settings.appearanceSubtitle')}
                 onPress={() => router.push('/appearance')}
@@ -448,15 +450,15 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.privacySafety')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.privacySafety')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
               <View style={styles.blockedUsersHeader}>
                 <View style={styles.blockedUsersIcon}>
-                  <Ban color={Colors.error} size={22} />
+                  <Ban color={colors.error} size={22} />
                 </View>
                 <View style={styles.blockedUsersInfo}>
                   <Text style={styles.settingsItemTitle}>{t('settings.blockedUsers')}</Text>
@@ -471,7 +473,7 @@ export default function SettingsScreen() {
               </View>
               
               {blockedUsers.length > 0 && (
-                <View style={styles.blockedUsersList}>
+                <View style={[styles.blockedUsersList, { borderTopColor: colors.glassBorder }]}>
                   {blockedUsers.map((user, index) => (
                     <View 
                       key={user.id} 
@@ -491,8 +493,8 @@ export default function SettingsScreen() {
                         style={styles.unblockButton}
                         onPress={() => handleUnblockUser(user)}
                       >
-                        <UserX color={Colors.error} size={18} />
-                        <Text style={styles.unblockButtonText}>{t('settings.unblockButton')}</Text>
+                        <UserX color={colors.error} size={18} />
+                        <Text style={[styles.unblockButtonText, { color: colors.error }]}>{t('settings.unblockButton')}</Text>
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -502,20 +504,20 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.support')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.support')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
               <SettingsItem
-                icon={<HelpCircle color={Colors.warning} size={22} />}
+                icon={<HelpCircle color={colors.warning} size={22} />}
                 title={t('settings.helpCenter')}
                 subtitle={t('settings.helpCenterSubtitle')}
                 onPress={() => console.log('Help')}
               />
               <SettingsItem
-                icon={<Mail color={Colors.accentPink} size={22} />}
+                icon={<Mail color={colors.accentPink} size={22} />}
                 title={t('settings.contactSupport')}
                 subtitle={t('settings.contactSupportSubtitle')}
                 onPress={() => console.log('Contact')}
@@ -525,26 +527,26 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.legal')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.legal')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
               <SettingsItem
-                icon={<Shield color={Colors.primary} size={22} />}
+                icon={<Shield color={colors.primary} size={22} />}
                 title={t('settings.privacyPolicy')}
                 subtitle={t('settings.privacyPolicySubtitle')}
                 onPress={() => router.push('/legal/privacy-policy')}
               />
               <SettingsItem
-                icon={<FileText color={Colors.accent} size={22} />}
+                icon={<FileText color={colors.accent} size={22} />}
                 title={t('settings.termsOfService')}
                 subtitle={t('settings.termsOfServiceSubtitle')}
                 onPress={() => router.push('/legal/terms-of-service')}
               />
               <SettingsItem
-                icon={<Heart color={Colors.success} size={22} />}
+                icon={<Heart color={colors.success} size={22} />}
                 title={t('settings.codeOfConduct')}
                 subtitle={t('settings.codeOfConductSubtitle')}
                 onPress={() => router.push('/legal/code-of-conduct')}
@@ -554,28 +556,28 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.account')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
               <TouchableOpacity 
-                style={[styles.deleteAccountItem, styles.settingsItemBorder]} 
+                style={[styles.deleteAccountItem, styles.settingsItemBorder, { borderBottomColor: colors.glassBorder }]} 
                 onPress={() => router.push('/delete-account')}
                 activeOpacity={0.7}
               >
                 <View style={styles.deleteAccountIcon}>
-                  <Trash2 color={Colors.error} size={22} />
+                  <Trash2 color={colors.error} size={22} />
                 </View>
                 <View style={styles.settingsItemContent}>
-                  <Text style={styles.deleteAccountTitle}>{t('settings.deleteAccount')}</Text>
-                  <Text style={styles.deleteAccountSubtitle}>{t('settings.deleteAccountSubtitle')}</Text>
+                  <Text style={[styles.deleteAccountTitle, { color: colors.error }]}>{t('settings.deleteAccount')}</Text>
+                  <Text style={[styles.deleteAccountSubtitle, { color: colors.textMuted }]}>{t('settings.deleteAccountSubtitle')}</Text>
                 </View>
-                <ChevronRight color={Colors.error} size={20} />
+                <ChevronRight color={colors.error} size={20} />
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.signOutItem} 
+                style={styles.signOutItem}
                 onPress={() => {
                   Alert.alert(
                     t('settings.signOutConfirmTitle'),
@@ -599,26 +601,26 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.signOutIcon}>
-                  <LogOut color={Colors.warning} size={22} />
+                  <LogOut color={colors.warning} size={22} />
                 </View>
                 <View style={styles.settingsItemContent}>
-                  <Text style={styles.signOutTitle}>{t('settings.signOut')}</Text>
-                  <Text style={styles.signOutSubtitle}>{t('settings.signOutSubtitle')}</Text>
+                  <Text style={[styles.signOutTitle, { color: colors.warning }]}>{t('settings.signOut')}</Text>
+                  <Text style={[styles.signOutSubtitle, { color: colors.textMuted }]}>{t('settings.signOutSubtitle')}</Text>
                 </View>
-                <ChevronRight color={Colors.warning} size={20} />
+                <ChevronRight color={colors.warning} size={20} />
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.about')}</Text>
+            <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
               <SettingsItem
-                icon={<Info color={Colors.textSecondary} size={22} />}
+                icon={<Info color={colors.textSecondary} size={22} />}
                 title={t('settings.appVersion')}
                 subtitle="1.0.0"
                 onPress={() => {}}
@@ -627,9 +629,9 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>{t('settings.footer')}</Text>
-            <Text style={styles.footerSubtext}>{t('settings.footerSubtext')}</Text>
+          <View style={[styles.footer, { borderTopColor: colors.glassBorder }]}>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t('settings.footer')}</Text>
+            <Text style={[styles.footerSubtext, { color: colors.textMuted }]}>{t('settings.footerSubtext')}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -640,7 +642,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   safeArea: {
     flex: 1,
@@ -652,22 +653,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   title: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
   },
   scrollContent: {
     padding: 20,
@@ -679,7 +676,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
     marginBottom: 12,
@@ -688,7 +684,6 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
     overflow: 'hidden',
   },
   settingsItem: {
@@ -698,7 +693,6 @@ const styles = StyleSheet.create({
   },
   settingsItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   settingsItemIcon: {
     width: 40,
@@ -715,11 +709,9 @@ const styles = StyleSheet.create({
   settingsItemTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   settingsItemSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   footer: {
@@ -727,16 +719,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
   },
   footerText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
   },
   footerSubtext: {
     fontSize: 13,
-    color: Colors.textMuted,
     marginTop: 4,
   },
   blockedUsersHeader: {
@@ -758,7 +747,6 @@ const styles = StyleSheet.create({
   },
   blockedUsersList: {
     borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
   },
   blockedUserItem: {
     flexDirection: 'row',
@@ -768,7 +756,6 @@ const styles = StyleSheet.create({
   },
   blockedUserItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   blockedUserAvatar: {
     width: 40,
@@ -782,11 +769,9 @@ const styles = StyleSheet.create({
   blockedUserName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   blockedUserDate: {
     fontSize: 12,
-    color: Colors.textMuted,
     marginTop: 2,
   },
   unblockButton: {
@@ -801,7 +786,6 @@ const styles = StyleSheet.create({
   unblockButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.error,
   },
   deleteAccountItem: {
     flexDirection: 'row',
@@ -819,11 +803,9 @@ const styles = StyleSheet.create({
   deleteAccountTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.error,
   },
   deleteAccountSubtitle: {
     fontSize: 13,
-    color: Colors.textMuted,
     marginTop: 2,
   },
   signOutItem: {
@@ -842,17 +824,14 @@ const styles = StyleSheet.create({
   signOutTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.warning,
   },
   signOutSubtitle: {
     fontSize: 13,
-    color: Colors.textMuted,
     marginTop: 2,
   },
   languageSection: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   languageSectionHeader: {
     flexDirection: 'row',
@@ -866,7 +845,6 @@ const styles = StyleSheet.create({
     padding: 4,
     gap: 4,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
   },
   languageButton: {
     flex: 1,
@@ -880,7 +858,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   languageButtonActive: {
-    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -892,10 +869,8 @@ const styles = StyleSheet.create({
   languageLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
   },
   languageLabelActive: {
-    color: Colors.text,
     fontWeight: '700' as const,
   },
   sectionHeader: {
@@ -912,9 +887,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
     borderWidth: 1,
-    borderColor: Colors.primary,
   },
   saveProfileButtonDisabled: {
     opacity: 0.5,
@@ -922,19 +895,16 @@ const styles = StyleSheet.create({
   saveProfileButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
   },
   profilePhotoSection: {
     alignItems: 'center',
     padding: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   profileInputGroup: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
   },
   inputLabel: {
     flexDirection: 'row',
@@ -945,17 +915,13 @@ const styles = StyleSheet.create({
   inputLabelText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
   },
   profileTextInput: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: Colors.text,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
   },
   textArea: {
     minHeight: 80,
@@ -963,7 +929,6 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: 12,
-    color: Colors.textMuted,
     textAlign: 'right',
     marginTop: 6,
   },
@@ -976,23 +941,17 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
   yearButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
   },
   yearButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
   },
   yearButtonTextActive: {
-    color: Colors.text,
     fontWeight: '700' as const,
   },
   privacySection: {

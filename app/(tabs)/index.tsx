@@ -11,8 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import Colors from '@/constants/colors';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
@@ -23,6 +23,7 @@ import { useQuizProgress } from '@/providers/QuizProgressProvider';
 export default function HomeScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
+  const { colors } = useTheme();
   const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
@@ -65,9 +66,9 @@ export default function HomeScreen() {
   }, [hasActiveSession, sessionState, lastSessionInfo, router]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
-        colors={[Colors.background, Colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -82,8 +83,8 @@ export default function HomeScreen() {
                 style={styles.appIcon} 
               />
               <View>
-                <Text style={styles.greeting}>{t('home.greeting')}</Text>
-                <Text style={styles.userName}>{currentUser.name.split(' ')[0]} 👋</Text>
+                <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
+                <Text style={[styles.userName, { color: colors.text }]}>{currentUser.name.split(' ')[0]} 👋</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
@@ -97,8 +98,8 @@ export default function HomeScreen() {
           <GlassCard style={styles.heroCard} variant="accent">
             <View style={styles.heroContent}>
               <View style={styles.heroLeft}>
-                <Text style={styles.heroTitle}>{t('home.continueLearning')}</Text>
-                <Text style={styles.heroSubtitle}>
+                <Text style={[styles.heroTitle, { color: colors.text }]}>{t('home.continueLearning')}</Text>
+                <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
                   {t('home.questionsToday').replace('{current}', String(todayProgress)).replace('{goal}', String(todayGoal))}
                 </Text>
                 <TouchableOpacity 
@@ -106,13 +107,13 @@ export default function HomeScreen() {
                   onPress={handleContinueLearning}
                 >
                   <LinearGradient
-                    colors={[Colors.primary, Colors.primaryDark]}
+                    colors={[colors.primary, colors.primaryDark]}
                     style={styles.heroButtonGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <Play color={Colors.text} size={18} fill={Colors.text} />
-                    <Text style={styles.heroButtonText}>
+                    <Play color={colors.text} size={18} fill={colors.text} />
+                    <Text style={[styles.heroButtonText, { color: colors.text }]}>
                       {hasActiveSession ? t('home.continueQuiz') : t('home.startQuiz')}
                     </Text>
                   </LinearGradient>
@@ -122,7 +123,7 @@ export default function HomeScreen() {
                 progress={(todayProgress / todayGoal) * 100} 
                 size={90} 
                 strokeWidth={10}
-                color={Colors.accent}
+                color={colors.accent}
                 label={t('home.today')}
               />
             </View>
@@ -130,39 +131,39 @@ export default function HomeScreen() {
 
           <View style={styles.statsRow}>
             <GlassCard style={styles.statCard}>
-              <TrendingUp color={Colors.success} size={24} />
-              <Text style={styles.statValue}>{accuracy.toFixed(1)}%</Text>
-              <Text style={styles.statLabel}>{t('home.accuracy')}</Text>
+              <TrendingUp color={colors.success} size={24} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{accuracy.toFixed(1)}%</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.accuracy')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
-              <Target color={Colors.accentPink} size={24} />
-              <Text style={styles.statValue}>{formattedQuestionsCount}</Text>
-              <Text style={styles.statLabel}>{t('home.questions')}</Text>
+              <Target color={colors.accentPink} size={24} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{formattedQuestionsCount}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.questions')}</Text>
             </GlassCard>
             <GlassCard style={styles.statCard}>
-              <Clock color={Colors.warning} size={24} />
-              <Text style={styles.statValue}>{formattedStudyTime}</Text>
-              <Text style={styles.statLabel}>{t('home.studyTime')}</Text>
+              <Clock color={colors.warning} size={24} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{formattedStudyTime}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.studyTime')}</Text>
             </GlassCard>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.yourProgress')}</Text>
-              <Text style={styles.sectionSubtitle}>{overallProgress.toFixed(1)}% {t('home.complete')}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.yourProgress')}</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.primary }]}>{overallProgress.toFixed(1)}% {t('home.complete')}</Text>
             </View>
             <GlassCard>
-              <View style={styles.progressBar}>
+              <View style={[styles.progressBar, { backgroundColor: colors.cardBgLight }]}>
                 <LinearGradient
-                  colors={[Colors.primary, Colors.accent]}
+                  colors={[colors.primary, colors.accent]}
                   style={[styles.progressFill, { width: `${overallProgress}%` }]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 />
               </View>
               <View style={styles.progressStats}>
-                <Text style={styles.progressText}>
-                  <Text style={styles.progressHighlight}>{completedQuestions.toLocaleString()}</Text> {t('home.ofQuestions').replace('{total}', totalQuestions.toLocaleString())}
+                <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.progressHighlight, { color: colors.text }]}>{completedQuestions.toLocaleString()}</Text> {t('home.ofQuestions').replace('{total}', totalQuestions.toLocaleString())}
                 </Text>
               </View>
             </GlassCard>
@@ -170,9 +171,9 @@ export default function HomeScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.quickStartAnatomy')}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.quickStartAnatomy')}</Text>
               <TouchableOpacity onPress={() => router.push('/quiz')}>
-                <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>{t('home.seeAll')}</Text>
               </TouchableOpacity>
             </View>
             {categories.map((category) => {
@@ -196,14 +197,14 @@ export default function HomeScreen() {
                       <IconComponent color={category.color} size={20} />
                     </View>
                     <View style={styles.categoryInfo}>
-                      <Text style={styles.categoryName}>{getModuleName(category.id)}</Text>
-                      <Text style={styles.categoryProgress}>
+                      <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
+                      <Text style={[styles.categoryProgress, { color: colors.textSecondary }]}>
                         {t('home.categoryQuestions')
                           .replace('{current}', category.completedCount.toLocaleString())
                           .replace('{total}', category.questionCount.toLocaleString())}
                       </Text>
                     </View>
-                    <ChevronRight color={Colors.textMuted} size={20} />
+                    <ChevronRight color={colors.textMuted} size={20} />
                   </GlassCard>
                 </TouchableOpacity>
               );
@@ -218,7 +219,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   safeArea: {
     flex: 1,
@@ -236,12 +236,10 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   userName: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -262,8 +260,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 2,
-    borderColor: Colors.primary,
   },
   heroCard: {
     marginBottom: 20,
@@ -282,12 +278,10 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
     marginBottom: 6,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: 16,
   },
   heroButton: {
@@ -302,7 +296,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroButtonText: {
-    color: Colors.text,
     fontSize: 16,
     fontWeight: '600' as const,
   },
@@ -320,12 +313,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   section: {
@@ -340,21 +331,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: Colors.primary,
     fontWeight: '600' as const,
   },
   seeAll: {
     fontSize: 14,
-    color: Colors.primary,
     fontWeight: '600' as const,
   },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.cardBgLight,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -367,10 +354,8 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   progressHighlight: {
-    color: Colors.text,
     fontWeight: '600' as const,
   },
   categoryCard: {
@@ -395,12 +380,10 @@ const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
     flexShrink: 1,
   },
   categoryProgress: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginTop: 2,
     flexShrink: 1,
   },

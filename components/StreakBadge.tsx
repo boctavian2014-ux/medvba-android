@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Text, StyleSheet, Animated } from 'react-native';
 import { Flame } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 interface StreakBadgeProps {
   streak: number;
@@ -9,6 +9,7 @@ interface StreakBadgeProps {
 }
 
 export default function StreakBadge({ streak, size = 'medium' }: StreakBadgeProps) {
+  const { colors } = useTheme();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -51,8 +52,8 @@ export default function StreakBadge({ streak, size = 'medium' }: StreakBadgeProp
         { transform: [{ scale: pulseAnim }] }
       ]}
     >
-      <Flame color={Colors.streakOrange} size={sizeConfig.icon} fill={Colors.streakOrange} />
-      <Text style={[styles.text, { fontSize: sizeConfig.text }]}>{streak}</Text>
+      <Flame color={colors.streakOrange} size={sizeConfig.icon} fill={colors.streakOrange} />
+      <Text style={[styles.text, { fontSize: sizeConfig.text, color: colors.streakOrange }]}>{streak}</Text>
     </Animated.View>
   );
 }
@@ -66,7 +67,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   text: {
-    color: Colors.streakOrange,
     fontWeight: '700' as const,
   },
 });
