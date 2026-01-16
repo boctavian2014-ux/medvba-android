@@ -57,8 +57,12 @@ function useProtectedRoute() {
     }
 
     if (!splashHidden) {
-      SplashScreen.hideAsync().catch(() => {});
       setSplashHidden(true);
+      setTimeout(() => {
+        SplashScreen.hideAsync().catch((err) => {
+          console.log('[SplashScreen] Hide error (safe to ignore):', err.message);
+        });
+      }, 100);
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden]);
 
