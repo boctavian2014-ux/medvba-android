@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Clock } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -45,8 +45,11 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 export default function NotificationsScreen() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { colors } = useTheme();
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [showStudyTimePicker, setShowStudyTimePicker] = useState(false);
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     loadSettings();
@@ -97,7 +100,7 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
@@ -108,7 +111,7 @@ export default function NotificationsScreen() {
             onPress={() => router.back()}
             activeOpacity={0.7}
           >
-            <ChevronLeft color={Colors.text} size={24} />
+            <ChevronLeft color={colors.text} size={24} />
           </TouchableOpacity>
           <Text style={styles.title}>{t('notifications.title')}</Text>
           <View style={styles.placeholder} />
@@ -137,8 +140,8 @@ export default function NotificationsScreen() {
                 <Switch
                   value={settings.studyReminders}
                   onValueChange={(value) => updateSetting('studyReminders', value)}
-                  trackColor={{ false: Colors.cardBgLight, true: Colors.primary }}
-                  thumbColor={Colors.text}
+                  trackColor={{ false: colors.cardBgLight, true: colors.primary }}
+                  thumbColor={colors.text}
                 />
               </View>
 
@@ -149,7 +152,7 @@ export default function NotificationsScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.timePickerIcon}>
-                    <Clock color={Colors.primary} size={20} />
+                    <Clock color={colors.primary} size={20} />
                   </View>
                   <View style={styles.timePickerInfo}>
                     <Text style={styles.timePickerLabel}>
@@ -187,8 +190,8 @@ export default function NotificationsScreen() {
                 <Switch
                   value={settings.chatNotifications}
                   onValueChange={(value) => updateSetting('chatNotifications', value)}
-                  trackColor={{ false: Colors.cardBgLight, true: Colors.primary }}
-                  thumbColor={Colors.text}
+                  trackColor={{ false: colors.cardBgLight, true: colors.primary }}
+                  thumbColor={colors.text}
                 />
               </View>
 
@@ -204,8 +207,8 @@ export default function NotificationsScreen() {
                 <Switch
                   value={settings.medixUpdates}
                   onValueChange={(value) => updateSetting('medixUpdates', value)}
-                  trackColor={{ false: Colors.cardBgLight, true: Colors.primary }}
-                  thumbColor={Colors.text}
+                  trackColor={{ false: colors.cardBgLight, true: colors.primary }}
+                  thumbColor={colors.text}
                 />
               </View>
 
@@ -221,8 +224,8 @@ export default function NotificationsScreen() {
                 <Switch
                   value={settings.soundEnabled}
                   onValueChange={(value) => updateSetting('soundEnabled', value)}
-                  trackColor={{ false: Colors.cardBgLight, true: Colors.primary }}
-                  thumbColor={Colors.text}
+                  trackColor={{ false: colors.cardBgLight, true: colors.primary }}
+                  thumbColor={colors.text}
                 />
               </View>
             </View>
@@ -233,10 +236,10 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -248,22 +251,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   title: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   placeholder: {
     width: 40,
@@ -278,7 +281,7 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   settingItem: {
@@ -289,7 +292,7 @@ const styles = StyleSheet.create({
   },
   settingItemBorder: {
     borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
+    borderTopColor: colors.glassBorder,
   },
   settingInfo: {
     flex: 1,
@@ -297,12 +300,12 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   timePickerContainer: {
@@ -327,12 +330,12 @@ const styles = StyleSheet.create({
   timePickerLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   timePickerValue: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
 });

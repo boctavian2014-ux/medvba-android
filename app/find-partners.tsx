@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { X, Search, MapPin, School, Users, BookOpen, Filter } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import { useStudyPartners } from '@/lib/supabase-hooks';
 import type { UserAccount } from '@/types/user';
@@ -25,6 +25,7 @@ import { useAuth } from '@/providers/AuthProvider';
 export default function FindPartnersScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string | undefined>();
   const [selectedUniversity, setSelectedUniversity] = useState<string | undefined>();
@@ -88,6 +89,8 @@ export default function FindPartnersScreen() {
     setSelectedUniversity(undefined);
   };
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const renderPartnerCard = (partner: UserAccount) => (
     <GlassCard key={partner.id} style={styles.partnerCard}>
       <View style={styles.partnerHeader}>
@@ -96,7 +99,7 @@ export default function FindPartnersScreen() {
           <Text style={styles.partnerName}>{partner.name}</Text>
           {partner.city && (
             <View style={styles.partnerMetaItem}>
-              <MapPin color={Colors.accent} size={14} />
+              <MapPin color={colors.accent} size={14} />
               <Text style={styles.partnerMetaText}>{partner.city}</Text>
             </View>
           )}
@@ -106,7 +109,7 @@ export default function FindPartnersScreen() {
       {partner.university && (
         <View style={styles.partnerDetail}>
           <View style={styles.partnerDetailIcon}>
-            <School color={Colors.secondary} size={16} />
+            <School color={colors.secondary} size={16} />
           </View>
           <Text style={styles.partnerDetailText}>
             {partner.university}
@@ -134,7 +137,7 @@ export default function FindPartnersScreen() {
           }}
           activeOpacity={0.7}
         >
-          <Users color={Colors.primary} size={16} />
+          <Users color={colors.primary} size={16} />
           <Text style={styles.viewProfileButtonText}>View Profile</Text>
         </TouchableOpacity>
 
@@ -149,12 +152,12 @@ export default function FindPartnersScreen() {
           activeOpacity={0.8}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.secondary]}
+            colors={[colors.primary, colors.secondary]}
             style={StyleSheet.absoluteFill}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           />
-          <BookOpen color={Colors.text} size={16} />
+          <BookOpen color={colors.text} size={16} />
           <Text style={styles.connectButtonText}>Connect</Text>
         </TouchableOpacity>
       </View>
@@ -164,14 +167,14 @@ export default function FindPartnersScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()} activeOpacity={0.7}>
-            <X color={Colors.text} size={24} />
+            <X color={colors.text} size={24} />
           </TouchableOpacity>
           <Text style={styles.title}>Find Study Partners</Text>
           <TouchableOpacity
@@ -184,7 +187,7 @@ export default function FindPartnersScreen() {
             }}
             activeOpacity={0.7}
           >
-            <Filter color={activeFiltersCount > 0 ? Colors.text : Colors.textSecondary} size={22} />
+            <Filter color={activeFiltersCount > 0 ? colors.text : colors.textSecondary} size={22} />
             {activeFiltersCount > 0 && (
               <View style={styles.filterBadge}>
                 <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
@@ -195,17 +198,17 @@ export default function FindPartnersScreen() {
 
         <View style={styles.searchSection}>
           <View style={styles.searchBar}>
-            <Search color={Colors.textMuted} size={20} />
+            <Search color={colors.textMuted} size={20} />
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search by name, bio, location..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={colors.textMuted}
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <X color={Colors.textMuted} size={20} />
+                <X color={colors.textMuted} size={20} />
               </TouchableOpacity>
             )}
           </View>
@@ -276,7 +279,7 @@ export default function FindPartnersScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />}
         >
           <View style={styles.resultsHeader}>
             <Text style={styles.resultsCount}>
@@ -286,12 +289,12 @@ export default function FindPartnersScreen() {
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.primary} />
+              <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.loadingText}>Finding study partners...</Text>
             </View>
           ) : filteredPartners.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Users color={Colors.textMuted} size={64} />
+              <Users color={colors.textMuted} size={64} />
               <Text style={styles.emptyTitle}>No study partners found</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery || activeFiltersCount > 0
@@ -308,10 +311,10 @@ export default function FindPartnersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -323,42 +326,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   title: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   filterButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   filterButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterBadge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     borderRadius: 10,
     width: 20,
     height: 20,
@@ -368,7 +371,7 @@ const styles = StyleSheet.create({
   filterBadgeText: {
     fontSize: 11,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   searchSection: {
     paddingHorizontal: 20,
@@ -377,32 +380,32 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: Colors.text,
+    color: colors.text,
   },
   filtersSection: {
     marginHorizontal: 20,
     marginBottom: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     padding: 16,
     overflow: 'hidden',
   },
   filtersSectionTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   filterGroup: {
@@ -411,7 +414,7 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   filterChips: {
@@ -421,21 +424,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   filterChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterChipText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   filterChipTextActive: {
-    color: Colors.text,
+    color: colors.text,
   },
   clearFiltersButton: {
     alignItems: 'center',
@@ -445,7 +448,7 @@ const styles = StyleSheet.create({
   clearFiltersButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   scrollContent: {
     padding: 20,
@@ -457,7 +460,7 @@ const styles = StyleSheet.create({
   resultsCount: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -465,7 +468,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 16,
   },
   emptyContainer: {
@@ -475,12 +478,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginTop: 20,
   },
   emptySubtitle: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -497,7 +500,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   partnerInfo: {
     flex: 1,
@@ -506,7 +509,7 @@ const styles = StyleSheet.create({
   partnerName: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   partnerMetaItem: {
@@ -516,7 +519,7 @@ const styles = StyleSheet.create({
   },
   partnerMetaText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   partnerDetail: {
     flexDirection: 'row',
@@ -535,17 +538,17 @@ const styles = StyleSheet.create({
   partnerDetailText: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   partnerBio: {
     marginBottom: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
+    borderTopColor: colors.glassBorder,
   },
   partnerBioText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   partnerActions: {
@@ -559,15 +562,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     gap: 6,
   },
   viewProfileButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   connectButton: {
     flex: 1,
@@ -582,6 +585,6 @@ const styles = StyleSheet.create({
   connectButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
 });

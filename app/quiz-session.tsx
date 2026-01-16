@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 import { useQuizProgress, type SessionState } from '@/providers/QuizProgressProvider';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
@@ -395,6 +395,7 @@ async function selectQuestionsForQuiz(
 export default function QuizSessionScreen() {
   const router = useRouter();
   const { t, getChapterTitle, currentLanguage } = useLanguage();
+  const { colors } = useTheme();
   const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
   const insets = useSafeAreaInsets();
   
@@ -424,6 +425,8 @@ export default function QuizSessionScreen() {
   const [sessionStartedAt, setSessionStartedAt] = useState<string>(new Date().toISOString());
   
   const fadeAnim = useState(new Animated.Value(1))[0];
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     let isMounted = true;
@@ -661,7 +664,7 @@ export default function QuizSessionScreen() {
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={[Colors.background, Colors.backgroundLight]}
+          colors={[colors.background, colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
@@ -677,7 +680,7 @@ export default function QuizSessionScreen() {
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={[Colors.background, Colors.backgroundLight]}
+          colors={[colors.background, colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
@@ -697,7 +700,7 @@ export default function QuizSessionScreen() {
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={[Colors.background, Colors.backgroundLight]}
+          colors={[colors.background, colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
@@ -705,9 +708,9 @@ export default function QuizSessionScreen() {
             <GlassCard style={styles.resultCard} variant="accent">
               <View style={styles.resultIconContainer}>
                 {percentage >= 70 ? (
-                  <CheckCircle color={Colors.success} size={64} />
+                  <CheckCircle color={colors.success} size={64} />
                 ) : (
-                  <XCircle color={Colors.error} size={64} />
+                  <XCircle color={colors.error} size={64} />
                 )}
               </View>
               <Text style={styles.resultTitle}>
@@ -730,7 +733,7 @@ export default function QuizSessionScreen() {
               
               <TouchableOpacity style={styles.finishButton} onPress={handleClose}>
                 <LinearGradient
-                  colors={[Colors.primary, Colors.primaryDark]}
+                  colors={[colors.primary, colors.primaryDark]}
                   style={styles.finishButtonGradient}
                 >
                   <Text style={styles.finishButtonText}>{t('session.backToQuiz')}</Text>
@@ -748,7 +751,7 @@ export default function QuizSessionScreen() {
     return (
       <View style={styles.container}>
         <LinearGradient
-          colors={[Colors.background, Colors.backgroundLight]}
+          colors={[colors.background, colors.backgroundLight]}
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
@@ -766,13 +769,13 @@ export default function QuizSessionScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, Colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
       <View style={[styles.safeArea, { paddingTop: topPadding }]}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-            <X color={Colors.text} size={24} />
+            <X color={colors.text} size={24} />
           </TouchableOpacity>
           
           <View style={styles.progressContainer}>
@@ -791,7 +794,7 @@ export default function QuizSessionScreen() {
           
           {mode === 'exam' && (
             <View style={styles.timerContainer}>
-              <Clock color={Colors.warning} size={16} />
+              <Clock color={colors.warning} size={16} />
               <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
             </View>
           )}
@@ -845,8 +848,8 @@ export default function QuizSessionScreen() {
                         </Text>
                       </View>
                       <Text style={styles.optionText}>{option}</Text>
-                      {showCorrect && <CheckCircle color={Colors.success} size={20} />}
-                      {showWrong && <XCircle color={Colors.error} size={20} />}
+                      {showCorrect && <CheckCircle color={colors.success} size={20} />}
+                      {showWrong && <XCircle color={colors.error} size={20} />}
                     </GlassCard>
                   </TouchableOpacity>
                 );
@@ -861,7 +864,7 @@ export default function QuizSessionScreen() {
                     style={styles.copyButton} 
                     onPress={handleCopyExplanation}
                   >
-                    <Copy color={Colors.primary} size={18} />
+                    <Copy color={colors.primary} size={18} />
                     <Text style={styles.copyButtonText}>{t('session.copy')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -875,7 +878,7 @@ export default function QuizSessionScreen() {
           <View style={[styles.footer, { paddingBottom: bottomPadding + 8 }]}>
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
               <LinearGradient
-                colors={[Colors.primary, Colors.primaryDark]}
+                colors={[colors.primary, colors.primaryDark]}
                 style={styles.nextButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -883,7 +886,7 @@ export default function QuizSessionScreen() {
                 <Text style={styles.nextButtonText}>
                   {currentIndex < questions.length - 1 ? t('session.nextQuestion') : t('session.seeResults')}
                 </Text>
-                <ChevronRight color={Colors.text} size={20} />
+                <ChevronRight color={colors.text} size={20} />
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -893,10 +896,10 @@ export default function QuizSessionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -909,11 +912,11 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 20,
   },
   backButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -921,7 +924,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   header: {
     flexDirection: 'row',
@@ -934,7 +937,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -947,19 +950,19 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 6,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 3,
   },
   progressText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   timerContainer: {
     flexDirection: 'row',
@@ -973,7 +976,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.warning,
+    color: colors.warning,
   },
   scrollContent: {
     flex: 1,
@@ -990,22 +993,22 @@ const styles = StyleSheet.create({
   },
   chapterBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.primary + '25',
+    backgroundColor: colors.primary + '25',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.primary + '40',
+    borderColor: colors.primary + '40',
   },
   chapterText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   difficultyBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -1014,13 +1017,13 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textTransform: 'capitalize',
   },
   questionText: {
     fontSize: 20,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     lineHeight: 28,
   },
   optionsContainer: {
@@ -1033,16 +1036,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   optionSelected: {
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     borderWidth: 2,
   },
   optionCorrect: {
-    borderColor: Colors.success,
+    borderColor: colors.success,
     borderWidth: 2,
     backgroundColor: 'rgba(0, 196, 140, 0.1)',
   },
   optionWrong: {
-    borderColor: Colors.error,
+    borderColor: colors.error,
     borderWidth: 2,
     backgroundColor: 'rgba(255, 71, 87, 0.1)',
   },
@@ -1050,31 +1053,31 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   optionLetterCorrect: {
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
   },
   optionLetterWrong: {
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
   },
   optionLetterText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   optionText: {
     flex: 1,
     fontSize: 15,
-    color: Colors.text,
+    color: colors.text,
     lineHeight: 22,
   },
   explanationCard: {
     backgroundColor: 'rgba(0, 180, 216, 0.1)',
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   explanationHeader: {
     flexDirection: 'row',
@@ -1085,7 +1088,7 @@ const styles = StyleSheet.create({
   explanationTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   copyButton: {
     flexDirection: 'row',
@@ -1094,16 +1097,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: Colors.primary + '20',
+    backgroundColor: colors.primary + '20',
   },
   copyButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   explanationText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   footer: {
@@ -1124,7 +1127,7 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   resultContainer: {
     flex: 1,
@@ -1141,18 +1144,18 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   resultScore: {
     fontSize: 48,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: colors.primary,
     marginBottom: 4,
   },
   resultPercentage: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 24,
   },
   resultStats: {
@@ -1167,16 +1170,16 @@ const styles = StyleSheet.create({
   resultStatDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.glassBorder,
+    backgroundColor: colors.glassBorder,
   },
   resultStatValue: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   resultStatLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
   finishButton: {
@@ -1192,6 +1195,6 @@ const styles = StyleSheet.create({
   finishButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
 });

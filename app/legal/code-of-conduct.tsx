@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Heart, Users, AlertOctagon, Flag, ShieldCheck, MessageCircle } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const LAST_UPDATED = 'January 12, 2026';
 const CONTACT_EMAIL = 'dev.ai.eood@icloud.com';
@@ -20,6 +20,9 @@ interface SectionProps {
 }
 
 function Section({ icon, title, children }: SectionProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -34,10 +37,13 @@ function Section({ icon, title, children }: SectionProps) {
 }
 
 export default function CodeOfConductScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
@@ -49,10 +55,10 @@ export default function CodeOfConductScreen() {
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={[Colors.success, Colors.accent]}
+                colors={[colors.success, colors.accent]}
                 style={StyleSheet.absoluteFill}
               />
-              <Heart color={Colors.text} size={32} />
+              <Heart color={colors.text} size={32} />
             </View>
             <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
           </View>
@@ -74,7 +80,7 @@ export default function CodeOfConductScreen() {
           </View>
 
           <Section
-            icon={<Users color={Colors.primary} size={20} />}
+            icon={<Users color={colors.primary} size={20} />}
             title="Study Room Behavior"
           >
             <Text style={styles.subheading}>Expected Behavior:</Text>
@@ -99,7 +105,7 @@ export default function CodeOfConductScreen() {
           </Section>
 
           <Section
-            icon={<AlertOctagon color={Colors.error} size={20} />}
+            icon={<AlertOctagon color={colors.error} size={20} />}
             title="Zero Tolerance Policy"
           >
             <Text style={styles.paragraph}>
@@ -118,7 +124,7 @@ export default function CodeOfConductScreen() {
           </Section>
 
           <Section
-            icon={<ShieldCheck color={Colors.success} size={20} />}
+            icon={<ShieldCheck color={colors.success} size={20} />}
             title="Consequences of Violations"
           >
             <Text style={styles.paragraph}>
@@ -127,7 +133,7 @@ export default function CodeOfConductScreen() {
             
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 184, 0, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: Colors.warning }]}>Level 1</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.warning }]}>Level 1</Text>
               </View>
               <View style={styles.consequenceContent}>
                 <Text style={styles.consequenceTitle}>Warning</Text>
@@ -137,7 +143,7 @@ export default function CodeOfConductScreen() {
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 149, 0, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: Colors.streakOrange }]}>Level 2</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.streakOrange }]}>Level 2</Text>
               </View>
               <View style={styles.consequenceContent}>
                 <Text style={styles.consequenceTitle}>Temporary Suspension</Text>
@@ -147,7 +153,7 @@ export default function CodeOfConductScreen() {
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 107, 157, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: Colors.accentPink }]}>Level 3</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.accentPink }]}>Level 3</Text>
               </View>
               <View style={styles.consequenceContent}>
                 <Text style={styles.consequenceTitle}>Extended Suspension</Text>
@@ -157,7 +163,7 @@ export default function CodeOfConductScreen() {
 
             <View style={styles.consequenceItem}>
               <View style={[styles.consequenceBadge, { backgroundColor: 'rgba(255, 71, 87, 0.2)' }]}>
-                <Text style={[styles.consequenceLevel, { color: Colors.error }]}>Level 4</Text>
+                <Text style={[styles.consequenceLevel, { color: colors.error }]}>Level 4</Text>
               </View>
               <View style={styles.consequenceContent}>
                 <Text style={styles.consequenceTitle}>Permanent Ban</Text>
@@ -171,7 +177,7 @@ export default function CodeOfConductScreen() {
           </Section>
 
           <Section
-            icon={<Flag color={Colors.accentPink} size={20} />}
+            icon={<Flag color={colors.accentPink} size={20} />}
             title="How to Report Violations"
           >
             <Text style={styles.paragraph}>
@@ -209,7 +215,7 @@ export default function CodeOfConductScreen() {
           </Section>
 
           <Section
-            icon={<MessageCircle color={Colors.accent} size={20} />}
+            icon={<MessageCircle color={colors.accent} size={20} />}
             title="Creating a Positive Environment"
           >
             <Text style={styles.paragraph}>
@@ -247,10 +253,10 @@ export default function CodeOfConductScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -274,11 +280,11 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   intro: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 20,
     textAlign: 'center',
@@ -289,27 +295,27 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   highlightTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   highlightText: {
     fontSize: 14,
-    color: Colors.accent,
+    color: colors.accent,
     textAlign: 'center',
     letterSpacing: 1,
   },
   section: {
     marginBottom: 24,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -318,13 +324,13 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   sectionContent: {
     padding: 16,
@@ -332,30 +338,30 @@ const styles = StyleSheet.create({
   subheading: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   paragraph: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
     marginBottom: 12,
   },
   bold: {
     fontWeight: '700' as const,
-    color: Colors.error,
+    color: colors.error,
   },
   bulletList: {
     gap: 6,
   },
   bulletItem: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   bulletItemRed: {
     fontSize: 14,
-    color: Colors.error,
+    color: colors.error,
     lineHeight: 22,
   },
   warningBox: {
@@ -368,7 +374,7 @@ const styles = StyleSheet.create({
   },
   warningItem: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 26,
   },
   consequenceItem: {
@@ -392,16 +398,16 @@ const styles = StyleSheet.create({
   consequenceTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 2,
   },
   consequenceDesc: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   note: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontStyle: 'italic',
     marginTop: 8,
   },
@@ -418,19 +424,19 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   stepNumberText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   stepText: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   commitmentBox: {
@@ -438,25 +444,25 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   commitmentTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
     textAlign: 'center',
   },
   commitmentText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
     textAlign: 'center',
   },
   footer: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     lineHeight: 20,
     textAlign: 'center',
     fontStyle: 'italic',

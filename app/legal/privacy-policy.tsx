@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Shield, Database, Users, Lock, Mail, Globe } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const LAST_UPDATED = 'January 12, 2026';
 const COMPANY_NAME = 'Dev AI LTD';
@@ -22,6 +22,9 @@ interface SectionProps {
 }
 
 function Section({ icon, title, children }: SectionProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -36,10 +39,13 @@ function Section({ icon, title, children }: SectionProps) {
 }
 
 export default function PrivacyPolicyScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
@@ -51,10 +57,10 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={[Colors.primary, Colors.secondary]}
+                colors={[colors.primary, colors.secondary]}
                 style={StyleSheet.absoluteFill}
               />
-              <Shield color={Colors.text} size={32} />
+              <Shield color={colors.text} size={32} />
             </View>
             <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
           </View>
@@ -66,7 +72,7 @@ export default function PrivacyPolicyScreen() {
           </Text>
 
           <Section
-            icon={<Database color={Colors.primary} size={20} />}
+            icon={<Database color={colors.primary} size={20} />}
             title="Information We Collect"
           >
             <Text style={styles.paragraph}>
@@ -94,7 +100,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Users color={Colors.accent} size={20} />}
+            icon={<Users color={colors.accent} size={20} />}
             title="Third-Party Services"
           >
             <Text style={styles.paragraph}>
@@ -120,7 +126,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Lock color={Colors.success} size={20} />}
+            icon={<Lock color={colors.success} size={20} />}
             title="How We Use Your Information"
           >
             <View style={styles.bulletList}>
@@ -134,7 +140,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Globe color={Colors.accentPink} size={20} />}
+            icon={<Globe color={colors.accentPink} size={20} />}
             title="Your Rights (GDPR)"
           >
             <Text style={styles.paragraph}>
@@ -166,7 +172,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Shield color={Colors.warning} size={20} />}
+            icon={<Shield color={colors.warning} size={20} />}
             title="Data Security"
           >
             <Text style={styles.paragraph}>
@@ -181,7 +187,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Database color={Colors.primary} size={20} />}
+            icon={<Database color={colors.primary} size={20} />}
             title="Data Retention"
           >
             <Text style={styles.paragraph}>
@@ -195,7 +201,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Users color={Colors.accent} size={20} />}
+            icon={<Users color={colors.accent} size={20} />}
             title="Children's Privacy"
           >
             <Text style={styles.paragraph}>
@@ -206,7 +212,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Section
-            icon={<Mail color={Colors.accentPink} size={20} />}
+            icon={<Mail color={colors.accentPink} size={20} />}
             title="Contact Us"
           >
             <Text style={styles.paragraph}>
@@ -230,10 +236,10 @@ export default function PrivacyPolicyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -257,21 +263,21 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   intro: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 24,
     textAlign: 'center',
   },
   section: {
     marginBottom: 24,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -280,33 +286,33 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   sectionContent: {
     padding: 16,
   },
   paragraph: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
     marginBottom: 12,
   },
   bold: {
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   bulletList: {
     marginTop: 8,
   },
   bulletItem: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 4,
   },
@@ -318,17 +324,17 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   contactEmail: {
     fontSize: 14,
-    color: Colors.primary,
+    color: colors.primary,
     marginTop: 4,
   },
   footer: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     lineHeight: 20,
     textAlign: 'center',
     marginTop: 16,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FileText, UserCheck, AlertTriangle, Scale, ShieldX, Ban } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 
 const LAST_UPDATED = 'January 12, 2026';
 const COMPANY_NAME = 'Dev AI LTD';
@@ -22,6 +22,9 @@ interface SectionProps {
 }
 
 function Section({ icon, title, children }: SectionProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -36,10 +39,13 @@ function Section({ icon, title, children }: SectionProps) {
 }
 
 export default function TermsOfServiceScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, '#0D1F35', Colors.backgroundLight]}
+        colors={[colors.background, '#0D1F35', colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
         locations={[0, 0.5, 1]}
       />
@@ -51,10 +57,10 @@ export default function TermsOfServiceScreen() {
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={[Colors.accent, Colors.primary]}
+                colors={[colors.accent, colors.primary]}
                 style={StyleSheet.absoluteFill}
               />
-              <FileText color={Colors.text} size={32} />
+              <FileText color={colors.text} size={32} />
             </View>
             <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
           </View>
@@ -65,7 +71,7 @@ export default function TermsOfServiceScreen() {
           </Text>
 
           <Section
-            icon={<UserCheck color={Colors.primary} size={20} />}
+            icon={<UserCheck color={colors.primary} size={20} />}
             title="Account Responsibilities"
           >
             <Text style={styles.paragraph}>
@@ -85,7 +91,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<AlertTriangle color={Colors.warning} size={20} />}
+            icon={<AlertTriangle color={colors.warning} size={20} />}
             title="Acceptable Use"
           >
             <Text style={styles.paragraph}>
@@ -104,7 +110,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<Scale color={Colors.accent} size={20} />}
+            icon={<Scale color={colors.accent} size={20} />}
             title="Intellectual Property"
           >
             <Text style={styles.paragraph}>
@@ -125,7 +131,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<Ban color={Colors.error} size={20} />}
+            icon={<Ban color={colors.error} size={20} />}
             title="Account Termination"
           >
             <Text style={styles.paragraph}>
@@ -145,7 +151,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<ShieldX color={Colors.accentPink} size={20} />}
+            icon={<ShieldX color={colors.accentPink} size={20} />}
             title="Disclaimer of Warranties"
           >
             <Text style={styles.paragraph}>
@@ -164,7 +170,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<Scale color={Colors.warning} size={20} />}
+            icon={<Scale color={colors.warning} size={20} />}
             title="Limitation of Liability"
           >
             <Text style={styles.paragraph}>
@@ -183,7 +189,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<FileText color={Colors.primary} size={20} />}
+            icon={<FileText color={colors.primary} size={20} />}
             title="Subscription & Payments"
           >
             <Text style={styles.paragraph}>
@@ -202,7 +208,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<Scale color={Colors.accent} size={20} />}
+            icon={<Scale color={colors.accent} size={20} />}
             title="Governing Law"
           >
             <Text style={styles.paragraph}>
@@ -216,7 +222,7 @@ export default function TermsOfServiceScreen() {
           </Section>
 
           <Section
-            icon={<FileText color={Colors.accentPink} size={20} />}
+            icon={<FileText color={colors.accentPink} size={20} />}
             title="Changes to Terms"
           >
             <Text style={styles.paragraph}>
@@ -246,10 +252,10 @@ export default function TermsOfServiceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -273,21 +279,21 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   intro: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 24,
     textAlign: 'center',
   },
   section: {
     marginBottom: 24,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
     overflow: 'hidden',
   },
   sectionHeader: {
@@ -296,33 +302,33 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   sectionContent: {
     padding: 16,
   },
   paragraph: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
     marginBottom: 12,
   },
   bold: {
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   bulletList: {
     marginTop: 8,
   },
   bulletItem: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 4,
   },
@@ -334,12 +340,12 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   contactText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   contactBox: {
@@ -351,17 +357,17 @@ const styles = StyleSheet.create({
   },
   contactInfo: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   contactEmail: {
     fontSize: 14,
-    color: Colors.accent,
+    color: colors.accent,
     marginTop: 4,
   },
   footer: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     lineHeight: 20,
     textAlign: 'center',
     fontStyle: 'italic',
