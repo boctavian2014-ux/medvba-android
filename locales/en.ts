@@ -403,6 +403,31 @@ export const en: Record<string, string> = {
   'settings.blockedDate': 'Blocked {date}',
   'settings.cancel': 'Cancel',
 
+  // Notifications Settings
+  'notifications.title': 'Notifications',
+  'notifications.studyReminders': 'Study Reminders',
+  'notifications.studyRemindersDesc': 'Notify me at the set time that I need to study.',
+  'notifications.studyTime': 'Study Time',
+  'notifications.studyTimePlaceholder': 'Choose the time you want to be notified.',
+  'notifications.chatNotifications': 'Chat Notifications',
+  'notifications.chatNotificationsDesc': 'Get alerts when someone messages you or invites you to study in chat.',
+  'notifications.medixUpdates': 'Medix Updates',
+  'notifications.medixUpdatesDesc': 'I want to know when new updates, lessons, or important announcements appear.',
+  'notifications.soundEnabled': 'Notification Sounds',
+  'notifications.soundEnabledDesc': 'Turn on or off sounds for notifications.',
+  'notifications.doNotDisturb': 'Do Not Disturb',
+  'notifications.doNotDisturbDesc': 'Don\'t send notifications between selected hours.',
+
+  // Appearance Settings
+  'appearance.title': 'Appearance',
+  'appearance.themeSection': 'App Theme',
+  'appearance.themeAuto': 'Auto (system)',
+  'appearance.themeAutoDesc': 'Apply theme based on system settings.',
+  'appearance.themeLight': 'Light Mode',
+  'appearance.themeLightDesc': 'Always use a light theme.',
+  'appearance.themeDark': 'Dark Mode',
+  'appearance.themeDarkDesc': 'Always use a dark theme, friendly to the eyes at night.',
+
   // Permissions
   'permissions.zoom.title': 'Join Study Room',
   'permissions.zoom.message': 'When you join a study room via Zoom, you may be asked to grant camera and microphone permissions. These permissions allow you to participate in video discussions with other students.\n\nYou can:\n• Join with video and audio\n• Join with audio only\n• Join as a viewer only\n\nZoom will request these permissions when you open the meeting.',

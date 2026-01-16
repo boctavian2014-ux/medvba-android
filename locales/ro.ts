@@ -403,6 +403,31 @@ export const ro: Record<string, string> = {
   'settings.blockedDate': 'Blocat pe {date}',
   'settings.cancel': 'Anulează',
 
+  // Notifications Settings
+  'notifications.title': 'Notificări',
+  'notifications.studyReminders': 'Remindere de studiu',
+  'notifications.studyRemindersDesc': 'Anunță-mă la ora setată că trebuie să studiez.',
+  'notifications.studyTime': 'Ora de studiu',
+  'notifications.studyTimePlaceholder': 'Alege ora la care vrei să fii anunțat.',
+  'notifications.chatNotifications': 'Notificări din chat',
+  'notifications.chatNotificationsDesc': 'Primește alerte când cineva îți scrie sau te invită la studiu în chat.',
+  'notifications.medixUpdates': 'Noutăți de la Medix',
+  'notifications.medixUpdatesDesc': 'Vreau să aflu când apar noutăți, lecții sau anunțuri importante.',
+  'notifications.soundEnabled': 'Sunet notificări',
+  'notifications.soundEnabledDesc': 'Pornește sau oprește sunetul pentru notificări.',
+  'notifications.doNotDisturb': 'Nu deranja',
+  'notifications.doNotDisturbDesc': 'Nu trimite notificări între orele selectate.',
+
+  // Appearance Settings
+  'appearance.title': 'Aspect',
+  'appearance.themeSection': 'Temă aplicație',
+  'appearance.themeAuto': 'Automat (ca telefonul)',
+  'appearance.themeAutoDesc': 'Aplică tema în funcție de setarea sistemului.',
+  'appearance.themeLight': 'Mod luminos',
+  'appearance.themeLightDesc': 'Folosește mereu o temă luminoasă.',
+  'appearance.themeDark': 'Mod întunecat',
+  'appearance.themeDarkDesc': 'Folosește mereu o temă întunecată, prietenoasă cu ochii noaptea.',
+
   // Permissions
   'permissions.zoom.title': 'Alătură-te camerei de studiu',
   'permissions.zoom.message': 'Când te alături unei camere de studiu prin Zoom, ți se poate cere să acorzi permisiuni pentru cameră și microfon. Aceste permisiuni îți permit să participi la discuții video cu alți studenți.\n\nPoți:\n• Să te alături cu video și audio\n• Să te alături doar cu audio\n• Să te alături doar ca spectator\n\nZoom va solicita aceste permisiuni când deschizi întâlnirea.',

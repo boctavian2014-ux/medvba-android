@@ -435,13 +435,13 @@ export default function SettingsScreen() {
                 icon={<Bell color={Colors.primary} size={22} />}
                 title={t('settings.notifications')}
                 subtitle={t('settings.notificationsSubtitle')}
-                onPress={() => console.log('Notifications')}
+                onPress={() => router.push('/notifications')}
               />
               <SettingsItem
                 icon={<Moon color={Colors.accent} size={22} />}
                 title={t('settings.appearance')}
                 subtitle={t('settings.appearanceSubtitle')}
-                onPress={() => console.log('Appearance')}
+                onPress={() => router.push('/appearance')}
                 showBorder={false}
               />
             </View>
