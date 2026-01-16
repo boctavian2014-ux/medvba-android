@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,12 +29,27 @@ interface ThemeOption {
 export default function AppearanceScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { preference, setPreference, colors } = useTheme();
+  const { preference, setPreference, colors, isTransitioning } = useTheme();
+  const [fadeAnim] = useState(new Animated.Value(1));
 
   const selectTheme = (theme: ThemeMode) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.5,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
     setPreference(theme === 'auto' ? 'system' : theme);
     console.log('Theme saved:', theme);
   };
@@ -88,10 +105,12 @@ export default function AppearanceScreen() {
           <View style={styles.placeholder} />
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            scrollEnabled={!isTransitioning}
+          >
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
               {t('appearance.themeSection')}
@@ -124,6 +143,7 @@ export default function AppearanceScreen() {
                     ]}
                     onPress={() => selectTheme(option.mode)}
                     activeOpacity={0.7}
+                    disabled={isTransitioning}
                   >
                     <View
                       style={[
@@ -165,12 +185,16 @@ export default function AppearanceScreen() {
                         {t(option.descKey)}
                       </Text>
                     </View>
+                    {isTransitioning && isSelected && (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
         </ScrollView>
+        </Animated.View>
       </SafeAreaView>
     </View>
   );

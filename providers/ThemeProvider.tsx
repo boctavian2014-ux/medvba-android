@@ -10,6 +10,7 @@ type ThemeContextValue = {
   setPreference: (value: ThemePreference) => void;
   colorScheme: 'light' | 'dark';
   colors: typeof darkColors;
+  isTransitioning: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -20,6 +21,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const systemScheme = useColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then(stored => {
@@ -35,10 +37,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setPreference = (value: ThemePreference) => {
     console.log('[ThemeProvider] Setting preference to:', value);
+    setIsTransitioning(true);
     setPreferenceState(value);
     AsyncStorage.setItem(THEME_KEY, value).catch((error) => {
       console.error('Failed to save theme preference:', error);
     });
+    
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
   };
 
   const colorScheme: 'light' | 'dark' = useMemo(() => {
@@ -57,8 +64,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [preference, systemScheme, colorScheme]);
 
   const value = useMemo(
-    () => ({ preference, setPreference, colorScheme, colors }),
-    [preference, colorScheme, colors]
+    () => ({ preference, setPreference, colorScheme, colors, isTransitioning }),
+    [preference, colorScheme, colors, isTransitioning]
   );
 
   if (!isLoaded) {
