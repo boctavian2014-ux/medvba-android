@@ -35,7 +35,7 @@ const premiumFeatures = [
   {
     icon: Brain,
     title: 'Unlimited AI Tutor',
-    description: 'Ask unlimited questions to your AI medical tutor',
+    description: 'Ask unlimited questions to your AI tutor',
   },
   {
     icon: Zap,

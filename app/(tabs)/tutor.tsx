@@ -76,7 +76,7 @@ export default function TutorScreen() {
   }
 
   const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
-    const systemPrompt = `You are an expert AI medical tutor helping students prepare for medical exams (USMLE, MBBS, anatomy exams, etc.).
+    const systemPrompt = `You are an expert AI tutor helping students prepare for exams (USMLE, MBBS, anatomy exams, etc.).
 
 Your role:
 - Explain complex medical concepts clearly and accurately

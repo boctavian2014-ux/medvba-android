@@ -144,7 +144,7 @@ When using Medix Study Hub, we may request the following permissions:
 
 Need help? We're here for you!
 
-- **Email:** dev.ai.eood@icloud.com
+- **Email:** contact@devaieood.com
 - **Help Center:** Access FAQs and tutorials in Settings
 - **In-App Support:** Contact us directly from the Settings menu
 

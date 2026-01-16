@@ -11,7 +11,7 @@ import { Heart, Users, AlertOctagon, Flag, ShieldCheck, MessageCircle } from 'lu
 import { useTheme } from '@/providers/ThemeProvider';
 
 const LAST_UPDATED = 'January 12, 2026';
-const CONTACT_EMAIL = 'dev.ai.eood@icloud.com';
+const CONTACT_EMAIL = 'contact@devaieood.com';
 
 interface SectionProps {
   icon: React.ReactNode;
