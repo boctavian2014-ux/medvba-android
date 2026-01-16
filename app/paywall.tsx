@@ -1,279 +1,189 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
-import {
-  X,
-  Crown,
-  Check,
-  Zap,
-  Brain,
-  Users,
-  Infinity,
-  Star,
-  Shield,
-} from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { Stack, router } from 'expo-router';
+import { Crown, Check } from 'lucide-react-native';
+import { useTheme } from '@/providers/ThemeProvider';
+import { PREMIUM_FEATURES, PRICING } from '@/constants/subscription';
 import GlassCard from '@/components/GlassCard';
-import { useSubscription } from '@/providers/SubscriptionProvider';
+import PremiumBadge from '@/components/PremiumBadge';
 
-const premiumFeatures = [
-  {
-    icon: Infinity,
-    title: 'Unlimited Quizzes',
-    description: 'Practice as much as you want, any mode',
-  },
-  {
-    icon: Brain,
-    title: 'Unlimited AI Tutor',
-    description: 'Ask unlimited questions to your AI tutor',
-  },
-  {
-    icon: Zap,
-    title: 'All Quiz Modes',
-    description: 'Access Practice (25Q) and Exam Simulation (100Q)',
-  },
-  {
-    icon: Users,
-    title: 'Study Rooms',
-    description: 'Create and join unlimited study rooms',
-  },
-  {
-    icon: Star,
-    title: 'Priority Support',
-    description: 'Get help faster with priority customer support',
-  },
-  {
-    icon: Shield,
-    title: 'Early Access',
-    description: 'Be first to try new features and content',
-  },
-];
-
-interface PlanOption {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  savings?: string;
-  popular?: boolean;
-}
-
-const plans: PlanOption[] = [
-  {
-    id: 'weekly',
-    name: 'Weekly',
-    price: '$4.99',
-    period: '/week',
-  },
-  {
-    id: 'monthly',
-    name: 'Monthly',
-    price: '$9.99',
-    period: '/month',
-    savings: 'Save 50%',
-    popular: true,
-  },
-  {
-    id: 'yearly',
-    name: 'Yearly',
-    price: '$59.99',
-    period: '/year',
-    savings: 'Save 75%',
-  },
-];
+type PlanType = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
-  const router = useRouter();
-  const { setPremiumStatus, getRemainingQuizzes, getRemainingAiQuestions } = useSubscription();
-  const [selectedPlan, setSelectedPlan] = useState('monthly');
-  const [isLoading, setIsLoading] = useState(false);
+  const { colors, colorScheme } = useTheme();
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
 
-  const remainingQuizzes = getRemainingQuizzes();
-  const remainingAi = getRemainingAiQuestions();
+  const handleUpgrade = () => {
+    console.log('[Paywall] User selected plan:', selectedPlan);
+  };
 
-  const handleClose = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleContinueFree = () => {
+    console.log('[Paywall] User chose free plan');
     router.back();
   };
 
-  const handleSelectPlan = (planId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedPlan(planId);
-  };
-
-  const handleSubscribe = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setIsLoading(true);
-    
-    // TODO: Integrate with RevenueCat here
-    // For now, simulate a purchase
-    console.log('[Paywall] Subscribe to plan:', selectedPlan);
-    
-    setTimeout(async () => {
-      // This will be replaced with actual RevenueCat purchase flow
-      await setPremiumStatus(true);
-      setIsLoading(false);
-      router.back();
-    }, 1500);
-  };
-
-  const handleRestorePurchases = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsLoading(true);
-    
-    // TODO: Integrate with RevenueCat restore
-    console.log('[Paywall] Restoring purchases...');
-    
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-  };
-
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.background, '#0A2540', Colors.background]}
-        style={StyleSheet.absoluteFill}
-        locations={[0, 0.5, 1]}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Upgrade Premium',
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+        }}
       />
-      
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-          <X color={Colors.textSecondary} size={24} />
-        </TouchableOpacity>
 
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
+      <LinearGradient
+        colors={
+          colorScheme === 'dark'
+            ? ['#0A1628', '#0F2139', '#1A2F4D']
+            : ['#F0F9FF', '#E0F2FE', '#BAE6FD']
+        }
+        style={styles.gradientBg}
+      />
+
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
-            <LinearGradient
-              colors={[Colors.warning, '#FF9500']}
-              style={styles.crownContainer}
-            >
-              <Crown color={Colors.background} size={32} />
-            </LinearGradient>
-            <Text style={styles.title}>Upgrade to Premium</Text>
-            <Text style={styles.subtitle}>
-              Unlock your full learning potential
+            <View style={styles.badgeContainer}>
+              <PremiumBadge size="large" />
+            </View>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Deblocează Potențialul Maxim
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Accesează toate funcțiile premium și accelerează-ți progresul
             </Text>
           </View>
 
-          {(remainingQuizzes === 0 || remainingAi === 0) && (
-            <GlassCard style={styles.limitWarning}>
-              <Text style={styles.limitWarningText}>
-                {remainingQuizzes === 0 && remainingAi === 0
-                  ? "You've reached your daily quiz and AI tutor limits"
-                  : remainingQuizzes === 0
-                  ? "You've used all 2 free quizzes today"
-                  : "You've used your free AI question today"}
-              </Text>
-              <Text style={styles.limitWarningSubtext}>
-                Upgrade to continue learning without limits
-              </Text>
-            </GlassCard>
-          )}
-
-          <View style={styles.featuresSection}>
-            {premiumFeatures.map((feature, index) => (
+          <View style={styles.featuresContainer}>
+            {PREMIUM_FEATURES.map((feature, index) => (
               <View key={index} style={styles.featureRow}>
-                <View style={styles.featureIconContainer}>
-                  <feature.icon color={Colors.primary} size={20} />
+                <View style={[styles.checkIcon, { backgroundColor: colors.success + '20' }]}>
+                  <Check size={16} color={colors.success} strokeWidth={3} />
                 </View>
-                <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>{feature.title}</Text>
-                  <Text style={styles.featureDescription}>{feature.description}</Text>
-                </View>
-                <Check color={Colors.success} size={20} />
+                <Text style={[styles.featureText, { color: colors.text }]}>
+                  {feature}
+                </Text>
               </View>
             ))}
           </View>
 
-          <View style={styles.plansSection}>
-            <Text style={styles.plansSectionTitle}>Choose your plan</Text>
-            
-            <View style={styles.plansGrid}>
-              {plans.map((plan) => (
-                <TouchableOpacity
-                  key={plan.id}
-                  onPress={() => handleSelectPlan(plan.id)}
-                  style={[
-                    styles.planCard,
-                    selectedPlan === plan.id && styles.planCardSelected,
-                  ]}
-                >
-                  {plan.popular && (
-                    <View style={styles.popularBadge}>
-                      <Text style={styles.popularBadgeText}>MOST POPULAR</Text>
-                    </View>
-                  )}
-                  <Text style={styles.planName}>{plan.name}</Text>
-                  <View style={styles.planPriceRow}>
-                    <Text style={styles.planPrice}>{plan.price}</Text>
-                    <Text style={styles.planPeriod}>{plan.period}</Text>
-                  </View>
-                  {plan.savings && (
-                    <View style={styles.savingsBadge}>
-                      <Text style={styles.savingsText}>{plan.savings}</Text>
-                    </View>
-                  )}
-                  <View style={[
-                    styles.planRadio,
-                    selectedPlan === plan.id && styles.planRadioSelected,
-                  ]}>
-                    {selectedPlan === plan.id && (
-                      <View style={styles.planRadioInner} />
+          <View style={styles.plansContainer}>
+            <Text style={[styles.plansTitle, { color: colors.text }]}>
+              Alege Planul Tău
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setSelectedPlan('yearly')}
+            >
+              <GlassCard
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'yearly' && styles.selectedPlan,
+                  selectedPlan === 'yearly' && { borderColor: colors.primary, borderWidth: 2 },
+                ]}
+              >
+                <View style={styles.planHeader}>
+                  <View style={styles.planTitleRow}>
+                    <Text style={[styles.planTitle, { color: colors.text }]}>Anual</Text>
+                    {selectedPlan === 'yearly' && (
+                      <View style={[styles.selectedBadge, { backgroundColor: colors.primary }]}>
+                        <Text style={styles.selectedBadgeText}>Recomandat</Text>
+                      </View>
                     )}
                   </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  <View style={[styles.savingsBadge, { backgroundColor: colors.success + '20' }]}>
+                    <Text style={[styles.savingsText, { color: colors.success }]}>
+                      {PRICING.yearly.savingsText}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.priceRow}>
+                  <Text style={[styles.price, { color: colors.text }]}>
+                    {PRICING.yearly.price}
+                  </Text>
+                  <Text style={[styles.period, { color: colors.textSecondary }]}>
+                    /{PRICING.yearly.period}
+                  </Text>
+                </View>
+
+                <Text style={[styles.planDescription, { color: colors.textMuted }]}>
+                  {PRICING.yearly.description}
+                </Text>
+              </GlassCard>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => setSelectedPlan('monthly')}
+            >
+              <GlassCard
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'monthly' && styles.selectedPlan,
+                  selectedPlan === 'monthly' && { borderColor: colors.primary, borderWidth: 2 },
+                ]}
+              >
+                <View style={styles.planHeader}>
+                  <Text style={[styles.planTitle, { color: colors.text }]}>Lunar</Text>
+                </View>
+
+                <View style={styles.priceRow}>
+                  <Text style={[styles.price, { color: colors.text }]}>
+                    {PRICING.monthly.price}
+                  </Text>
+                  <Text style={[styles.period, { color: colors.textSecondary }]}>
+                    /{PRICING.monthly.period}
+                  </Text>
+                </View>
+
+                <Text style={[styles.planDescription, { color: colors.textMuted }]}>
+                  {PRICING.monthly.description}
+                </Text>
+              </GlassCard>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled]}
-            onPress={handleSubscribe}
-            disabled={isLoading}
+            style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
+            activeOpacity={0.8}
+            onPress={handleUpgrade}
           >
             <LinearGradient
-              colors={[Colors.primary, Colors.primaryDark]}
-              style={styles.subscribeGradient}
+              colors={[colors.primary, colors.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
+              style={styles.upgradeButtonGradient}
             >
-              {isLoading ? (
-                <ActivityIndicator color={Colors.text} />
-              ) : (
-                <>
-                  <Crown color={Colors.text} size={20} />
-                  <Text style={styles.subscribeButtonText}>
-                    Start Premium
-                  </Text>
-                </>
-              )}
+              <Crown size={20} color="#FFF" strokeWidth={2.5} />
+              <Text style={styles.upgradeButtonText}>
+                Upgrade la Premium
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.restoreButton}
-            onPress={handleRestorePurchases}
-            disabled={isLoading}
+          <TouchableOpacity
+            style={styles.freeButton}
+            activeOpacity={0.6}
+            onPress={handleContinueFree}
           >
-            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+            <Text style={[styles.freeButtonText, { color: colors.textSecondary }]}>
+              Continue with Free
+            </Text>
           </TouchableOpacity>
 
-          <Text style={styles.disclaimer}>
-            Payment will be charged to your App Store account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.
+          <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
+            Prețurile sunt în RON. Abonamentul se reînnoiește automat. Poți anula oricând.
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -284,228 +194,160 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+  },
+  gradientBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   safeArea: {
     flex: 1,
   },
-  closeButton: {
-    position: 'absolute' as const,
-    top: 60,
-    right: 20,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.cardBgLight,
-    justifyContent: 'center',
-    alignItems: 'center',
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 60,
     paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    paddingTop: 20,
+    paddingBottom: 30,
   },
-  crownContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+  badgeContainer: {
     marginBottom: 16,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700' as const,
-    color: Colors.text,
+    fontWeight: '800' as const,
+    textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: 'center' as const,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 20,
   },
-  limitWarning: {
-    backgroundColor: 'rgba(255, 71, 87, 0.15)',
-    borderColor: Colors.error,
-    borderWidth: 1,
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  limitWarningText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.error,
-    textAlign: 'center' as const,
-  },
-  limitWarningSubtext: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 4,
-    textAlign: 'center' as const,
-  },
-  featuresSection: {
-    marginBottom: 28,
+  featuresContainer: {
+    marginBottom: 32,
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    marginBottom: 14,
   },
-  featureIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.cardBgLight,
-    justifyContent: 'center',
+  checkIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
+  featureText: {
     fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    flex: 1,
+    lineHeight: 20,
   },
-  featureDescription: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  plansSection: {
+  plansContainer: {
     marginBottom: 24,
   },
-  plansSectionTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 16,
-    textAlign: 'center' as const,
-  },
-  plansGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  planCard: {
-    flex: 1,
-    backgroundColor: Colors.cardBgLight,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-    position: 'relative' as const,
-  },
-  planCardSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(0, 180, 216, 0.1)',
-  },
-  popularBadge: {
-    position: 'absolute' as const,
-    top: -10,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  popularBadgeText: {
-    fontSize: 9,
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  planName: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  planPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  planPrice: {
+  plansTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    marginBottom: 16,
+    textAlign: 'center',
   },
-  planPeriod: {
-    fontSize: 12,
-    color: Colors.textMuted,
+  planCard: {
+    padding: 20,
+    marginBottom: 12,
+  },
+  selectedPlan: {
+    transform: [{ scale: 1.02 }],
+  },
+  planHeader: {
+    marginBottom: 12,
+  },
+  planTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  planTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+  },
+  selectedBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  selectedBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700' as const,
   },
   savingsBadge: {
-    backgroundColor: 'rgba(0, 196, 140, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   savingsText: {
-    fontSize: 10,
+    fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.success,
   },
-  planRadio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: Colors.textMuted,
-    marginTop: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 8,
   },
-  planRadioSelected: {
-    borderColor: Colors.primary,
+  price: {
+    fontSize: 32,
+    fontWeight: '800' as const,
   },
-  planRadioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.primary,
+  period: {
+    fontSize: 16,
+    marginLeft: 4,
   },
-  subscribeButton: {
+  planDescription: {
+    fontSize: 13,
+  },
+  upgradeButton: {
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 12,
   },
-  subscribeButtonDisabled: {
-    opacity: 0.7,
-  },
-  subscribeGradient: {
+  upgradeButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 18,
     gap: 10,
   },
-  subscribeButtonText: {
-    fontSize: 18,
+  upgradeButtonText: {
+    color: '#FFF',
+    fontSize: 17,
     fontWeight: '700' as const,
-    color: Colors.text,
   },
-  restoreButton: {
-    paddingVertical: 12,
+  freeButton: {
+    paddingVertical: 14,
     alignItems: 'center',
+    marginBottom: 16,
   },
-  restoreButtonText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textDecorationLine: 'underline' as const,
+  freeButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
   },
   disclaimer: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    textAlign: 'center' as const,
+    fontSize: 12,
+    textAlign: 'center',
     lineHeight: 16,
-    marginTop: 16,
+    paddingHorizontal: 20,
   },
 });

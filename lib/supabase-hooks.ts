@@ -1650,3 +1650,144 @@ export function useActivityFeed(limit: number = 50) {
   });
 }
 
+export type SubscriptionStatus = 'free' | 'premium' | 'trial';
+export type SubscriptionType = 'monthly' | 'yearly' | null;
+
+export interface UserSubscription {
+  id: string;
+  userId: string;
+  status: SubscriptionStatus;
+  type: SubscriptionType;
+  startedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionStatusResult {
+  isPremium: boolean;
+  status: SubscriptionStatus;
+  type: SubscriptionType;
+  expiresAt: string | null;
+}
+
+export function useSubscriptionStatus(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['subscription', userId],
+    queryFn: async (): Promise<SubscriptionStatusResult> => {
+      if (!userId) {
+        return {
+          isPremium: false,
+          status: 'free',
+          type: null,
+          expiresAt: null,
+        };
+      }
+
+      console.log('[Supabase] Fetching subscription for user:', userId);
+      
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('[Supabase] No subscription found, returning free status');
+          return {
+            isPremium: false,
+            status: 'free',
+            type: null,
+            expiresAt: null,
+          };
+        }
+        console.error('[Supabase] Error fetching subscription:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        throw error;
+      }
+
+      const status = data.status as SubscriptionStatus;
+      const isPremium = status === 'premium' || status === 'trial';
+
+      if (isPremium && data.expires_at) {
+        const expiresAt = new Date(data.expires_at);
+        const now = new Date();
+        if (expiresAt < now) {
+          console.log('[Supabase] Subscription expired, treating as free');
+          return {
+            isPremium: false,
+            status: 'free',
+            type: null,
+            expiresAt: data.expires_at,
+          };
+        }
+      }
+
+      console.log('[Supabase] Subscription status:', status, 'isPremium:', isPremium);
+      
+      return {
+        isPremium,
+        status,
+        type: data.type as SubscriptionType,
+        expiresAt: data.expires_at,
+      };
+    },
+    enabled: !!userId,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useUpdateSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      status: SubscriptionStatus;
+      type?: SubscriptionType;
+      expiresAt?: string | null;
+    }) => {
+      console.log('[Supabase] Updating subscription for user:', input.userId, 'to status:', input.status);
+
+      const updateData: any = {
+        status: input.status,
+      };
+
+      if (input.type !== undefined) {
+        updateData.type = input.type;
+      }
+
+      if (input.expiresAt !== undefined) {
+        updateData.expires_at = input.expiresAt;
+      }
+
+      if (input.status === 'premium' || input.status === 'trial') {
+        updateData.started_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: input.userId,
+          ...updateData,
+        }, {
+          onConflict: 'user_id',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[Supabase] Error updating subscription:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
+        throw error;
+      }
+
+      console.log('[Supabase] Subscription updated successfully');
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['subscription', variables.userId] });
+    },
+  });
+}
+

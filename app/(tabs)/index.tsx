@@ -6,24 +6,31 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain } from 'lucide-react-native';
+import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Sparkles, Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import { useSubscriptionStatus } from '@/lib/supabase-hooks';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import StreakBadge from '@/components/StreakBadge';
+import PremiumBadge from '@/components/PremiumBadge';
 import { currentUser } from '@/mocks/users';
 import { categories } from '@/mocks/questions';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
+import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
   const { colors } = useTheme();
+  const { user } = useAuth();
+  const { data: subscriptionData } = useSubscriptionStatus(user?.id);
   const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
@@ -32,8 +39,28 @@ export default function HomeScreen() {
 
   const todayGoal = dailyProgress.goal;
   const todayProgress = dailyProgress.questionsAnswered;
+
+  const isPremium = subscriptionData?.isPremium ?? false;
+  const hasReachedDailyLimit = !isPremium && todayProgress >= FREE_DAILY_QUIZ_LIMIT;
+
+  const handleUpgradePress = useCallback(() => {
+    console.log('[Home] Navigate to paywall');
+    router.push('/paywall');
+  }, [router]);
   
   const handleContinueLearning = useCallback(() => {
+    if (hasReachedDailyLimit) {
+      Alert.alert(
+        '📚 Limită Zilnică Atinsă',
+        `Ai răspuns la ${FREE_DAILY_QUIZ_LIMIT} întrebări astăzi. Upgrade la Premium pentru acces nelimitat!`,
+        [
+          { text: 'Mai Târziu', style: 'cancel' },
+          { text: '⭐ Upgrade Premium', onPress: handleUpgradePress, style: 'default' },
+        ]
+      );
+      return;
+    }
+
     if (hasActiveSession && sessionState) {
       console.log('[Home] Resuming active session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
       router.push({
@@ -63,7 +90,7 @@ export default function HomeScreen() {
         }
       });
     }
-  }, [hasActiveSession, sessionState, lastSessionInfo, router]);
+  }, [hasActiveSession, sessionState, lastSessionInfo, router, hasReachedDailyLimit, handleUpgradePress]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -88,6 +115,16 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.headerRight}>
+              {!isPremium && (
+                <TouchableOpacity
+                  onPress={handleUpgradePress}
+                  style={[styles.upgradeButton, { backgroundColor: colors.warning + '20' }]}
+                  activeOpacity={0.7}
+                >
+                  <Sparkles size={16} color={colors.warning} strokeWidth={2.5} />
+                  <Text style={[styles.upgradeButtonText, { color: colors.warning }]}>Upgrade</Text>
+                </TouchableOpacity>
+              )}
               <StreakBadge streak={currentUser.streak} />
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
@@ -96,6 +133,28 @@ export default function HomeScreen() {
           </View>
 
           <GlassCard style={styles.heroCard} variant="accent">
+            {isPremium && (
+              <View style={styles.premiumBadgeContainer}>
+                <PremiumBadge size="small" />
+              </View>
+            )}
+            {hasReachedDailyLimit && (
+              <View style={[styles.limitOverlay, { backgroundColor: colors.background + 'E6' }]}>
+                <Lock size={32} color={colors.warning} strokeWidth={2} />
+                <Text style={[styles.limitTitle, { color: colors.text }]}>Limită Zilnică Atinsă</Text>
+                <Text style={[styles.limitText, { color: colors.textSecondary }]}>
+                  Ai răspuns la {FREE_DAILY_QUIZ_LIMIT} întrebări astăzi
+                </Text>
+                <TouchableOpacity
+                  onPress={handleUpgradePress}
+                  style={[styles.limitUpgradeButton, { backgroundColor: colors.warning }]}
+                  activeOpacity={0.8}
+                >
+                  <Sparkles size={16} color="#FFF" strokeWidth={2.5} />
+                  <Text style={styles.limitUpgradeText}>Upgrade Premium</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={styles.heroContent}>
               <View style={styles.heroLeft}>
                 <Text style={[styles.heroTitle, { color: colors.text }]}>{t('home.continueLearning')}</Text>
@@ -260,6 +319,61 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  upgradeButtonText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+  },
+  premiumBadgeContainer: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+  },
+  limitOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    zIndex: 5,
+  },
+  limitTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  limitText: {
+    fontSize: 14,
+    marginTop: 6,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  limitUpgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    gap: 8,
+  },
+  limitUpgradeText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700' as const,
   },
   heroCard: {
     marginBottom: 20,
