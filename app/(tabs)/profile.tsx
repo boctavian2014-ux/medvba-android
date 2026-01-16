@@ -586,7 +586,7 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.leaderboardStreak}>
                     <Text style={styles.streakNumber}>{user.streak}</Text>
-                    <Text style={styles.streakEmoji}>🔥</Text>
+                    <Text style={styles.streakEmoji}>⚡</Text>
                   </View>
                 </View>
               ))}

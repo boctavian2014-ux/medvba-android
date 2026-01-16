@@ -56,10 +56,10 @@ export const activities: Activity[] = [
     userName: 'Mihai D.',
     userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop',
     type: 'streak',
-    title: '🔥 89 Day Streak!',
+    title: '89 Day Streak!',
     description: 'Just hit 89 days of consecutive studying! The grind never stops.',
     timestamp: new Date(Date.now() - 1000 * 60 * 15),
-    reactions: [{ emoji: '🔥', count: 45 }, { emoji: '💪', count: 23 }, { emoji: '👏', count: 18 }],
+    reactions: [{ emoji: '💪', count: 23 }, { emoji: '👏', count: 18 }],
   },
   {
     id: '2',
