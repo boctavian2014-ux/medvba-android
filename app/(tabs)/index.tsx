@@ -400,6 +400,7 @@ const styles = StyleSheet.create({
   },
   heroButton: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
   heroButtonGradient: {
     flexDirection: 'row',
@@ -408,10 +409,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 25,
     gap: 8,
+    flexShrink: 1,
   },
   heroButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
+    flexShrink: 1,
   },
   statsRow: {
     flexDirection: 'row',
