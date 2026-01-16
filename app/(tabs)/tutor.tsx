@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import { generateText } from '@rork-ai/toolkit-sdk';
 import { useSubscription } from '@/providers/SubscriptionProvider';
@@ -44,6 +44,8 @@ const getSuggestedQuestions = (t: (key: string) => string) => [
 ];
 
 export default function TutorScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -185,7 +187,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, Colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -196,7 +198,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
         >
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <Bot color={Colors.primary} size={24} />
+              <Bot color={colors.primary} size={24} />
             </View>
             <View>
               <Text style={styles.title}>{t('tutor.title')}</Text>
@@ -207,7 +209,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             </View>
             {isPremium ? (
               <View style={styles.premiumBadge}>
-                <Sparkles color={Colors.warning} size={14} />
+                <Sparkles color={colors.warning} size={14} />
                 <Text style={styles.premiumText}>{t('tutor.premium')}</Text>
               </View>
             ) : (
@@ -215,7 +217,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 style={styles.upgradeButton}
                 onPress={() => router.push('/paywall')}
               >
-                <Crown color={Colors.warning} size={14} />
+                <Crown color={colors.warning} size={14} />
                 <Text style={styles.upgradeButtonText}>{t('tutor.upgrade')}</Text>
               </TouchableOpacity>
             )}
@@ -236,7 +238,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                       : t('tutor.dailyLimitReached')}
                   </Text>
                   {remainingAiQuestions === 0 && (
-                    <Lock color={Colors.error} size={16} />
+                    <Lock color={colors.error} size={16} />
                   )}
                 </View>
               </View>
@@ -251,7 +253,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                     onPress={() => handleSuggestion(suggestion.text)}
                   >
                     <GlassCard style={styles.suggestionCard}>
-                      <suggestion.icon color={Colors.primary} size={20} />
+                      <suggestion.icon color={colors.primary} size={20} />
                       <View style={styles.suggestionContent}>
                         <Text style={styles.suggestionText}>{suggestion.text}</Text>
                         <Text style={styles.suggestionCategory}>{suggestion.category}</Text>
@@ -272,7 +274,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
               >
                 {message.role === 'assistant' && (
                   <View style={styles.avatarContainer}>
-                    <Bot color={Colors.primary} size={18} />
+                    <Bot color={colors.primary} size={18} />
                   </View>
                 )}
                 <View
@@ -290,7 +292,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 </View>
                 {message.role === 'user' && (
                   <View style={[styles.avatarContainer, styles.userAvatar]}>
-                    <User color={Colors.text} size={18} />
+                    <User color={colors.text} size={18} />
                   </View>
                 )}
               </View>
@@ -299,7 +301,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             {isTyping && (
               <View style={styles.messageRow}>
                 <View style={styles.avatarContainer}>
-                  <Bot color={Colors.primary} size={18} />
+                  <Bot color={colors.primary} size={18} />
                 </View>
                 <View style={[styles.messageBubble, styles.assistantBubble, styles.typingBubble]}>
                   <View style={styles.typingIndicator}>
@@ -317,7 +319,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
               <TextInput
                 style={styles.input}
                 placeholder={t('tutor.inputPlaceholder')}
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 value={inputText}
                 onChangeText={setInputText}
                 multiline
@@ -328,7 +330,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 onPress={handleSend}
                 disabled={!inputText.trim()}
               >
-                <Send color={inputText.trim() ? Colors.text : Colors.textMuted} size={20} />
+                <Send color={inputText.trim() ? colors.text : colors.textMuted} size={20} />
               </TouchableOpacity>
             </GlassCard>
           </View>
@@ -338,10 +340,10 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof import('@/constants/colors').darkColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -355,13 +357,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   headerIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -369,7 +371,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   statusRow: {
     flexDirection: 'row',
@@ -381,11 +383,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
   },
   status: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   premiumBadge: {
     flexDirection: 'row',
@@ -400,7 +402,7 @@ const styles = StyleSheet.create({
   premiumText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.warning,
+    color: colors.warning,
   },
   messagesContainer: {
     flex: 1,
@@ -414,7 +416,7 @@ const styles = StyleSheet.create({
   },
   suggestionsTitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 12,
   },
   suggestionCard: {
@@ -428,12 +430,12 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     fontSize: 14,
-    color: Colors.text,
+    color: colors.text,
     fontWeight: '500' as const,
   },
   suggestionCategory: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   messageRow: {
@@ -448,13 +450,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
   },
   userAvatar: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     marginRight: 0,
     marginLeft: 8,
   },
@@ -464,20 +466,20 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   assistantBubble: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderBottomLeftRadius: 4,
   },
   userBubble: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderBottomRightRadius: 4,
   },
   messageText: {
     fontSize: 15,
-    color: Colors.text,
+    color: colors.text,
     lineHeight: 22,
   },
   userMessageText: {
-    color: Colors.text,
+    color: colors.text,
   },
   typingBubble: {
     paddingVertical: 16,
@@ -491,7 +493,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.textMuted,
+    backgroundColor: colors.textMuted,
   },
   typingDot1: {
     opacity: 0.4,
@@ -516,7 +518,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
     maxHeight: 100,
     paddingVertical: 8,
   },
@@ -524,13 +526,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
   },
   sendButtonDisabled: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
   },
   upgradeButton: {
     flexDirection: 'row',
@@ -545,7 +547,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.warning,
+    color: colors.warning,
   },
   freeLimitBanner: {
     backgroundColor: 'rgba(255, 184, 0, 0.1)',
@@ -562,8 +564,9 @@ const styles = StyleSheet.create({
   },
   freeLimitText: {
     fontSize: 14,
-    color: Colors.warning,
+    color: colors.warning,
     fontWeight: '500' as const,
     flex: 1,
   },
 });
+

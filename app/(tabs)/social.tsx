@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ import {
   User,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import RoomChat from '@/components/RoomChat';
 import { activities } from '@/mocks/activities';
@@ -141,6 +141,8 @@ export default function SocialScreen() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { t, getModuleName } = useLanguage();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
   const [localRoomUpdates, setLocalRoomUpdates] = useState<Record<string, Partial<StudyRoom>>>({});
@@ -475,7 +477,7 @@ export default function SocialScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.background, Colors.backgroundLight]}
+        colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -486,7 +488,7 @@ export default function SocialScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primary}
+              tintColor={colors.primary}
             />
           }
         >
@@ -505,12 +507,12 @@ export default function SocialScreen() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={[Colors.accent, Colors.secondary]}
+                  colors={[colors.accent, colors.secondary]}
                   style={StyleSheet.absoluteFill}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 />
-                <User color={Colors.text} size={18} />
+                <User color={colors.text} size={18} />
                 <Text style={styles.findPartnersButtonText}>{t('social.findPartners')}</Text>
               </TouchableOpacity>
             </View>
@@ -518,7 +520,7 @@ export default function SocialScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Radio color={Colors.error} size={18} />
+              <Radio color={colors.error} size={18} />
               <Text style={styles.sectionTitle}>{t('social.liveStudyRooms')}</Text>
               <TouchableOpacity 
                 style={styles.createRoomButton}
@@ -527,7 +529,7 @@ export default function SocialScreen() {
                   setShowCreateRoomModal(true);
                 }}
               >
-                <Plus color={Colors.text} size={16} />
+                <Plus color={colors.text} size={16} />
                 <Text style={styles.createRoomButtonText}>{t('social.create')}</Text>
               </TouchableOpacity>
             </View>
@@ -556,7 +558,7 @@ export default function SocialScreen() {
                         {isHost ? t('social.youAreHosting') : t('social.hostedBy').replace('{name}', room.host)}
                       </Text>
                       <View style={styles.roomFooter}>
-                        <Users color={Colors.textSecondary} size={14} />
+                        <Users color={colors.textSecondary} size={14} />
                         <Text style={styles.roomParticipants}>
                           {room.participants}/{room.maxParticipants}
                         </Text>
@@ -571,7 +573,7 @@ export default function SocialScreen() {
                             avatar: room.hostAvatar,
                           })}
                         >
-                          <MoreVertical color={Colors.textMuted} size={18} />
+                          <MoreVertical color={colors.textMuted} size={18} />
                         </TouchableOpacity>
                       )}
                       
@@ -584,7 +586,7 @@ export default function SocialScreen() {
                             setShowChatModal(true);
                           }}
                         >
-                          <MessageCircle color={Colors.primary} size={14} />
+                          <MessageCircle color={colors.primary} size={14} />
                           <Text style={styles.chatButtonText}>{t('social.chat')}</Text>
                         </TouchableOpacity>
                         
@@ -596,7 +598,7 @@ export default function SocialScreen() {
                               handleScheduleSession(room);
                             }}
                           >
-                            <Calendar color={Colors.primary} size={14} />
+                            <Calendar color={colors.primary} size={14} />
                             <Text style={styles.scheduleButtonText}>{t('social.schedule')}</Text>
                           </TouchableOpacity>
                         )}
@@ -611,7 +613,7 @@ export default function SocialScreen() {
           {filteredUpcomingSessions.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Calendar color={Colors.secondary} size={18} />
+                <Calendar color={colors.secondary} size={18} />
                 <Text style={styles.sectionTitle}>{t('social.upcomingSessions')}</Text>
               </View>
               
@@ -637,11 +639,11 @@ export default function SocialScreen() {
                             avatar: session.hostAvatar,
                           })}
                         >
-                          <MoreVertical color={Colors.textMuted} size={18} />
+                          <MoreVertical color={colors.textMuted} size={18} />
                         </TouchableOpacity>
                       )}
                       <View style={styles.countdownBadge}>
-                        <Clock color={Colors.secondary} size={12} />
+                        <Clock color={colors.secondary} size={12} />
                         <Text style={styles.countdownText}>{formatCountdown(session.scheduledFor)}</Text>
                       </View>
                     </View>
@@ -654,15 +656,15 @@ export default function SocialScreen() {
                     
                     <View style={styles.sessionMeta}>
                       <View style={styles.sessionMetaItem}>
-                        <Calendar color={Colors.textMuted} size={14} />
+                        <Calendar color={colors.textMuted} size={14} />
                         <Text style={styles.sessionMetaText}>{formatSessionTime(session.scheduledFor)}</Text>
                       </View>
                       <View style={styles.sessionMetaItem}>
-                        <Clock color={Colors.textMuted} size={14} />
+                        <Clock color={colors.textMuted} size={14} />
                         <Text style={styles.sessionMetaText}>{session.durationMinutes} {t('social.min')}</Text>
                       </View>
                       <View style={styles.sessionMetaItem}>
-                        <Users color={Colors.textMuted} size={14} />
+                        <Users color={colors.textMuted} size={14} />
                         <Text style={styles.sessionMetaText}>{session.attendees.length} {t('social.joined')}</Text>
                       </View>
                     </View>
@@ -674,7 +676,7 @@ export default function SocialScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <MessageCircle color={Colors.primary} size={18} />
+              <MessageCircle color={colors.primary} size={18} />
               <Text style={styles.sectionTitle}>{t('social.activityFeed')}</Text>
             </View>
             
@@ -689,7 +691,7 @@ export default function SocialScreen() {
                     </Text>
                   </View>
                   <View style={styles.activityTypeIcon}>
-                    <Trophy color={Colors.accent} size={18} />
+                    <Trophy color={colors.accent} size={18} />
                   </View>
                 </View>
                 
@@ -699,7 +701,7 @@ export default function SocialScreen() {
                 </Text>
                 
                 <View style={styles.achievementBadge}>
-                  <Trophy color={Colors.accent} size={14} />
+                  <Trophy color={colors.accent} size={14} />
                   <Text style={styles.achievementBadgeText}>{t('social.achievementUnlocked')}</Text>
                 </View>
               </GlassCard>
@@ -719,7 +721,7 @@ export default function SocialScreen() {
                     </View>
                     <View style={styles.activityTypeIcon}>
                       <IconComponent 
-                        color={activity.type === 'streak' ? Colors.streakOrange : Colors.primary} 
+                        color={activity.type === 'streak' ? colors.streakOrange : colors.primary} 
                         size={18} 
                       />
                     </View>
@@ -767,7 +769,7 @@ export default function SocialScreen() {
         >
           <View style={styles.modalContent}>
             <LinearGradient
-              colors={[Colors.cardBg, Colors.background]}
+              colors={[colors.cardBg, colors.background]}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.modalHeader}>
@@ -779,7 +781,7 @@ export default function SocialScreen() {
                   resetScheduleForm();
                 }}
               >
-                <X color={Colors.textSecondary} size={24} />
+                <X color={colors.textSecondary} size={24} />
               </TouchableOpacity>
             </View>
 
@@ -798,7 +800,7 @@ export default function SocialScreen() {
                   value={sessionTitle}
                   onChangeText={setSessionTitle}
                   placeholder={t('social.titlePlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                 />
               </View>
 
@@ -809,7 +811,7 @@ export default function SocialScreen() {
                   value={sessionDescription}
                   onChangeText={setSessionDescription}
                   placeholder={t('social.descriptionPlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={3}
                 />
@@ -823,7 +825,7 @@ export default function SocialScreen() {
                     value={sessionDate}
                     onChangeText={setSessionDate}
                     placeholder={t('social.datePlaceholder')}
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
@@ -833,7 +835,7 @@ export default function SocialScreen() {
                     value={sessionTime}
                     onChangeText={setSessionTime}
                     placeholder={t('social.timePlaceholder')}
-                    placeholderTextColor={Colors.textMuted}
+                    placeholderTextColor={colors.textMuted}
                   />
                 </View>
               </View>
@@ -868,7 +870,7 @@ export default function SocialScreen() {
                   value={meetingUrl}
                   onChangeText={setMeetingUrl}
                   placeholder={t('social.meetingUrlPlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   autoCapitalize="none"
                   keyboardType="url"
                 />
@@ -892,10 +894,10 @@ export default function SocialScreen() {
                 disabled={createSessionMutation.isPending}
               >
                 {createSessionMutation.isPending ? (
-                  <ActivityIndicator size="small" color={Colors.text} />
+                  <ActivityIndicator size="small" color={colors.text} />
                 ) : (
                   <>
-                    <Calendar color={Colors.text} size={16} />
+                    <Calendar color={colors.text} size={16} />
                     <Text style={styles.createButtonText}>{t('social.schedule')}</Text>
                   </>
                 )}
@@ -917,7 +919,7 @@ export default function SocialScreen() {
         >
           <View style={styles.modalContent}>
             <LinearGradient
-              colors={[Colors.cardBg, Colors.background]}
+              colors={[colors.cardBg, colors.background]}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.modalHeader}>
@@ -929,7 +931,7 @@ export default function SocialScreen() {
                   resetCreateRoomForm();
                 }}
               >
-                <X color={Colors.textSecondary} size={24} />
+                <X color={colors.textSecondary} size={24} />
               </TouchableOpacity>
             </View>
 
@@ -941,7 +943,7 @@ export default function SocialScreen() {
                   value={newRoomName}
                   onChangeText={setNewRoomName}
                   placeholder={t('social.roomNamePlaceholder')}
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={colors.textMuted}
                   maxLength={100}
                 />
               </View>
@@ -1014,10 +1016,10 @@ export default function SocialScreen() {
                 disabled={createRoomMutation.isPending}
               >
                 {createRoomMutation.isPending ? (
-                  <ActivityIndicator size="small" color={Colors.text} />
+                  <ActivityIndicator size="small" color={colors.text} />
                 ) : (
                   <>
-                    <Plus color={Colors.text} size={16} />
+                    <Plus color={colors.text} size={16} />
                     <Text style={styles.createButtonText}>{t('social.createRoom')}</Text>
                   </>
                 )}
@@ -1040,7 +1042,7 @@ export default function SocialScreen() {
         >
           <View style={styles.userActionsContent}>
             <LinearGradient
-              colors={[Colors.cardBg, Colors.background]}
+              colors={[colors.cardBg, colors.background]}
               style={StyleSheet.absoluteFill}
             />
             {selectedUser && (
@@ -1055,7 +1057,7 @@ export default function SocialScreen() {
                   onPress={() => handleBlockUser(selectedUser)}
                 >
                   <View style={[styles.userActionIcon, { backgroundColor: 'rgba(255, 71, 87, 0.15)' }]}>
-                    <Ban color={Colors.error} size={20} />
+                    <Ban color={colors.error} size={20} />
                   </View>
                   <View style={styles.userActionTextContainer}>
                     <Text style={styles.userActionTitle}>{t('social.blockUserTitle')}</Text>
@@ -1068,7 +1070,7 @@ export default function SocialScreen() {
                   onPress={handleOpenReportModal}
                 >
                   <View style={[styles.userActionIcon, { backgroundColor: 'rgba(255, 159, 67, 0.15)' }]}>
-                    <Flag color={Colors.warning} size={20} />
+                    <Flag color={colors.warning} size={20} />
                   </View>
                   <View style={styles.userActionTextContainer}>
                     <Text style={styles.userActionTitle}>{t('social.reportUserTitle')}</Text>
@@ -1100,14 +1102,14 @@ export default function SocialScreen() {
         >
           <View style={styles.reportModalContent}>
             <LinearGradient
-              colors={[Colors.cardBg, Colors.background]}
+              colors={[colors.cardBg, colors.background]}
               style={StyleSheet.absoluteFill}
             />
             
             {reportSubmitted ? (
               <View style={styles.reportSuccessContainer}>
                 <View style={styles.reportSuccessIcon}>
-                  <CheckCircle color={Colors.success} size={48} />
+                  <CheckCircle color={colors.success} size={48} />
                 </View>
                 <Text style={styles.reportSuccessTitle}>{t('social.reportSubmitted')}</Text>
                 <Text style={styles.reportSuccessText}>
@@ -1128,7 +1130,7 @@ export default function SocialScreen() {
                     style={styles.modalClose}
                     onPress={handleCloseReportModal}
                   >
-                    <X color={Colors.textSecondary} size={24} />
+                    <X color={colors.textSecondary} size={24} />
                   </TouchableOpacity>
                 </View>
 
@@ -1158,7 +1160,7 @@ export default function SocialScreen() {
                           }}
                         >
                           <IconComponent 
-                            color={isSelected ? Colors.warning : Colors.textSecondary} 
+                            color={isSelected ? colors.warning : colors.textSecondary} 
                             size={20} 
                           />
                           <Text style={[
@@ -1169,7 +1171,7 @@ export default function SocialScreen() {
                           </Text>
                           {isSelected && (
                             <View style={styles.reportReasonCheck}>
-                              <CheckCircle color={Colors.warning} size={18} />
+                              <CheckCircle color={colors.warning} size={18} />
                             </View>
                           )}
                         </TouchableOpacity>
@@ -1184,7 +1186,7 @@ export default function SocialScreen() {
                       value={reportDetails}
                       onChangeText={setReportDetails}
                       placeholder={t('social.additionalDetailsPlaceholder')}
-                      placeholderTextColor={Colors.textMuted}
+                      placeholderTextColor={colors.textMuted}
                       multiline
                       numberOfLines={4}
                     />
@@ -1206,7 +1208,7 @@ export default function SocialScreen() {
                     onPress={handleSubmitReport}
                     disabled={!selectedReportReason}
                   >
-                    <Flag color={Colors.text} size={16} />
+                    <Flag color={colors.text} size={16} />
                     <Text style={styles.submitReportButtonText}>{t('social.submitReport')}</Text>
                   </TouchableOpacity>
                 </View>
@@ -1236,7 +1238,7 @@ export default function SocialScreen() {
                   setSelectedChatRoom(null);
                 }}
               >
-                <X color={Colors.text} size={24} />
+                <X color={colors.text} size={24} />
               </TouchableOpacity>
             </View>
             {selectedChatRoom && (
@@ -1252,10 +1254,10 @@ export default function SocialScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof import('@/constants/colors').darkColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -1291,16 +1293,16 @@ const styles = StyleSheet.create({
   findPartnersButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
   section: {
@@ -1316,13 +1318,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     flex: 1,
   },
   createRoomButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1331,7 +1333,7 @@ const styles = StyleSheet.create({
   createRoomButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   roomsScroll: {
     paddingHorizontal: 20,
@@ -1360,12 +1362,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
   },
   liveText: {
     fontSize: 10,
     fontWeight: '700' as const,
-    color: Colors.error,
+    color: colors.error,
   },
   idleIndicator: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1376,26 +1378,26 @@ const styles = StyleSheet.create({
   idleText: {
     fontSize: 10,
     fontWeight: '600' as const,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   roomHostAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     marginTop: 8,
   },
   roomName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginTop: 10,
     textAlign: 'center',
   },
   roomHost: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   roomFooter: {
@@ -1406,25 +1408,25 @@ const styles = StyleSheet.create({
   },
   roomParticipants: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   joinButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 12,
   },
   joinButtonDisabled: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
   },
   joinButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600' as const,
   },
   joinButtonTextDisabled: {
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   hostButtons: {
     marginTop: 12,
@@ -1440,7 +1442,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -1451,7 +1453,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   goLiveButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600' as const,
   },
@@ -1463,12 +1465,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     marginTop: 12,
     gap: 4,
   },
   scheduleButtonText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '600' as const,
   },
@@ -1479,14 +1481,14 @@ const styles = StyleSheet.create({
   hostJoinButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     gap: 4,
   },
   hostJoinButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600' as const,
   },
@@ -1496,10 +1498,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.error,
+    borderColor: colors.error,
   },
   endButtonText: {
-    color: Colors.error,
+    color: colors.error,
     fontSize: 12,
     fontWeight: '600' as const,
   },
@@ -1517,7 +1519,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.secondary,
+    borderColor: colors.secondary,
   },
   sessionInfo: {
     flex: 1,
@@ -1526,11 +1528,11 @@ const styles = StyleSheet.create({
   sessionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   sessionHost: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   sessionLiveIndicator: {
@@ -1545,7 +1547,7 @@ const styles = StyleSheet.create({
   sessionLiveText: {
     fontSize: 11,
     fontWeight: '700' as const,
-    color: Colors.error,
+    color: colors.error,
   },
   countdownBadge: {
     flexDirection: 'row',
@@ -1559,11 +1561,11 @@ const styles = StyleSheet.create({
   countdownText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.secondary,
+    color: colors.secondary,
   },
   sessionDescription: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -1580,7 +1582,7 @@ const styles = StyleSheet.create({
   },
   sessionMetaText: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   sessionActions: {
     marginTop: 4,
@@ -1594,13 +1596,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 12,
     gap: 6,
   },
   sessionOpenButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600' as const,
   },
@@ -1610,10 +1612,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.error,
+    borderColor: colors.error,
   },
   sessionEndButtonText: {
-    color: Colors.error,
+    color: colors.error,
     fontSize: 14,
     fontWeight: '600' as const,
   },
@@ -1621,39 +1623,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
     paddingVertical: 10,
     borderRadius: 12,
     gap: 6,
   },
   sessionStartButtonDisabled: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
   },
   sessionStartButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600' as const,
   },
   sessionStartButtonTextDisabled: {
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   sessionJoinButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 10,
     borderRadius: 12,
   },
   sessionJoinButtonDisabled: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
   },
   sessionJoinButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600' as const,
   },
   sessionJoinButtonTextDisabled: {
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   activityCard: {
     marginHorizontal: 20,
@@ -1676,30 +1678,30 @@ const styles = StyleSheet.create({
   activityUserName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   activityTime: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   activityTypeIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   activityTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   activityDescription: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -1711,7 +1713,7 @@ const styles = StyleSheet.create({
   reactionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
@@ -1720,18 +1722,18 @@ const styles = StyleSheet.create({
   reactionBadgeActive: {
     backgroundColor: 'rgba(0, 180, 216, 0.2)',
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   reactionEmoji: {
     fontSize: 14,
   },
   reactionCount: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '500' as const,
   },
   reactionCountActive: {
-    color: Colors.primary,
+    color: colors.primary,
   },
   modalOverlay: {
     flex: 1,
@@ -1739,7 +1741,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -1752,12 +1754,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBgLight,
+    borderBottomColor: colors.cardBgLight,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   modalClose: {
     padding: 4,
@@ -1769,7 +1771,7 @@ const styles = StyleSheet.create({
   selectedRoomBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -1778,12 +1780,12 @@ const styles = StyleSheet.create({
   },
   selectedRoomLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   selectedRoomName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   inputGroup: {
     marginBottom: 16,
@@ -1791,16 +1793,16 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: Colors.text,
+    color: colors.text,
     borderWidth: 1,
     borderColor: 'transparent',
   },
@@ -1820,21 +1822,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   durationOptionActive: {
     backgroundColor: 'rgba(0, 180, 216, 0.15)',
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   durationOptionText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   durationOptionTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
   },
   categoryOptions: {
     flexDirection: 'row',
@@ -1845,28 +1847,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   categoryOptionActive: {
     backgroundColor: 'rgba(0, 180, 216, 0.15)',
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   categoryOptionText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   categoryOptionTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
   },
   modalFooter: {
     flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: Colors.cardBgLight,
+    borderTopColor: colors.cardBgLight,
     gap: 12,
   },
   cancelButton: {
@@ -1875,12 +1877,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
   },
   cancelButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   createButton: {
     flex: 2,
@@ -1889,13 +1891,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     gap: 8,
   },
   createButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   userActionsButton: {
     position: 'absolute',
@@ -1912,7 +1914,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -1930,33 +1932,33 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: colors.glassBorder,
   },
   userActionsHeader: {
     alignItems: 'center',
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   userActionsAvatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
     marginBottom: 10,
   },
   userActionsName: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   userActionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.glassBorder,
+    borderBottomColor: colors.glassBorder,
   },
   userActionIcon: {
     width: 40,
@@ -1972,11 +1974,11 @@ const styles = StyleSheet.create({
   userActionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   userActionSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   userActionCancelButton: {
@@ -1986,10 +1988,10 @@ const styles = StyleSheet.create({
   userActionCancelText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   reportModalContent: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -1998,7 +2000,7 @@ const styles = StyleSheet.create({
   reportUserBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     padding: 12,
     borderRadius: 12,
     marginBottom: 20,
@@ -2012,7 +2014,7 @@ const styles = StyleSheet.create({
   reportUserName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   reportReasonsList: {
     gap: 10,
@@ -2023,23 +2025,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderRadius: 12,
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     borderWidth: 1,
     borderColor: 'transparent',
     gap: 12,
   },
   reportReasonItemActive: {
     backgroundColor: 'rgba(255, 159, 67, 0.1)',
-    borderColor: Colors.warning,
+    borderColor: colors.warning,
   },
   reportReasonText: {
     flex: 1,
     fontSize: 15,
     fontWeight: '500' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   reportReasonTextActive: {
-    color: Colors.warning,
+    color: colors.warning,
   },
   reportReasonCheck: {
     marginLeft: 'auto',
@@ -2051,17 +2053,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: Colors.warning,
+    backgroundColor: colors.warning,
     gap: 8,
   },
   submitReportButtonDisabled: {
-    backgroundColor: Colors.cardBgLight,
+    backgroundColor: colors.cardBgLight,
     opacity: 0.6,
   },
   submitReportButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   reportSuccessContainer: {
     alignItems: 'center',
@@ -2079,18 +2081,18 @@ const styles = StyleSheet.create({
   reportSuccessTitle: {
     fontSize: 22,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   reportSuccessText: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
   },
   reportSuccessButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 40,
     paddingVertical: 14,
     borderRadius: 12,
@@ -2098,7 +2100,7 @@ const styles = StyleSheet.create({
   reportSuccessButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   roomActions: {
     flexDirection: 'row',
@@ -2110,7 +2112,7 @@ const styles = StyleSheet.create({
   chatButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -2119,13 +2121,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chatButtonText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600' as const,
   },
   chatModalContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   chatSafeArea: {
     flex: 1,
@@ -2135,16 +2137,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: colors.cardBg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cardBgLight,
+    borderBottomColor: colors.cardBgLight,
   },
   chatCloseButton: {
     padding: 4,
   },
   inputHint: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 6,
   },
   achievementBadge: {
@@ -2160,6 +2162,6 @@ const styles = StyleSheet.create({
   achievementBadgeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.accent,
+    color: colors.accent,
   },
 });
