@@ -59,8 +59,8 @@ function useProtectedRoute() {
     if (!splashHidden) {
       setSplashHidden(true);
       setTimeout(() => {
-        SplashScreen.hideAsync().catch((err) => {
-          console.log('[SplashScreen] Hide error (safe to ignore):', err.message);
+        SplashScreen.hideAsync().catch(() => {
+          // Ignore splash screen errors - they happen when native splash isn't registered
         });
       }, 100);
     }
