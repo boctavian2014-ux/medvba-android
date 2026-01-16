@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import { Crown, Check } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
-import { PREMIUM_FEATURES, PRICING } from '@/constants/subscription';
+import { useSubscription } from '@/providers/SubscriptionProvider';
+import { PREMIUM_FEATURES } from '@/constants/subscription';
 import GlassCard from '@/components/GlassCard';
 import PremiumBadge from '@/components/PremiumBadge';
 
@@ -13,10 +14,65 @@ type PlanType = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
   const { colors, colorScheme } = useTheme();
+  const { offerings, purchasePackage, restorePurchases, isLoading: subLoading } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
+  const [purchasing, setPurchasing] = useState(false);
 
-  const handleUpgrade = () => {
-    console.log('[Paywall] User selected plan:', selectedPlan);
+  useEffect(() => {
+    if (offerings?.availablePackages.length) {
+      console.log('[Paywall] Available packages:', offerings.availablePackages.map(p => p.identifier));
+    }
+  }, [offerings]);
+
+  const handleUpgrade = async () => {
+    if (!offerings) {
+      Alert.alert('Eroare', 'Nu s-au putut încărca opțiunile de abonament');
+      return;
+    }
+
+    setPurchasing(true);
+    try {
+      const packageId = selectedPlan === 'yearly' ? '$rc_annual' : '$rc_monthly';
+      console.log('[Paywall] Purchasing package:', packageId);
+      
+      const success = await purchasePackage(packageId);
+      
+      if (success) {
+        Alert.alert(
+          'Succes!',
+          'Ai fost upgradat la Premium! Bucură-te de toate funcțiile.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
+      console.error('[Paywall] Purchase error:', error);
+      Alert.alert('Eroare', 'A apărut o problemă la procesarea plății. Încearcă din nou.');
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setPurchasing(true);
+    try {
+      console.log('[Paywall] Restoring purchases...');
+      const success = await restorePurchases();
+      
+      if (success) {
+        Alert.alert(
+          'Restaurat cu succes!',
+          'Abonamentul tău Premium a fost restaurat.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      } else {
+        Alert.alert('Info', 'Nu s-au găsit achiziții anterioare.');
+      }
+    } catch (error) {
+      console.error('[Paywall] Restore error:', error);
+      Alert.alert('Eroare', 'Nu s-au putut restaura achizițiile. Încearcă din nou.');
+    } finally {
+      setPurchasing(false);
+    }
   };
 
   const handleContinueFree = () => {
@@ -76,10 +132,18 @@ export default function PaywallScreen() {
             ))}
           </View>
 
-          <View style={styles.plansContainer}>
-            <Text style={[styles.plansTitle, { color: colors.text }]}>
-              Alege Planul Tău
-            </Text>
+          {subLoading || !offerings ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                Se încarcă opțiunile...
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.plansContainer}>
+              <Text style={[styles.plansTitle, { color: colors.text }]}>
+                Alege Planul Tău
+              </Text>
 
             <TouchableOpacity
               activeOpacity={0.8}
@@ -103,22 +167,22 @@ export default function PaywallScreen() {
                   </View>
                   <View style={[styles.savingsBadge, { backgroundColor: colors.success + '20' }]}>
                     <Text style={[styles.savingsText, { color: colors.success }]}>
-                      {PRICING.yearly.savingsText}
+                      Economisești 37%
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.priceRow}>
                   <Text style={[styles.price, { color: colors.text }]}>
-                    {PRICING.yearly.price}
+                    {offerings?.availablePackages.find(p => p.identifier === '$rc_annual')?.product.priceString || '149.99 RON'}
                   </Text>
                   <Text style={[styles.period, { color: colors.textSecondary }]}>
-                    /{PRICING.yearly.period}
+                    /an
                   </Text>
                 </View>
 
                 <Text style={[styles.planDescription, { color: colors.textMuted }]}>
-                  {PRICING.yearly.description}
+                  Facturat anual
                 </Text>
               </GlassCard>
             </TouchableOpacity>
@@ -140,24 +204,26 @@ export default function PaywallScreen() {
 
                 <View style={styles.priceRow}>
                   <Text style={[styles.price, { color: colors.text }]}>
-                    {PRICING.monthly.price}
+                    {offerings?.availablePackages.find(p => p.identifier === '$rc_monthly')?.product.priceString || '19.99 RON'}
                   </Text>
                   <Text style={[styles.period, { color: colors.textSecondary }]}>
-                    /{PRICING.monthly.period}
+                    /lună
                   </Text>
                 </View>
 
                 <Text style={[styles.planDescription, { color: colors.textMuted }]}>
-                  {PRICING.monthly.description}
+                  Facturat lunar
                 </Text>
               </GlassCard>
             </TouchableOpacity>
-          </View>
+            </View>
+          )}
 
           <TouchableOpacity
             style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.8}
             onPress={handleUpgrade}
+            disabled={purchasing || subLoading}
           >
             <LinearGradient
               colors={[colors.primary, colors.primaryDark]}
@@ -165,11 +231,28 @@ export default function PaywallScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.upgradeButtonGradient}
             >
-              <Crown size={20} color="#FFF" strokeWidth={2.5} />
-              <Text style={styles.upgradeButtonText}>
-                Upgrade la Premium
-              </Text>
+              {purchasing ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <>
+                  <Crown size={20} color="#FFF" strokeWidth={2.5} />
+                  <Text style={styles.upgradeButtonText}>
+                    Upgrade la Premium
+                  </Text>
+                </>
+              )}
             </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.restoreButton}
+            activeOpacity={0.6}
+            onPress={handleRestore}
+            disabled={purchasing}
+          >
+            <Text style={[styles.restoreButtonText, { color: colors.primary }]}>
+              Restaurează Achiziții
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -334,6 +417,24 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 17,
     fontWeight: '700' as const,
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  restoreButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
   freeButton: {
     paddingVertical: 14,
