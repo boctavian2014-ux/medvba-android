@@ -9,8 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Shield, Database, Users, Lock, Mail, Globe } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
-const LAST_UPDATED = 'January 12, 2026';
+const LAST_UPDATED_EN = 'January 12, 2026';
+const LAST_UPDATED_RO = '12 ianuarie 2026';
 const COMPANY_NAME = 'Dev AI LTD';
 const COMPANY_ADDRESS = 'Bogdan Voivoda, № 1, Ruse 7002, Ruse Region, Ruse Municipality, Bulgaria';
 const CONTACT_EMAIL = 'contact@devaieood.com';
@@ -40,7 +42,10 @@ function Section({ icon, title, children }: SectionProps) {
 
 export default function PrivacyPolicyScreen() {
   const { colors } = useTheme();
+  const { t, currentLanguage } = useLanguage();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  
+  const lastUpdatedDate = currentLanguage === 'ro' ? LAST_UPDATED_RO : LAST_UPDATED_EN;
 
   return (
     <View style={styles.container}>
@@ -61,161 +66,148 @@ export default function PrivacyPolicyScreen() {
               />
               <Shield color={colors.text} size={32} />
             </View>
-            <Text style={styles.lastUpdated}>Last Updated: {LAST_UPDATED}</Text>
+            <Text style={styles.lastUpdated}>{t('privacy.lastUpdated').replace('{date}', lastUpdatedDate)}</Text>
           </View>
 
           <Text style={styles.intro}>
-            This Privacy Policy describes how {COMPANY_NAME} (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) 
-            collects, uses, and protects your personal information when you use 
-            MedixStudyHub (the &quot;App&quot;).
+            {t('privacy.intro').replace('{company}', COMPANY_NAME)}
           </Text>
 
           <Section
             icon={<Database color={colors.primary} size={20} />}
-            title="Information We Collect"
+            title={t('privacy.informationWeCollect')}
           >
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Account Information:</Text> When you create an account, 
-              we collect your name, email address, and profile picture.
+              <Text style={styles.bold}>{t('privacy.accountInfo')}</Text> {t('privacy.accountInfoDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Quiz Progress Data:</Text> We track your quiz answers, 
-              scores, accuracy rates, study time, and learning progress to provide personalized 
-              learning experiences.
+              <Text style={styles.bold}>{t('privacy.quizProgressData')}</Text> {t('privacy.quizProgressDataDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Study Session Data:</Text> Duration of study sessions, 
-              topics studied, and performance metrics.
+              <Text style={styles.bold}>{t('privacy.studySessionData')}</Text> {t('privacy.studySessionDataDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Video Call Data:</Text> When you participate in live 
-              study rooms, we may access your camera and microphone through Zoom integration. 
-              We do not record these sessions unless explicitly stated.
+              <Text style={styles.bold}>{t('privacy.videoCallData')}</Text> {t('privacy.videoCallDataDesc')}
             </Text>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Device Information:</Text> Device type, operating system, 
-              and app version for troubleshooting and optimization.
+              <Text style={styles.bold}>{t('privacy.deviceInfo')}</Text> {t('privacy.deviceInfoDesc')}
             </Text>
           </Section>
 
           <Section
             icon={<Users color={colors.accent} size={20} />}
-            title="Third-Party Services"
+            title={t('privacy.thirdPartyServices')}
           >
             <Text style={styles.paragraph}>
-              We use the following third-party services that may collect data:
+              {t('privacy.thirdPartyIntro')}
             </Text>
             <View style={styles.bulletList}>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Supabase:</Text> Database hosting and authentication
+                • <Text style={styles.bold}>{t('privacy.supabase')}</Text> {t('privacy.supabaseDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Zoom:</Text> Video conferencing for live study rooms
+                • <Text style={styles.bold}>{t('privacy.zoom')}</Text> {t('privacy.zoomDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Google Cloud Vision:</Text> OCR functionality (if enabled)
+                • <Text style={styles.bold}>{t('privacy.googleCloudVision')}</Text> {t('privacy.googleCloudVisionDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>RevenueCat:</Text> Subscription management (if applicable)
+                • <Text style={styles.bold}>{t('privacy.revenueCat')}</Text> {t('privacy.revenueCatDesc')}
               </Text>
             </View>
             <Text style={styles.paragraph}>
-              Each service has its own privacy policy. We encourage you to review them.
+              {t('privacy.thirdPartyNote')}
             </Text>
           </Section>
 
           <Section
             icon={<Lock color={colors.success} size={20} />}
-            title="How We Use Your Information"
+            title={t('privacy.howWeUseInfo')}
           >
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Provide and improve the App&apos;s functionality</Text>
-              <Text style={styles.bulletItem}>• Track your learning progress and provide statistics</Text>
-              <Text style={styles.bulletItem}>• Enable social features like study rooms and leaderboards</Text>
-              <Text style={styles.bulletItem}>• Send important notifications about your account</Text>
-              <Text style={styles.bulletItem}>• Analyze usage patterns to improve user experience</Text>
-              <Text style={styles.bulletItem}>• Respond to your support requests</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo1')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo2')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo3')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo4')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo5')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.useInfo6')}</Text>
             </View>
           </Section>
 
           <Section
             icon={<Globe color={colors.accentPink} size={20} />}
-            title="Your Rights (GDPR)"
+            title={t('privacy.yourRights')}
           >
             <Text style={styles.paragraph}>
-              If you are located in the European Economic Area (EEA), you have the following rights:
+              {t('privacy.gdprIntro')}
             </Text>
             <View style={styles.bulletList}>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Access:</Text> Request a copy of your personal data
+                • <Text style={styles.bold}>{t('privacy.rightAccess')}</Text> {t('privacy.rightAccessDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Rectification:</Text> Request correction of inaccurate data
+                • <Text style={styles.bold}>{t('privacy.rightRectification')}</Text> {t('privacy.rightRectificationDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Erasure:</Text> Request deletion of your personal data
+                • <Text style={styles.bold}>{t('privacy.rightErasure')}</Text> {t('privacy.rightErasureDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Portability:</Text> Request transfer of your data
+                • <Text style={styles.bold}>{t('privacy.rightPortability')}</Text> {t('privacy.rightPortabilityDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Restriction:</Text> Request limitation of processing
+                • <Text style={styles.bold}>{t('privacy.rightRestriction')}</Text> {t('privacy.rightRestrictionDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>Objection:</Text> Object to certain processing activities
+                • <Text style={styles.bold}>{t('privacy.rightObjection')}</Text> {t('privacy.rightObjectionDesc')}
               </Text>
             </View>
             <Text style={styles.paragraph}>
-              To exercise these rights, contact us at {CONTACT_EMAIL}.
+              {t('privacy.exerciseRights').replace('{email}', CONTACT_EMAIL)}
             </Text>
           </Section>
 
           <Section
             icon={<Shield color={colors.warning} size={20} />}
-            title="Data Security"
+            title={t('privacy.dataSecurity')}
           >
             <Text style={styles.paragraph}>
-              We implement industry-standard security measures to protect your data, including:
+              {t('privacy.securityIntro')}
             </Text>
             <View style={styles.bulletList}>
-              <Text style={styles.bulletItem}>• Encrypted data transmission (HTTPS/TLS)</Text>
-              <Text style={styles.bulletItem}>• Secure database storage with access controls</Text>
-              <Text style={styles.bulletItem}>• Regular security audits and updates</Text>
-              <Text style={styles.bulletItem}>• Limited employee access to personal data</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.security1')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.security2')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.security3')}</Text>
+              <Text style={styles.bulletItem}>• {t('privacy.security4')}</Text>
             </View>
           </Section>
 
           <Section
             icon={<Database color={colors.primary} size={20} />}
-            title="Data Retention"
+            title={t('privacy.dataRetention')}
           >
             <Text style={styles.paragraph}>
-              We retain your personal data for as long as your account is active or as needed 
-              to provide services. You can request deletion of your account and associated 
-              data at any time.
+              {t('privacy.retentionDesc1')}
             </Text>
             <Text style={styles.paragraph}>
-              Quiz progress and statistics may be retained in anonymized form for analytical purposes.
+              {t('privacy.retentionDesc2')}
             </Text>
           </Section>
 
           <Section
             icon={<Users color={colors.accent} size={20} />}
-            title="Children's Privacy"
+            title={t('privacy.childrensPrivacy')}
           >
             <Text style={styles.paragraph}>
-              The App is intended for users aged 13 and older. We do not knowingly collect 
-              personal information from children under 13. If you believe we have collected 
-              such information, please contact us immediately.
+              {t('privacy.childrensPrivacyDesc')}
             </Text>
           </Section>
 
           <Section
             icon={<Mail color={colors.accentPink} size={20} />}
-            title="Contact Us"
+            title={t('privacy.contactUs')}
           >
             <Text style={styles.paragraph}>
-              If you have questions about this Privacy Policy or our data practices, contact us at:
+              {t('privacy.contactIntro')}
             </Text>
             <View style={styles.contactBox}>
               <Text style={styles.contactText}>{COMPANY_NAME}</Text>
@@ -225,9 +217,7 @@ export default function PrivacyPolicyScreen() {
           </Section>
 
           <Text style={styles.footer}>
-            We may update this Privacy Policy from time to time. We will notify you of any 
-            material changes by posting the new policy on this page and updating the 
-            &quot;Last Updated&quot; date.
+            {t('privacy.footer')}
           </Text>
         </ScrollView>
       </SafeAreaView>
