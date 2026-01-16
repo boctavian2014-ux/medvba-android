@@ -15,9 +15,12 @@ import { monitoring } from "@/lib/monitoring";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Ignore - splash screen not available in this environment
-});
+let splashScreenAvailable = true;
+try {
+  SplashScreen.preventAutoHideAsync();
+} catch {
+  splashScreenAvailable = false;
+}
 monitoring.init();
 
 const queryClient = new QueryClient({
@@ -36,7 +39,7 @@ const queryClient = new QueryClient({
   },
 });
 
-function useProtectedRoute() {
+function useProtectedRoute(splashAvailable: boolean) {
   const { isAuthenticated, isLoading, hasCompletedOnboarding } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -58,21 +61,23 @@ function useProtectedRoute() {
       router.replace('/(tabs)');
     }
 
-    if (!splashHidden) {
+    if (!splashHidden && splashAvailable) {
       setSplashHidden(true);
       setTimeout(() => {
-        SplashScreen.hideAsync().catch(() => {
-          // Ignore - splash screen not available in this environment
-        });
+        try {
+          SplashScreen.hideAsync();
+        } catch {
+          // Ignore - splash screen not available
+        }
       }, 100);
     }
-  }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden]);
+  }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden, splashAvailable]);
 
   return isLoading;
 }
 
-function RootLayoutNav() {
-  const isLoading = useProtectedRoute();
+function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
+  const isLoading = useProtectedRoute(splashAvailable);
   const { colors, colorScheme } = useTheme();
 
   if (isLoading) {
@@ -149,7 +154,7 @@ export default function RootLayout() {
                 <SubscriptionProvider>
                   <QuizProgressProvider>
                     <GestureHandlerRootView style={{ flex: 1 }}>
-                      <RootLayoutNav />
+                      <RootLayoutNav splashAvailable={splashScreenAvailable} />
                     </GestureHandlerRootView>
                   </QuizProgressProvider>
                 </SubscriptionProvider>
