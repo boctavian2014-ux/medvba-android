@@ -1,7 +1,10 @@
 import { Stack } from 'expo-router';
 import Colors from '@/constants/colors';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 export default function LegalLayout() {
+  const { t } = useLanguage();
+  
   return (
     <Stack
       screenOptions={{
@@ -20,15 +23,15 @@ export default function LegalLayout() {
     >
       <Stack.Screen
         name="privacy-policy"
-        options={{ title: 'Privacy Policy' }}
+        options={{ title: t('settings.privacyPolicy') }}
       />
       <Stack.Screen
         name="terms-of-service"
-        options={{ title: 'Terms of Service' }}
+        options={{ title: t('settings.termsOfService') }}
       />
       <Stack.Screen
         name="code-of-conduct"
-        options={{ title: 'Code of Conduct' }}
+        options={{ title: t('settings.codeOfConduct') }}
       />
     </Stack>
   );
