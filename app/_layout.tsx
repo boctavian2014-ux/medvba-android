@@ -10,8 +10,8 @@ import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
+import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
 import { monitoring } from "@/lib/monitoring";
-import colors from "@/constants/colors";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -67,17 +67,20 @@ function useProtectedRoute() {
 
 function RootLayoutNav() {
   const isLoading = useProtectedRoute();
+  const { colors, colorScheme } = useTheme();
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
@@ -111,6 +114,7 @@ function RootLayoutNav() {
         }} 
       />
     </Stack>
+    </>
   );
 }
 
@@ -119,7 +123,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
   },
 });
 
@@ -128,18 +131,19 @@ export default function RootLayout() {
     <ErrorBoundary>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <LanguageProvider>
-              <SubscriptionProvider>
-                <QuizProgressProvider>
-                  <GestureHandlerRootView style={{ flex: 1 }}>
-                    <StatusBar style="light" />
-                    <RootLayoutNav />
-                  </GestureHandlerRootView>
-                </QuizProgressProvider>
-              </SubscriptionProvider>
-            </LanguageProvider>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <LanguageProvider>
+                <SubscriptionProvider>
+                  <QuizProgressProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                      <RootLayoutNav />
+                    </GestureHandlerRootView>
+                  </QuizProgressProvider>
+                </SubscriptionProvider>
+              </LanguageProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </trpc.Provider>
     </ErrorBoundary>
