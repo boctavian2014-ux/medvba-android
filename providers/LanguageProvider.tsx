@@ -4,6 +4,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { en } from '@/locales/en';
 import { ro } from '@/locales/ro';
 import { chapterTranslations } from '@/locales/chapterTranslations';
+import { log } from '@/lib/log';
 
 export type Language = 'en' | 'ro';
 
@@ -24,10 +25,10 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
         const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
         if (storedLanguage && ['en', 'ro'].includes(storedLanguage)) {
           setCurrentLanguage(storedLanguage as Language);
-          console.log('Loaded language from storage:', storedLanguage);
+          log.debug('Loaded language from storage:', storedLanguage);
         }
       } catch (error) {
-        console.error('Error loading language:', error);
+        log.error('Error loading language:', error);
       } finally {
         setIsLoading(false);
       }
@@ -39,16 +40,16 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
     try {
       setCurrentLanguage(lang);
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-      console.log('Language changed and saved:', lang);
+      log.debug('Language changed and saved:', lang);
     } catch (error) {
-      console.error('Error saving language:', error);
+      log.error('Error saving language:', error);
     }
   }, []);
 
   const t = useCallback((key: string): string => {
     const translation = translations[currentLanguage]?.[key];
     if (!translation) {
-      console.warn(`Missing translation for key: ${key} in language: ${currentLanguage}`);
+      log.warn(`Missing translation for key: ${key} in language: ${currentLanguage}`);
       return translations['en']?.[key] || key;
     }
     return translation;
@@ -57,7 +58,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
   const getChapterTitle = useCallback((chapterId: string): string => {
     const chapterTrans = chapterTranslations[chapterId];
     if (!chapterTrans) {
-      console.warn(`Missing chapter translation for: ${chapterId}`);
+      log.warn(`Missing chapter translation for: ${chapterId}`);
       return chapterId;
     }
     return chapterTrans[currentLanguage] || chapterTrans['en'] || chapterId;

@@ -1,13 +1,25 @@
-const DEBUG = __DEV__ || process.env.EXPO_PUBLIC_DEBUG_LOGS === 'true';
+const isDevelopment = __DEV__;
 
-export function log(...args: any[]) {
-  if (DEBUG) {
-    console.log(...args);
-  }
-}
-
-export function logError(...args: any[]) {
-  if (DEBUG) {
-    console.error(...args);
-  }
-}
+export const log = {
+  info: (message: string, ...args: unknown[]) => {
+    if (isDevelopment) {
+      console.log(`[INFO] ${message}`, ...args);
+    }
+  },
+  
+  warn: (message: string, ...args: unknown[]) => {
+    if (isDevelopment) {
+      console.warn(`[WARN] ${message}`, ...args);
+    }
+  },
+  
+  error: (message: string, ...args: unknown[]) => {
+    console.error(`[ERROR] ${message}`, ...args);
+  },
+  
+  debug: (message: string, ...args: unknown[]) => {
+    if (isDevelopment) {
+      console.log(`[DEBUG] ${message}`, ...args);
+    }
+  },
+};

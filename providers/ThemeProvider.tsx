@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo } from '
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { darkColors, lightColors } from '@/constants/colors';
+import { log } from '@/lib/log';
 
 type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -25,7 +26,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then(stored => {
-      console.log('[ThemeProvider] Loaded preference from storage:', stored);
+      log.debug('[ThemeProvider] Loaded preference from storage:', stored);
       if (stored === 'light' || stored === 'dark' || stored === 'system') {
         setPreferenceState(stored);
       }
@@ -36,11 +37,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const setPreference = (value: ThemePreference) => {
-    console.log('[ThemeProvider] Setting preference to:', value);
+    log.debug('[ThemeProvider] Setting preference to:', value);
     setIsTransitioning(true);
     setPreferenceState(value);
     AsyncStorage.setItem(THEME_KEY, value).catch((error) => {
-      console.error('Failed to save theme preference:', error);
+      log.error('Failed to save theme preference:', error);
     });
     
     setTimeout(() => {
@@ -60,7 +61,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [colorScheme]);
 
   useEffect(() => {
-    console.log('[ThemeProvider] State updated - preference:', preference, 'systemScheme:', systemScheme, 'computed colorScheme:', colorScheme);
+    log.debug('[ThemeProvider] State updated - preference:', preference, 'systemScheme:', systemScheme, 'computed colorScheme:', colorScheme);
   }, [preference, systemScheme, colorScheme]);
 
   const value = useMemo(

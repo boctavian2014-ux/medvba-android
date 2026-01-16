@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useTheme } from '@/providers/ThemeProvider';
+import { spacing, typography } from '@/constants/design';
 
 interface ProgressRingProps {
   progress: number;
@@ -25,9 +26,33 @@ export default function ProgressRing({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
+  
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.timing(animatedValue, {
+        toValue: progress,
+        duration: 800,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [progress, animatedValue, scaleAnim]);
 
   return (
-    <View style={styles.container}>
+    <Animated.View 
+      style={[
+        styles.container,
+        { transform: [{ scale: scaleAnim }] }
+      ]}
+    >
       <Svg width={size} height={size}>
         <Circle
           cx={size / 2}
@@ -52,11 +77,35 @@ export default function ProgressRing({
       </Svg>
       {showPercentage && (
         <View style={[styles.labelContainer, { width: size, height: size }]}>
-          <Text style={[styles.percentage, { color: colors.text }]}>{Math.round(progress)}%</Text>
-          {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
+          <Text 
+            style={[
+              styles.percentage, 
+              { 
+                color: colors.text,
+                fontSize: typography.bodySemibold.fontSize,
+                fontWeight: typography.bodySemibold.fontWeight,
+              }
+            ]}
+          >
+            {Math.round(progress)}%
+          </Text>
+          {label && (
+            <Text 
+              style={[
+                styles.label, 
+                { 
+                  color: colors.textSecondary,
+                  fontSize: typography.caption.fontSize,
+                  marginTop: spacing.xs,
+                }
+              ]}
+            >
+              {label}
+            </Text>
+          )}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -72,11 +121,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   percentage: {
-    fontSize: 18,
     fontWeight: '700' as const,
   },
   label: {
-    fontSize: 10,
-    marginTop: 2,
+    fontWeight: '400' as const,
   },
 });
