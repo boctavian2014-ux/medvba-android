@@ -38,13 +38,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         }
 
         const apiKey = Platform.select({
-          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
-          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
+          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
         });
 
         if (!apiKey) {
           console.error('[RevenueCat] API key not found for platform:', Platform.OS);
-          console.error('[RevenueCat] Please set EXPO_PUBLIC_REVENUECAT_IOS_API_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY');
+          console.error('[RevenueCat] Please set EXPO_PUBLIC_REVENUECAT_TEST_API_KEY or platform-specific keys');
           return;
         }
 
