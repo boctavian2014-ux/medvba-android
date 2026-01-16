@@ -32,19 +32,25 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   useEffect(() => {
     const initRevenueCat = async () => {
       try {
-        const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
-        if (!apiKey) {
-          console.error('[RevenueCat] API key not found');
+        if (Platform.OS === 'web') {
+          console.log('[RevenueCat] Skipping on web');
           return;
         }
 
-        if (Platform.OS !== 'web') {
-          console.log('[RevenueCat] Configuring SDK...');
-          Purchases.configure({ apiKey });
-          console.log('[RevenueCat] SDK configured successfully');
-        } else {
-          console.log('[RevenueCat] Skipping on web');
+        const apiKey = Platform.select({
+          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+        });
+
+        if (!apiKey) {
+          console.error('[RevenueCat] API key not found for platform:', Platform.OS);
+          console.error('[RevenueCat] Please set EXPO_PUBLIC_REVENUECAT_IOS_API_KEY and EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY');
+          return;
         }
+
+        console.log('[RevenueCat] Configuring SDK for', Platform.OS, 'with key:', apiKey.substring(0, 10) + '...');
+        Purchases.configure({ apiKey });
+        console.log('[RevenueCat] SDK configured successfully');
       } catch (error) {
         console.error('[RevenueCat] Initialization error:', error);
       }
