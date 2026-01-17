@@ -710,62 +710,43 @@ export interface DailyProgressData {
 export function useUserProgress(userId: string | undefined) {
   return useQuery({
     queryKey: ['userProgress', userId],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (!userId) return null;
 
       console.log('[Supabase] Fetching user progress for:', userId);
       
-      try {
-        if (signal?.aborted) {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('[Supabase] No user progress found, will create on first update');
           return null;
         }
-
-        const { data, error } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', userId)
-          .abortSignal(signal)
-          .single();
-
-        if (signal?.aborted) {
-          return null;
-        }
-
-        if (error) {
-          if (error.code === 'PGRST116') {
-            console.log('[Supabase] No user progress found, will create on first update');
-            return null;
-          }
-          console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
-          throw error;
-        }
-
-        return {
-          id: data.id,
-          userId: data.user_id,
-          totalQuestionsAnswered: data.total_questions_answered,
-          correctAnswers: data.correct_answers,
-          studyTimeSeconds: data.study_time_seconds,
-          currentStreak: data.current_streak,
-          longestStreak: data.longest_streak,
-          lastActivityDate: data.last_activity_date,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        } as UserProgressData;
-      } catch (error: any) {
-        if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
-          return null;
-        }
+        console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
+
+      return {
+        id: data.id,
+        userId: data.user_id,
+        totalQuestionsAnswered: data.total_questions_answered,
+        correctAnswers: data.correct_answers,
+        studyTimeSeconds: data.study_time_seconds,
+        currentStreak: data.current_streak,
+        longestStreak: data.longest_streak,
+        lastActivityDate: data.last_activity_date,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      } as UserProgressData;
     },
     enabled: !!userId,
     staleTime: 60000,
     gcTime: 300000,
-    retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) return false;
-      return failureCount < 1;
-    },
+    retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -857,60 +838,41 @@ export function useDailyProgress(userId: string | undefined, date: string) {
 export function useWeeklyProgress(userId: string | undefined, startDate: string, endDate: string) {
   return useQuery({
     queryKey: ['weeklyProgress', userId, startDate, endDate],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (!userId) return [];
 
       console.log('[Supabase] Fetching weekly progress for:', userId, startDate, 'to', endDate);
       
-      try {
-        if (signal?.aborted) {
-          return [];
-        }
+      const { data, error } = await supabase
+        .from('daily_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
 
-        const { data, error } = await supabase
-          .from('daily_progress')
-          .select('*')
-          .eq('user_id', userId)
-          .gte('date', startDate)
-          .lte('date', endDate)
-          .abortSignal(signal)
-          .order('date', { ascending: true });
-
-        if (signal?.aborted) {
-          return [];
-        }
-
-        if (error) {
-          console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
-          throw error;
-        }
-
-        console.log('[Supabase] Fetched', data?.length || 0, 'daily records');
-
-        return (data || []).map((day: any) => ({
-          id: day.id,
-          userId: day.user_id,
-          date: day.date,
-          questionsAnswered: day.questions_answered,
-          correctAnswers: day.correct_answers,
-          studyTimeSeconds: day.study_time_seconds,
-          createdAt: day.created_at,
-          updatedAt: day.updated_at,
-        })) as DailyProgressData[];
-      } catch (error: any) {
-        if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
-          return [];
-        }
+      if (error) {
+        console.error('[Supabase] Error fetching weekly progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
         throw error;
       }
+
+      console.log('[Supabase] Fetched', data?.length || 0, 'daily records');
+
+      return (data || []).map((day: any) => ({
+        id: day.id,
+        userId: day.user_id,
+        date: day.date,
+        questionsAnswered: day.questions_answered,
+        correctAnswers: day.correct_answers,
+        studyTimeSeconds: day.study_time_seconds,
+        createdAt: day.created_at,
+        updatedAt: day.updated_at,
+      })) as DailyProgressData[];
     },
     enabled: !!userId && !!startDate && !!endDate,
     staleTime: 60000,
     gcTime: 300000,
-    retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) return false;
-      return failureCount < 1;
-    },
+    retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -1023,8 +985,7 @@ export interface RecentAchievementWithUser extends UserAchievement {
 export function useAllRecentAchievements(limit: number = 20) {
   return useQuery({
     queryKey: ['recentAchievements', limit],
-    queryFn: async ({ signal }) => {
-      if (signal?.aborted) return [];
+    queryFn: async () => {
       console.log('[Supabase] Fetching recent achievements from all users with user info');
       
       const { data: achievementsData, error: achievementsError } = await supabase
@@ -1141,10 +1102,7 @@ export interface AchievementCheckResult {
 export function useCheckAchievements(userId: string | undefined) {
   return useQuery({
     queryKey: ['checkAchievements', userId],
-    queryFn: async ({ signal }): Promise<AchievementCheckResult> => {
-      if (signal?.aborted) {
-        return { earned: [], progress: {} as Record<AchievementType, { current: number; required: number }> };
-      }
+    queryFn: async (): Promise<AchievementCheckResult> => {
       if (!userId) {
         return { earned: [], progress: {} as Record<AchievementType, { current: number; required: number }> };
       }
