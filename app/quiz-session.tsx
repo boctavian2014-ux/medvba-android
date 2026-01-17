@@ -441,14 +441,14 @@ export default function QuizSessionScreen() {
             if (!savedSession.questions || savedSession.questions.length === 0) {
               console.error('[QuizSession] Invalid saved session: empty questions');
               await clearSessionState();
-              router.replace('/(tabs)/quiz' as any);
+              router.replace('/' as any);
               return;
             }
             
             if (savedSession.currentIndex >= savedSession.questions.length) {
               console.error('[QuizSession] Invalid saved session: index out of bounds');
               await clearSessionState();
-              router.replace('/(tabs)/quiz' as any);
+              router.replace('/' as any);
               return;
             }
             
@@ -604,7 +604,7 @@ export default function QuizSessionScreen() {
   const handleNext = useCallback(async () => {
     if (!questions || questions.length === 0) {
       console.error('[QuizSession] No questions available');
-      router.replace('/(tabs)/quiz' as any);
+      router.replace('/' as any);
       return;
     }
     
@@ -642,7 +642,7 @@ export default function QuizSessionScreen() {
     
     await AsyncStorage.setItem('quiz_just_exited', Date.now().toString());
     console.log('[QuizSession] Closing quiz, session state preserved for resume');
-    router.replace('/(tabs)/quiz' as any);
+    router.replace('/' as any);
   }, [addStudyTime, router]);
 
   const handleCopyExplanation = useCallback(async () => {
