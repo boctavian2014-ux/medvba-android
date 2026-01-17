@@ -1801,3 +1801,172 @@ export function useUpdateSubscription() {
   });
 }
 
+export function useUserPresence(userId?: string) {
+  return useQuery({
+    queryKey: ['userPresence', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      console.log('[Supabase] Fetching user presence:', userId);
+      const { data, error } = await supabase
+        .from('user_presence')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        console.error('[Supabase] Error fetching user presence:', error);
+        return null;
+      }
+
+      const now = new Date();
+      const lastSeen = new Date(data.last_seen);
+      const minutesAgo = (now.getTime() - lastSeen.getTime()) / 60000;
+      
+      return {
+        userId: data.user_id,
+        isOnline: minutesAgo < 5,
+        lastSeen: data.last_seen,
+        status: minutesAgo < 5 ? 'online' : 'offline',
+      };
+    },
+    enabled: !!userId,
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+}
+
+export function useUpdatePresence() {
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      console.log('[Supabase] Updating presence for:', userId);
+      const { error } = await supabase
+        .from('user_presence')
+        .upsert({
+          user_id: userId,
+          last_seen: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('[Supabase] Error updating presence:', error);
+        throw error;
+      }
+    },
+  });
+}
+
+export function useOnlineFriends(userId?: string) {
+  return useQuery({
+    queryKey: ['onlineFriends', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      console.log('[Supabase] Fetching online friends for:', userId);
+      
+      const fiveMinutesAgo = new Date();
+      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+      
+      const { data, error } = await supabase
+        .from('user_presence')
+        .select(`
+          user_id,
+          last_seen,
+          profiles!inner(id, name, avatar)
+        `)
+        .gte('last_seen', fiveMinutesAgo.toISOString())
+        .neq('user_id', userId);
+
+      if (error) {
+        console.error('[Supabase] Error fetching online friends:', error);
+        return [];
+      }
+
+      return (data || []).map((item: any) => ({
+        id: item.profiles.id,
+        name: item.profiles.name,
+        avatar: item.profiles.avatar,
+        lastSeen: item.last_seen,
+        isOnline: true,
+      }));
+    },
+    enabled: !!userId,
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+}
+
+export function useFriendActivity(userId?: string, limit = 20) {
+  return useQuery({
+    queryKey: ['friendActivity', userId, limit],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      console.log('[Supabase] Fetching friend activity...');
+      
+      const thirtyMinutesAgo = new Date();
+      thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+      
+      const { data: presenceData, error: presenceError } = await supabase
+        .from('user_presence')
+        .select(`
+          user_id,
+          last_seen,
+          profiles!inner(id, name, avatar)
+        `)
+        .gte('last_seen', thirtyMinutesAgo.toISOString())
+        .neq('user_id', userId)
+        .order('last_seen', { ascending: false })
+        .limit(limit);
+
+      if (presenceError) {
+        console.error('[Supabase] Error fetching friend activity:', presenceError);
+        return [];
+      }
+
+      return (presenceData || []).map((item: any, index: number) => ({
+        id: `activity_${item.user_id}_${index}`,
+        userId: item.profiles.id,
+        userName: item.profiles.name,
+        userAvatar: item.profiles.avatar,
+        activityType: 'came_online' as const,
+        timestamp: item.last_seen,
+        metadata: {},
+      }));
+    },
+    enabled: !!userId,
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
+}
+
+export function usePresenceSubscription(userId?: string, onPresenceChange?: (presence: any) => void) {
+  useEffect(() => {
+    if (!userId || !onPresenceChange) return;
+
+    console.log('[Supabase] Setting up presence subscription...');
+    
+    const channel = supabase
+      .channel('presence-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_presence',
+        },
+        (payload) => {
+          console.log('[Supabase] Presence change:', payload);
+          onPresenceChange(payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[Supabase] Cleaning up presence subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [userId, onPresenceChange]);
+}

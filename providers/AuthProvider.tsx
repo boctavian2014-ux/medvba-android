@@ -3,6 +3,7 @@ import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
+import { AppState } from 'react-native';
 
 import { monitoring } from '@/lib/monitoring';
 import type { UserProfile } from '@/types/user';
@@ -329,6 +330,39 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       await fetchProfile(user.id, user.email, mountedRef);
     }
   }, [user, fetchProfile]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const updatePresence = async () => {
+      try {
+        await supabase
+          .from('user_presence')
+          .upsert({
+            user_id: user.id,
+            last_seen: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        console.log('[Auth] Presence updated');
+      } catch (error) {
+        console.error('[Auth] Error updating presence:', error);
+      }
+    };
+
+    updatePresence();
+
+    const presenceInterval = setInterval(updatePresence, 60000);
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        updatePresence();
+      }
+    });
+
+    return () => {
+      clearInterval(presenceInterval);
+      subscription.remove();
+    };
+  }, [user?.id]);
 
   return {
     session,

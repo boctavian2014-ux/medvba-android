@@ -42,6 +42,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import RoomChat from '@/components/RoomChat';
+import OnlineIndicator from '@/components/OnlineIndicator';
 import { activities } from '@/mocks/activities';
 import {
   useStudyRooms,
@@ -53,6 +54,8 @@ import {
   useAllRecentAchievements,
   RecentAchievementWithUser,
   AchievementType,
+  useOnlineFriends,
+  useFriendActivity,
 } from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -283,6 +286,8 @@ export default function SocialScreen() {
   const studyRoomsQuery = useStudyRooms();
   const upcomingSessionsQuery = useUpcomingSessions();
   const recentAchievementsQuery = useAllRecentAchievements(15);
+  const onlineFriendsQuery = useOnlineFriends(user?.id);
+  const friendActivityQuery = useFriendActivity(user?.id, 10);
 
   const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map((room: any) => ({
     ...room,
@@ -427,6 +432,8 @@ export default function SocialScreen() {
 
   const upcomingSessions: StudySession[] = upcomingSessionsQuery.data ?? [];
   const recentAchievements: RecentAchievementWithUser[] = recentAchievementsQuery.data ?? [];
+  const onlineFriends = onlineFriendsQuery.data ?? [];
+  const friendActivity = friendActivityQuery.data ?? [];
 
   const getAchievementTitle = (type: AchievementType): string => {
     const titles: Record<AchievementType, string> = {
@@ -552,7 +559,14 @@ export default function SocialScreen() {
                     }}
                   >
                     <GlassCard style={styles.roomCard} variant="light">
-                      <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
+                      <View style={styles.roomAvatarContainer}>
+                        <Image source={{ uri: room.hostAvatar }} style={styles.roomHostAvatar} />
+                        <OnlineIndicator 
+                          isOnline={onlineFriends.some(f => f.id === room.hostId)} 
+                          size={14}
+                          style={styles.onlineIndicator}
+                        />
+                      </View>
                       <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
                       <Text style={styles.roomHost}>
                         {isHost ? t('social.youAreHosting') : t('social.hostedBy').replace('{name}', room.host)}
@@ -671,6 +685,67 @@ export default function SocialScreen() {
                   </GlassCard>
                 );
               })}
+            </View>
+          )}
+
+          {onlineFriends.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Users color={colors.success} size={18} />
+                <Text style={styles.sectionTitle}>{t('social.onlineFriends')}</Text>
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.onlineFriendsScroll}
+              >
+                {onlineFriends.map((friend) => (
+                  <TouchableOpacity key={friend.id} style={styles.onlineFriendCard}>
+                    <View style={styles.onlineFriendAvatarContainer}>
+                      <Image source={{ uri: friend.avatar }} style={styles.onlineFriendAvatar} />
+                      <OnlineIndicator 
+                        isOnline={true} 
+                        size={14}
+                        style={styles.onlineFriendIndicator}
+                      />
+                    </View>
+                    <Text style={styles.onlineFriendName} numberOfLines={1}>{friend.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {friendActivity.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Clock color={colors.secondary} size={18} />
+                <Text style={styles.sectionTitle}>{t('social.recentActivity')}</Text>
+              </View>
+              {friendActivity.map((activity) => (
+                <GlassCard key={activity.id} style={styles.activityCard}>
+                  <View style={styles.activityHeader}>
+                    <View style={styles.friendActivityAvatarContainer}>
+                      <Image source={{ uri: activity.userAvatar }} style={styles.activityAvatar} />
+                      <OnlineIndicator 
+                        isOnline={onlineFriends.some(f => f.id === activity.userId)} 
+                        size={12}
+                        style={styles.activityOnlineIndicator}
+                      />
+                    </View>
+                    <View style={styles.activityUserInfo}>
+                      <Text style={styles.activityUserName}>{activity.userName}</Text>
+                      <Text style={styles.activityTime}>
+                        {formatTimeAgo(new Date(activity.timestamp))}
+                      </Text>
+                    </View>
+                    <View style={styles.activityTypeIcon}>
+                      <Users color={colors.success} size={18} />
+                    </View>
+                  </View>
+                  <Text style={styles.activityTitle}>{t('social.cameOnline')}</Text>
+                </GlassCard>
+              ))}
             </View>
           )}
 
@@ -2163,5 +2238,52 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     fontSize: 12,
     fontWeight: '600' as const,
     color: colors.accent,
+  },
+  roomAvatarContainer: {
+    position: 'relative',
+    marginTop: 8,
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
+  onlineFriendsScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  onlineFriendCard: {
+    alignItems: 'center',
+    width: 70,
+  },
+  onlineFriendAvatarContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  onlineFriendAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: colors.success,
+  },
+  onlineFriendIndicator: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+  },
+  onlineFriendName: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  friendActivityAvatarContainer: {
+    position: 'relative',
+  },
+  activityOnlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
   },
 });

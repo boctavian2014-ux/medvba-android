@@ -25,3 +25,20 @@ export interface UserAccount {
   profile_photo_url?: string;
   created_at: string;
 }
+
+export interface UserPresence {
+  userId: string;
+  isOnline: boolean;
+  lastSeen: string;
+  status?: 'online' | 'away' | 'offline';
+}
+
+export interface FriendActivity {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  activityType: 'came_online' | 'started_quiz' | 'joined_room' | 'earned_achievement';
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
