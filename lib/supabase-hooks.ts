@@ -523,8 +523,7 @@ export function useStudyPartners(filters?: {
       
       let query = supabase
         .from('profiles')
-        .select('*')
-        .eq('is_public', true);
+        .select('*');
 
       if (filters?.city) {
         query = query.eq('city', filters.city);
@@ -1890,7 +1889,7 @@ export function useOnlineFriends(userId?: string) {
       
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select('id, name, avatar, is_public')
+        .select('id, name, avatar')
         .in('id', userIds);
 
       if (usersError) {
@@ -1911,7 +1910,6 @@ export function useOnlineFriends(userId?: string) {
       );
 
       return (usersData || [])
-        .filter((user: any) => user.is_public)
         .map((user: any) => ({
           id: user.id,
           name: user.name || 'Student',
