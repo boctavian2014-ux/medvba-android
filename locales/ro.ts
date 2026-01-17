@@ -637,7 +637,7 @@ export const ro: Record<string, string> = {
   'paywall.billedAnnually': 'Facturat anual',
   'paywall.billedMonthly': 'Facturat lunar',
   'paywall.upgradeButton': 'Upgrade la Premium',
-  'paywall.restoreButton': 'Restaurează Achiziții',
+  'paywall.restoreButton': 'Returnează Achizițiile',
   'paywall.continueFree': 'Continuă Gratuit',
   'paywall.disclaimer': 'Prețurile sunt în RON. Abonamentul se reînnoiește automat. Poți anula oricând.',
   'paywall.errorTitle': 'Eroare',
