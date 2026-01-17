@@ -1881,7 +1881,12 @@ export function useOnlineFriends(userId?: string) {
         .eq('profiles.is_public', true);
 
       if (error) {
-        console.error('[Supabase] Error fetching online friends:', error);
+        console.error('[Supabase] Error fetching online friends:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         return [];
       }
 
@@ -1923,7 +1928,12 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .limit(limit);
 
       if (presenceError) {
-        console.error('[Supabase] Error fetching friend activity:', presenceError);
+        console.error('[Supabase] Error fetching friend activity:', {
+          message: presenceError.message,
+          details: presenceError.details,
+          hint: presenceError.hint,
+          code: presenceError.code
+        });
         return [];
       }
 
