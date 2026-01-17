@@ -623,7 +623,7 @@ export const ro: Record<string, string> = {
   'conduct.footer': 'Prin utilizarea MedixStudyHub, ești de acord să respecți acest Cod de conduită. Îți mulțumim că ne ajuți să menținem o comunitate de învățare pozitivă.',
 
   // Paywall
-  'paywall.title': 'Upgrade Premium',
+  'paywall.title': 'Treci la Premium',
   'paywall.mainTitle': 'Deblocează Potențialul Maxim',
   'paywall.subtitle': 'Accesează toate funcțiile premium și accelerează-ți progresul',
   'paywall.loading': 'Se încarcă opțiunile...',
