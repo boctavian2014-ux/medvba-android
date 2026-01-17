@@ -248,27 +248,65 @@ export default function HomeScreen() {
                 'neuroanatomy': Brain,
               };
               const IconComponent = iconMap[category.id] || Bone;
+              const isLocked = !isPremium;
+
+              const handleCategoryPress = () => {
+                if (isLocked) {
+                  Alert.alert(
+                    '🔒 Premium Feature',
+                    `${getModuleName(category.id)} is a premium feature. Upgrade to unlock all anatomy modules!`,
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: '⭐ Upgrade Premium', onPress: handleUpgradePress, style: 'default' },
+                    ]
+                  );
+                  return;
+                }
+
+                router.push({
+                  pathname: '/quiz-session',
+                  params: { category: category.id, mode: 'sequential' }
+                });
+              };
+
               return (
                 <TouchableOpacity 
                   key={category.id}
-                  onPress={() => router.push({
-                    pathname: '/quiz-session',
-                    params: { category: category.id, mode: 'sequential' }
-                  })}
+                  onPress={handleCategoryPress}
+                  activeOpacity={0.7}
                 >
-                  <GlassCard style={styles.categoryCard}>
+                  <GlassCard style={[styles.categoryCard, isLocked && { opacity: 0.7 }]}>
                     <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
-                      <IconComponent color={category.color} size={20} />
+                      {isLocked ? (
+                        <Lock color={category.color} size={20} strokeWidth={2.5} />
+                      ) : (
+                        <IconComponent color={category.color} size={20} />
+                      )}
                     </View>
                     <View style={styles.categoryInfo}>
-                      <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
+                      <View style={styles.categoryNameRow}>
+                        <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
+                        {isLocked && (
+                          <View style={[styles.premiumTag, { backgroundColor: colors.warning + '20' }]}>
+                            <Sparkles size={10} color={colors.warning} strokeWidth={2.5} />
+                            <Text style={[styles.premiumTagText, { color: colors.warning }]}>Premium</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={[styles.categoryProgress, { color: colors.textSecondary }]}>
-                        {t('home.categoryQuestions')
-                          .replace('{current}', category.completedCount.toLocaleString())
-                          .replace('{total}', category.questionCount.toLocaleString())}
+                        {isLocked 
+                          ? 'Unlock premium to access'
+                          : t('home.categoryQuestions')
+                              .replace('{current}', category.completedCount.toLocaleString())
+                              .replace('{total}', category.questionCount.toLocaleString())
+                        }
                       </Text>
                     </View>
-                    <ChevronRight color={colors.textMuted} size={20} />
+                    {isLocked ? (
+                      <Lock color={colors.textMuted} size={20} strokeWidth={2} />
+                    ) : (
+                      <ChevronRight color={colors.textMuted} size={20} />
+                    )}
                   </GlassCard>
                 </TouchableOpacity>
               );
@@ -516,10 +554,28 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     justifyContent: 'center',
   },
+  categoryNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
   categoryName: {
     fontSize: 16,
     fontWeight: '600' as const,
     flexShrink: 1,
+  },
+  premiumTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  premiumTagText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
   },
   categoryProgress: {
     fontSize: 13,
