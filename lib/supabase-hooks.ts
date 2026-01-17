@@ -1885,7 +1885,12 @@ export function useOnlineFriends(userId?: string) {
         .neq('user_id', userId);
 
       if (error) {
-        console.error('[Supabase] Error fetching online friends:', error);
+        console.error('[Supabase] Error fetching online friends:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         return [];
       }
 
