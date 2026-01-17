@@ -1870,11 +1870,15 @@ export function useOnlineFriends(userId?: string) {
         .neq('user_id', userId);
 
       if (presenceError) {
-        if (presenceError.message?.includes('aborted') || presenceError.message?.includes('signal is aborted')) {
+        const isAbortError = 
+          presenceError.name === 'AbortError' ||
+          presenceError.code === 'ABORT_ERR' ||
+          (presenceError.message && presenceError.message.includes('abort'));
+        
+        if (isAbortError) {
           return [];
         }
-        console.error('[Supabase] Error fetching online friends:', presenceError.message);
-        console.error('[Supabase] Error details:', presenceError);
+        console.error('[Supabase] Error fetching online friends:', presenceError.message || presenceError);
         return [];
       }
 
@@ -1890,11 +1894,15 @@ export function useOnlineFriends(userId?: string) {
         .in('id', userIds);
 
       if (usersError) {
-        if (usersError.message?.includes('aborted') || usersError.message?.includes('signal is aborted')) {
+        const isAbortError = 
+          usersError.name === 'AbortError' ||
+          usersError.code === 'ABORT_ERR' ||
+          (usersError.message && usersError.message.includes('abort'));
+        
+        if (isAbortError) {
           return [];
         }
-        console.error('[Supabase] Error fetching user data for online friends:', usersError.message);
-        console.error('[Supabase] Error details:', usersError);
+        console.error('[Supabase] Error fetching user data for online friends:', usersError.message || usersError);
         return [];
       }
 
@@ -1938,11 +1946,15 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .limit(limit);
 
       if (presenceError) {
-        if (presenceError.message?.includes('aborted') || presenceError.message?.includes('signal is aborted')) {
+        const isAbortError = 
+          presenceError.name === 'AbortError' ||
+          presenceError.code === 'ABORT_ERR' ||
+          (presenceError.message && presenceError.message.includes('abort'));
+        
+        if (isAbortError) {
           return [];
         }
-        console.error('[Supabase] Error fetching friend activity:', presenceError.message);
-        console.error('[Supabase] Error details:', presenceError);
+        console.error('[Supabase] Error fetching friend activity:', presenceError.message || presenceError);
         return [];
       }
 
@@ -1958,11 +1970,15 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .in('id', userIds);
 
       if (usersError) {
-        if (usersError.message?.includes('aborted') || usersError.message?.includes('signal is aborted')) {
+        const isAbortError = 
+          usersError.name === 'AbortError' ||
+          usersError.code === 'ABORT_ERR' ||
+          (usersError.message && usersError.message.includes('abort'));
+        
+        if (isAbortError) {
           return [];
         }
-        console.error('[Supabase] Error fetching user data for friend activity:', usersError.message);
-        console.error('[Supabase] Error details:', usersError);
+        console.error('[Supabase] Error fetching user data for friend activity:', usersError.message || usersError);
         return [];
       }
 
