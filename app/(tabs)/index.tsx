@@ -19,7 +19,6 @@ import { useSubscriptionStatus } from '@/lib/supabase-hooks';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import PremiumBadge from '@/components/PremiumBadge';
-import { currentUser } from '@/mocks/users';
 import { categories } from '@/mocks/questions';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
@@ -28,7 +27,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
   const { colors } = useTheme();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data: subscriptionData } = useSubscriptionStatus(user?.id);
   const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
@@ -110,7 +109,7 @@ export default function HomeScreen() {
               />
               <View>
                 <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
-                <Text style={[styles.userName, { color: colors.text }]}>{currentUser.name.split(' ')[0]}</Text>
+                <Text style={[styles.userName, { color: colors.text }]}>{profile?.name.split(' ')[0] || 'Student'}</Text>
               </View>
             </View>
             <View style={styles.headerRight}>
@@ -125,7 +124,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-                <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
+                <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
               </TouchableOpacity>
             </View>
           </View>

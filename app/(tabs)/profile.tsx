@@ -37,7 +37,7 @@ import {
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
-import { currentUser, leaderboard } from '@/mocks/users';
+import { leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useZoomRequests } from '@/lib/supabase-hooks';
@@ -80,7 +80,7 @@ function getLast7Days(): string[] {
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { colors } = useTheme();
   const { isPremium } = useSubscription();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -299,7 +299,7 @@ export default function ProfileScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
+                  <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
                 </LinearGradient>
                 <View style={styles.rankBadge}>
                   <LinearGradient
@@ -308,11 +308,11 @@ export default function ProfileScreen() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   />
-                  <Text style={styles.rankText}>#{currentUser.rank}</Text>
+                  <Text style={styles.rankText}>#{profile?.rank || 0}</Text>
                 </View>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>{currentUser.name}</Text>
+                <Text style={styles.profileName}>{profile?.name || 'Student'}</Text>
                 <View style={styles.profileStats}>
                   <View style={styles.streakBadgeSmall}>
                     <Flame color={colors.streakOrange} size={14} fill={colors.streakOrange} />
@@ -320,7 +320,7 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.pointsBadge}>
                     <Star color={colors.warning} size={14} fill={colors.warning} />
-                    <Text style={styles.pointsText}>{currentUser.points.toLocaleString()}</Text>
+                    <Text style={styles.pointsText}>{(profile?.points || 0).toLocaleString()}</Text>
                   </View>
                 </View>
               </View>
