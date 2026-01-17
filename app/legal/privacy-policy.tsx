@@ -108,12 +108,6 @@ export default function PrivacyPolicyScreen() {
                 • <Text style={styles.bold}>{t('privacy.supabase')}</Text> {t('privacy.supabaseDesc')}
               </Text>
               <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>{t('privacy.zoom')}</Text> {t('privacy.zoomDesc')}
-              </Text>
-              <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>{t('privacy.googleCloudVision')}</Text> {t('privacy.googleCloudVisionDesc')}
-              </Text>
-              <Text style={styles.bulletItem}>
                 • <Text style={styles.bold}>{t('privacy.revenueCat')}</Text> {t('privacy.revenueCatDesc')}
               </Text>
             </View>
