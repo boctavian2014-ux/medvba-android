@@ -27,10 +27,11 @@ const translationSchema = z.object({
 });
 
 export async function batchTranslateQuestions(
+  targetLanguages: ('ro' | 'es' | 'pt')[] = ['ro'],
   onProgress?: (progress: TranslationProgress) => void
 ): Promise<TranslationResult> {
   const untranslatedQuestions = sampleQuestions.filter(
-    (q) => !questionTranslations[q.id]?.ro
+    (q) => targetLanguages.some(lang => !questionTranslations[q.id]?.[lang])
   );
 
   console.log(`Found ${untranslatedQuestions.length} untranslated questions`);
@@ -57,8 +58,17 @@ export async function batchTranslateQuestions(
         explanation: q.explanation,
       }));
 
-      const prompt = `Translate the following anatomy quiz questions from English to Romanian. 
-Keep medical terminology accurate and professional. Return translations in the exact same format.
+      const languageNames = {
+        ro: 'Romanian',
+        es: 'Spanish',
+        pt: 'Portuguese'
+      };
+      
+      const targetLangNames = targetLanguages.map(l => languageNames[l]).join(', ');
+      
+      const prompt = `Translate the following anatomy quiz questions from English to ${targetLangNames}. 
+Keep medical terminology accurate and professional.
+Return the SAME translations for ALL languages requested.
 
 Questions to translate:
 ${JSON.stringify(questionsForTranslation, null, 2)}
@@ -67,7 +77,8 @@ Important:
 - Translate all medical terms accurately
 - Keep the professional tone
 - Ensure each question has the same number of options as the original
-- Make sure explanations are clear and educational`;
+- Make sure explanations are clear and educational
+- The translations should be identical for each requested language`;
 
       const translation = await generateObject({
         messages: [{ role: "user", content: prompt }],
@@ -75,13 +86,16 @@ Important:
       });
 
       for (const t of translation.translations) {
-        result[t.id] = {
-          ro: {
+        if (!result[t.id]) {
+          result[t.id] = {};
+        }
+        for (const lang of targetLanguages) {
+          result[t.id][lang] = {
             question: t.question,
             options: t.options,
             explanation: t.explanation,
-          },
-        };
+          };
+        }
         completed++;
       }
 
@@ -118,10 +132,11 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
 
 export async function translateSpecificCategory(
   category: string,
+  targetLanguages: ('ro' | 'es' | 'pt')[] = ['ro'],
   onProgress?: (progress: TranslationProgress) => void
 ): Promise<TranslationResult> {
   const categoryQuestions = sampleQuestions.filter((q) => 
-    q.category === category && !questionTranslations[q.id]?.ro
+    q.category === category && targetLanguages.some(lang => !questionTranslations[q.id]?.[lang])
   );
 
   console.log(`Found ${categoryQuestions.length} untranslated questions in category: ${category}`);
@@ -148,8 +163,17 @@ export async function translateSpecificCategory(
         explanation: q.explanation,
       }));
 
-      const prompt = `Translate the following anatomy quiz questions from English to Romanian.
-Keep medical terminology accurate and professional. Return translations in the exact same format.
+      const languageNames = {
+        ro: 'Romanian',
+        es: 'Spanish',
+        pt: 'Portuguese'
+      };
+      
+      const targetLangNames = targetLanguages.map(l => languageNames[l]).join(', ');
+      
+      const prompt = `Translate the following anatomy quiz questions from English to ${targetLangNames}.
+Keep medical terminology accurate and professional.
+Return the SAME translations for ALL languages requested.
 
 Questions to translate:
 ${JSON.stringify(questionsForTranslation, null, 2)}
@@ -158,7 +182,8 @@ Important:
 - Translate all medical terms accurately
 - Keep the professional tone
 - Ensure each question has the same number of options as the original
-- Make sure explanations are clear and educational`;
+- Make sure explanations are clear and educational
+- The translations should be identical for each requested language`;
 
       const translation = await generateObject({
         messages: [{ role: "user", content: prompt }],
@@ -166,13 +191,16 @@ Important:
       });
 
       for (const t of translation.translations) {
-        result[t.id] = {
-          ro: {
+        if (!result[t.id]) {
+          result[t.id] = {};
+        }
+        for (const lang of targetLanguages) {
+          result[t.id][lang] = {
             question: t.question,
             options: t.options,
             explanation: t.explanation,
-          },
-        };
+          };
+        }
         completed++;
       }
 
