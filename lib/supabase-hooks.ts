@@ -718,7 +718,6 @@ export function useUserProgress(userId: string | undefined) {
       
       try {
         if (signal?.aborted) {
-          console.log('[Supabase] Request aborted before starting');
           return null;
         }
 
@@ -730,7 +729,6 @@ export function useUserProgress(userId: string | undefined) {
           .single();
 
         if (signal?.aborted) {
-          console.log('[Supabase] Request aborted after fetch');
           return null;
         }
 
@@ -757,7 +755,6 @@ export function useUserProgress(userId: string | undefined) {
         } as UserProgressData;
       } catch (error: any) {
         if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
-          console.log('[Supabase] Query aborted gracefully');
           return null;
         }
         throw error;
@@ -767,7 +764,7 @@ export function useUserProgress(userId: string | undefined) {
     staleTime: 60000,
     gcTime: 300000,
     retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return false;
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) return false;
       return failureCount < 1;
     },
     refetchOnWindowFocus: false,
@@ -868,7 +865,6 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
       
       try {
         if (signal?.aborted) {
-          console.log('[Supabase] Request aborted before starting');
           return [];
         }
 
@@ -882,7 +878,6 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
           .order('date', { ascending: true });
 
         if (signal?.aborted) {
-          console.log('[Supabase] Request aborted after fetch');
           return [];
         }
 
@@ -905,7 +900,6 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
         })) as DailyProgressData[];
       } catch (error: any) {
         if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) {
-          console.log('[Supabase] Query aborted gracefully');
           return [];
         }
         throw error;
@@ -915,7 +909,7 @@ export function useWeeklyProgress(userId: string | undefined, startDate: string,
     staleTime: 60000,
     gcTime: 300000,
     retry: (failureCount, error: any) => {
-      if (error?.name === 'AbortError' || error?.message?.includes('aborted')) return false;
+      if (error?.name === 'AbortError' || error?.message?.includes('aborted') || error?.message?.includes('signal is aborted')) return false;
       return failureCount < 1;
     },
     refetchOnWindowFocus: false,
@@ -1876,6 +1870,9 @@ export function useOnlineFriends(userId?: string) {
         .neq('user_id', userId);
 
       if (presenceError) {
+        if (presenceError.message?.includes('aborted') || presenceError.message?.includes('signal is aborted')) {
+          return [];
+        }
         console.error('[Supabase] Error fetching online friends:', presenceError.message);
         console.error('[Supabase] Error details:', presenceError);
         return [];
@@ -1893,6 +1890,9 @@ export function useOnlineFriends(userId?: string) {
         .in('id', userIds);
 
       if (usersError) {
+        if (usersError.message?.includes('aborted') || usersError.message?.includes('signal is aborted')) {
+          return [];
+        }
         console.error('[Supabase] Error fetching user data for online friends:', usersError.message);
         console.error('[Supabase] Error details:', usersError);
         return [];
@@ -1938,6 +1938,9 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .limit(limit);
 
       if (presenceError) {
+        if (presenceError.message?.includes('aborted') || presenceError.message?.includes('signal is aborted')) {
+          return [];
+        }
         console.error('[Supabase] Error fetching friend activity:', presenceError.message);
         console.error('[Supabase] Error details:', presenceError);
         return [];
@@ -1955,6 +1958,9 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .in('id', userIds);
 
       if (usersError) {
+        if (usersError.message?.includes('aborted') || usersError.message?.includes('signal is aborted')) {
+          return [];
+        }
         console.error('[Supabase] Error fetching user data for friend activity:', usersError.message);
         console.error('[Supabase] Error details:', usersError);
         return [];
