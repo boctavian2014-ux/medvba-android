@@ -15,10 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { X, Search, MapPin, School, Users, BookOpen, Filter } from 'lucide-react-native';
+import { X, Search, MapPin, School, Users, Filter, MessageCircle } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
-import { useStudyPartners } from '@/lib/supabase-hooks';
+import { useStudyPartners, useGetOrCreateDirectChat } from '@/lib/supabase-hooks';
 import type { UserAccount } from '@/types/user';
 import { useAuth } from '@/providers/AuthProvider';
 
@@ -32,6 +32,7 @@ export default function FindPartnersScreen() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: allPartners = [], isLoading, refetch, isRefetching } = useStudyPartners();
+  const createOrGetChatMutation = useGetOrCreateDirectChat();
 
   const filteredPartners = useMemo(() => {
     let filtered = allPartners.filter((partner) => partner.id !== user?.id);
@@ -133,7 +134,7 @@ export default function FindPartnersScreen() {
             if (Platform.OS !== 'web') {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }
-            console.log('View profile:', partner.id);
+            router.push(`/profile/${partner.id}`);
           }}
           activeOpacity={0.7}
         >
@@ -143,12 +144,22 @@ export default function FindPartnersScreen() {
 
         <TouchableOpacity
           style={styles.connectButton}
-          onPress={() => {
+          onPress={async () => {
+            if (!user?.id) return;
             if (Platform.OS !== 'web') {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
-            console.log('Connect with:', partner.id);
+            try {
+              const result = await createOrGetChatMutation.mutateAsync({
+                currentUserId: user.id,
+                otherUserId: partner.id,
+              });
+              router.push(`/direct-chat?chatId=${result.id}`);
+            } catch (error) {
+              console.error('Error starting chat:', error);
+            }
           }}
+          disabled={createOrGetChatMutation.isPending}
           activeOpacity={0.8}
         >
           <LinearGradient
@@ -157,8 +168,14 @@ export default function FindPartnersScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           />
-          <BookOpen color={colors.text} size={16} />
-          <Text style={styles.connectButtonText}>Connect</Text>
+          {createOrGetChatMutation.isPending ? (
+            <ActivityIndicator size="small" color={colors.text} />
+          ) : (
+            <>
+              <MessageCircle color={colors.text} size={16} />
+              <Text style={styles.connectButtonText}>Message</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </GlassCard>

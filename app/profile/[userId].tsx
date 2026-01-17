@@ -1,0 +1,463 @@
+import React, { useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import {
+  ArrowLeft,
+  MapPin,
+  School,
+  BookOpen,
+  MessageCircle,
+  Calendar,
+  Award,
+  Clock,
+  Target,
+  TrendingUp,
+} from 'lucide-react-native';
+import { useTheme } from '@/providers/ThemeProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import GlassCard from '@/components/GlassCard';
+import { useUserProfile, useGetOrCreateDirectChat, useUserProgress } from '@/lib/supabase-hooks';
+
+export default function ProfileDetailScreen() {
+  const router = useRouter();
+  const { userId } = useLocalSearchParams<{ userId: string }>();
+  const { user } = useAuth();
+  const { colors } = useTheme();
+
+  const { data: profile, isLoading: isLoadingProfile } = useUserProfile(userId);
+  const { data: progress } = useUserProgress(userId);
+  const createOrGetChatMutation = useGetOrCreateDirectChat();
+
+  const isOwnProfile = user?.id === userId;
+
+  const handleStartChat = async () => {
+    if (!user?.id || !userId || isOwnProfile) return;
+
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+
+    try {
+      const result = await createOrGetChatMutation.mutateAsync({
+        currentUserId: user.id,
+        otherUserId: userId,
+      });
+
+      router.push(`/direct-chat?chatId=${result.id}`);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+    }
+  };
+
+  const handleEditProfile = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push('/edit-profile');
+  };
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  if (isLoadingProfile) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[colors.background, colors.backgroundLight]} style={StyleSheet.absoluteFill} />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+              <ArrowLeft color={colors.text} size={24} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <View style={styles.backButton} />
+          </View>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[colors.background, colors.backgroundLight]} style={StyleSheet.absoluteFill} />
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+              <ArrowLeft color={colors.text} size={24} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <View style={styles.backButton} />
+          </View>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Profile not found</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const accuracy = progress ? (progress.totalQuestionsAnswered > 0 ? (progress.correctAnswers / progress.totalQuestionsAnswered) * 100 : 0) : 0;
+  const studyHours = progress ? progress.studyTimeSeconds / 3600 : 0;
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient colors={[colors.background, colors.backgroundLight]} style={StyleSheet.absoluteFill} />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+            <ArrowLeft color={colors.text} size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.backButton} />
+        </View>
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <GlassCard style={styles.profileCard}>
+            <View style={styles.profileHeader}>
+              <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+              <Text style={styles.name}>{profile.name}</Text>
+              
+              {profile.city && (
+                <View style={styles.locationRow}>
+                  <MapPin color={colors.accent} size={16} />
+                  <Text style={styles.locationText}>{profile.city}</Text>
+                </View>
+              )}
+
+              {profile.university && (
+                <View style={styles.infoRow}>
+                  <View style={styles.infoIcon}>
+                    <School color={colors.secondary} size={18} />
+                  </View>
+                  <Text style={styles.infoText}>
+                    {profile.university}
+                    {profile.year_of_study && ` • Year ${profile.year_of_study}`}
+                  </Text>
+                </View>
+              )}
+
+              {profile.bio && (
+                <View style={styles.bioSection}>
+                  <Text style={styles.bioText}>{profile.bio}</Text>
+                </View>
+              )}
+
+              <View style={styles.joinedRow}>
+                <Calendar color={colors.textMuted} size={14} />
+                <Text style={styles.joinedText}>
+                  Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </Text>
+              </View>
+            </View>
+          </GlassCard>
+
+          {progress && (
+            <GlassCard style={styles.statsCard}>
+              <Text style={styles.sectionTitle}>Study Statistics</Text>
+              
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <View style={[styles.statIcon, { backgroundColor: colors.primary + '20' }]}>
+                    <Target color={colors.primary} size={20} />
+                  </View>
+                  <Text style={styles.statValue}>{progress.totalQuestionsAnswered}</Text>
+                  <Text style={styles.statLabel}>Questions</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View style={[styles.statIcon, { backgroundColor: colors.success + '20' }]}>
+                    <TrendingUp color={colors.success} size={20} />
+                  </View>
+                  <Text style={styles.statValue}>{accuracy.toFixed(1)}%</Text>
+                  <Text style={styles.statLabel}>Accuracy</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View style={[styles.statIcon, { backgroundColor: colors.accent + '20' }]}>
+                    <Award color={colors.accent} size={20} />
+                  </View>
+                  <Text style={styles.statValue}>{progress.currentStreak}</Text>
+                  <Text style={styles.statLabel}>Day Streak</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <View style={[styles.statIcon, { backgroundColor: colors.secondary + '20' }]}>
+                    <Clock color={colors.secondary} size={20} />
+                  </View>
+                  <Text style={styles.statValue}>{studyHours.toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>Study Hours</Text>
+                </View>
+              </View>
+            </GlassCard>
+          )}
+
+          {!isOwnProfile && (
+            <TouchableOpacity
+              style={styles.messageButton}
+              onPress={handleStartChat}
+              disabled={createOrGetChatMutation.isPending}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.secondary]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              />
+              {createOrGetChatMutation.isPending ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <>
+                  <MessageCircle color={colors.text} size={20} />
+                  <Text style={styles.messageButtonText}>Send Message</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {isOwnProfile && (
+            <TouchableOpacity style={styles.editButton} onPress={handleEditProfile} activeOpacity={0.8}>
+              <View style={styles.editButtonContent}>
+                <BookOpen color={colors.primary} size={20} />
+                <Text style={styles.editButtonText}>Edit Profile</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.glassBorder,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700' as const,
+      color: colors.text,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.cardBg,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      marginTop: 16,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 40,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    scrollContent: {
+      padding: 20,
+      paddingBottom: 40,
+    },
+    profileCard: {
+      marginBottom: 16,
+    },
+    profileHeader: {
+      alignItems: 'center',
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      borderWidth: 3,
+      borderColor: colors.primary,
+      marginBottom: 16,
+    },
+    name: {
+      fontSize: 24,
+      fontWeight: '700' as const,
+      color: colors.text,
+      marginBottom: 8,
+    },
+    locationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 12,
+    },
+    locationText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      width: '100%',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: colors.cardBgLight,
+      borderRadius: 12,
+      marginBottom: 12,
+    },
+    infoIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    infoText: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+    },
+    bioSection: {
+      width: '100%',
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.glassBorder,
+      marginVertical: 12,
+    },
+    bioText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      lineHeight: 22,
+      textAlign: 'center',
+    },
+    joinedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 4,
+    },
+    joinedText: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    statsCard: {
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.text,
+      marginBottom: 20,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    statItem: {
+      flex: 1,
+      minWidth: '45%',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: colors.cardBgLight,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    statIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: '700' as const,
+      color: colors.text,
+      marginBottom: 4,
+    },
+    statLabel: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600' as const,
+    },
+    messageButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      borderRadius: 16,
+      gap: 10,
+      overflow: 'hidden',
+      marginBottom: 16,
+    },
+    messageButtonText: {
+      fontSize: 16,
+      fontWeight: '700' as const,
+      color: colors.text,
+    },
+    editButton: {
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      overflow: 'hidden',
+      marginBottom: 16,
+    },
+    editButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      gap: 10,
+    },
+    editButtonText: {
+      fontSize: 16,
+      fontWeight: '700' as const,
+      color: colors.primary,
+    },
+  });
