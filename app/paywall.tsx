@@ -9,12 +9,14 @@ import { useSubscription } from '@/providers/SubscriptionProvider';
 import { PREMIUM_FEATURES } from '@/constants/subscription';
 import GlassCard from '@/components/GlassCard';
 import PremiumBadge from '@/components/PremiumBadge';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 type PlanType = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
   const { colors, colorScheme } = useTheme();
   const { offerings, purchasePackage, restorePurchases, isLoading: subLoading } = useSubscription();
+  const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [purchasing, setPurchasing] = useState(false);
 
@@ -26,7 +28,7 @@ export default function PaywallScreen() {
 
   const handleUpgrade = async () => {
     if (!offerings) {
-      Alert.alert('Eroare', 'Nu s-au putut încărca opțiunile de abonament');
+      Alert.alert(t('paywall.errorTitle'), t('paywall.errorLoadingOptions'));
       return;
     }
 
@@ -39,14 +41,14 @@ export default function PaywallScreen() {
       
       if (success) {
         Alert.alert(
-          'Succes!',
-          'Ai fost upgradat la Premium! Bucură-te de toate funcțiile.',
-          [{ text: 'OK', onPress: () => router.back() }]
+          t('paywall.successTitle'),
+          t('paywall.successMessage'),
+          [{ text: t('paywall.ok'), onPress: () => router.back() }]
         );
       }
     } catch (error) {
       console.error('[Paywall] Purchase error:', error);
-      Alert.alert('Eroare', 'A apărut o problemă la procesarea plății. Încearcă din nou.');
+      Alert.alert(t('paywall.errorTitle'), t('paywall.errorPayment'));
     } finally {
       setPurchasing(false);
     }
@@ -60,16 +62,16 @@ export default function PaywallScreen() {
       
       if (success) {
         Alert.alert(
-          'Restaurat cu succes!',
-          'Abonamentul tău Premium a fost restaurat.',
-          [{ text: 'OK', onPress: () => router.back() }]
+          t('paywall.restoreSuccessTitle'),
+          t('paywall.restoreSuccessMessage'),
+          [{ text: t('paywall.ok'), onPress: () => router.back() }]
         );
       } else {
-        Alert.alert('Info', 'Nu s-au găsit achiziții anterioare.');
+        Alert.alert(t('paywall.infoTitle'), t('paywall.noPurchasesFound'));
       }
     } catch (error) {
       console.error('[Paywall] Restore error:', error);
-      Alert.alert('Eroare', 'Nu s-au putut restaura achizițiile. Încearcă din nou.');
+      Alert.alert(t('paywall.errorTitle'), t('paywall.errorRestore'));
     } finally {
       setPurchasing(false);
     }
@@ -85,7 +87,7 @@ export default function PaywallScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Upgrade Premium',
+          title: t('paywall.title'),
           headerStyle: { backgroundColor: colors.background },
           headerTintColor: colors.text,
           headerShadowVisible: false,
@@ -112,10 +114,10 @@ export default function PaywallScreen() {
               <PremiumBadge size="large" />
             </View>
             <Text style={[styles.title, { color: colors.text }]}>
-              Deblocează Potențialul Maxim
+              {t('paywall.mainTitle')}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Accesează toate funcțiile premium și accelerează-ți progresul
+              {t('paywall.subtitle')}
             </Text>
           </View>
 
@@ -136,13 +138,13 @@ export default function PaywallScreen() {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-                Se încarcă opțiunile...
+                {t('paywall.loading')}
               </Text>
             </View>
           ) : (
             <View style={styles.plansContainer}>
               <Text style={[styles.plansTitle, { color: colors.text }]}>
-                Alege Planul Tău
+                {t('paywall.choosePlan')}
               </Text>
 
             <TouchableOpacity
@@ -158,16 +160,16 @@ export default function PaywallScreen() {
               >
                 <View style={styles.planHeader}>
                   <View style={styles.planTitleRow}>
-                    <Text style={[styles.planTitle, { color: colors.text }]}>Anual</Text>
+                    <Text style={[styles.planTitle, { color: colors.text }]}>{t('paywall.yearly')}</Text>
                     {selectedPlan === 'yearly' && (
                       <View style={[styles.selectedBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={styles.selectedBadgeText}>Recomandat</Text>
+                        <Text style={styles.selectedBadgeText}>{t('paywall.recommended')}</Text>
                       </View>
                     )}
                   </View>
                   <View style={[styles.savingsBadge, { backgroundColor: colors.success + '20' }]}>
                     <Text style={[styles.savingsText, { color: colors.success }]}>
-                      Economisești 37%
+                      {t('paywall.save37')}
                     </Text>
                   </View>
                 </View>
@@ -177,12 +179,12 @@ export default function PaywallScreen() {
                     {offerings?.availablePackages.find(p => p.identifier === '$rc_annual')?.product.priceString || '149.99 RON'}
                   </Text>
                   <Text style={[styles.period, { color: colors.textSecondary }]}>
-                    /an
+                    {t('paywall.perYear')}
                   </Text>
                 </View>
 
                 <Text style={[styles.planDescription, { color: colors.textMuted }]}>
-                  Facturat anual
+                  {t('paywall.billedAnnually')}
                 </Text>
               </GlassCard>
             </TouchableOpacity>
@@ -199,7 +201,7 @@ export default function PaywallScreen() {
                 ]}
               >
                 <View style={styles.planHeader}>
-                  <Text style={[styles.planTitle, { color: colors.text }]}>Lunar</Text>
+                  <Text style={[styles.planTitle, { color: colors.text }]}>{t('paywall.monthly')}</Text>
                 </View>
 
                 <View style={styles.priceRow}>
@@ -207,12 +209,12 @@ export default function PaywallScreen() {
                     {offerings?.availablePackages.find(p => p.identifier === '$rc_monthly')?.product.priceString || '19.99 RON'}
                   </Text>
                   <Text style={[styles.period, { color: colors.textSecondary }]}>
-                    /lună
+                    {t('paywall.perMonth')}
                   </Text>
                 </View>
 
                 <Text style={[styles.planDescription, { color: colors.textMuted }]}>
-                  Facturat lunar
+                  {t('paywall.billedMonthly')}
                 </Text>
               </GlassCard>
             </TouchableOpacity>
@@ -237,7 +239,7 @@ export default function PaywallScreen() {
                 <>
                   <Crown size={20} color="#FFF" strokeWidth={2.5} />
                   <Text style={styles.upgradeButtonText}>
-                    Upgrade la Premium
+                    {t('paywall.upgradeButton')}
                   </Text>
                 </>
               )}
@@ -251,7 +253,7 @@ export default function PaywallScreen() {
             disabled={purchasing}
           >
             <Text style={[styles.restoreButtonText, { color: colors.primary }]}>
-              Restaurează Achiziții
+              {t('paywall.restoreButton')}
             </Text>
           </TouchableOpacity>
 
@@ -261,12 +263,12 @@ export default function PaywallScreen() {
             onPress={handleContinueFree}
           >
             <Text style={[styles.freeButtonText, { color: colors.textSecondary }]}>
-              Continue with Free
+              {t('paywall.continueFree')}
             </Text>
           </TouchableOpacity>
 
           <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
-            Prețurile sunt în RON. Abonamentul se reînnoiește automat. Poți anula oricând.
+            {t('paywall.disclaimer')}
           </Text>
         </ScrollView>
       </SafeAreaView>
