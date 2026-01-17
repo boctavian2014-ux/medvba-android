@@ -91,7 +91,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { user, signOut, refreshProfile } = useAuth();
   const { currentLanguage, changeLanguage, t } = useLanguage();
-  const { colors } = useTheme();
+  const { colors, preference: themePreference } = useTheme();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   
   const { data: profile } = useUserProfile(user?.id);
@@ -442,7 +442,13 @@ export default function SettingsScreen() {
               <SettingsItem
                 icon={<Moon color={colors.accent} size={22} />}
                 title={t('settings.appearance')}
-                subtitle={t('settings.appearanceSubtitle')}
+                subtitle={
+                  themePreference === 'system'
+                    ? t('appearance.themeAuto')
+                    : themePreference === 'light'
+                    ? t('appearance.themeLight')
+                    : t('appearance.themeDark')
+                }
                 onPress={() => router.push('/appearance')}
                 showBorder={false}
               />
