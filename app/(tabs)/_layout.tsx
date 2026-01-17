@@ -18,8 +18,8 @@ export default function TabLayout() {
           backgroundColor: colors.backgroundLight,
           borderTopColor: colors.glassBorder,
           borderTopWidth: 1,
-          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
+          paddingTop: 8,
         },
         tabBarItemStyle: {
           paddingVertical: 6,
