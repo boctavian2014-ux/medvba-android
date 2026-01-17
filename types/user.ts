@@ -10,6 +10,7 @@ export interface UserProfile {
   studyHours: number;
   badges: string[];
   joinedAt: string;
+  isPublic: boolean;
 }
 
 export interface UserAccount {

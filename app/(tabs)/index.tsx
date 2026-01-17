@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Sparkles, Lock } from 'lucide-react-native';
+import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Sparkles, Lock, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useTheme } from '@/providers/ThemeProvider';
@@ -108,7 +108,15 @@ export default function HomeScreen() {
                 style={styles.appIcon} 
               />
               <View>
-                <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
+                <View style={styles.greetingRow}>
+                  <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
+                  {profile?.isPublic === false && (
+                    <View style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}>
+                      <EyeOff size={12} color={colors.textMuted} />
+                      <Text style={[styles.privacyBadgeText, { color: colors.textMuted }]}>Private</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={[styles.userName, { color: colors.text }]}>{profile?.name.split(' ')[0] || 'Student'}</Text>
               </View>
             </View>
@@ -301,6 +309,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  privacyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  privacyBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
   },
   appIcon: {
     width: 44,

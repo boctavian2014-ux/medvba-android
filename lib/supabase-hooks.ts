@@ -1874,17 +1874,18 @@ export function useOnlineFriends(userId?: string) {
         .select(`
           user_id,
           last_seen,
-          profiles!inner(id, name, avatar)
+          profiles!inner(id, name, avatar, is_public)
         `)
         .gte('last_seen', fiveMinutesAgo.toISOString())
-        .neq('user_id', userId);
+        .neq('user_id', userId)
+        .eq('profiles.is_public', true);
 
       if (error) {
         console.error('[Supabase] Error fetching online friends:', error);
         return [];
       }
 
-      return (data || []).map((item: any) => ({
+      return (data || []).filter((item: any) => item.profiles.is_public).map((item: any) => ({
         id: item.profiles.id,
         name: item.profiles.name,
         avatar: item.profiles.avatar,

@@ -108,6 +108,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             : 0,
           badges: [],
           joinedAt: result.created_at || new Date().toISOString(),
+          isPublic: result.is_public ?? true,
         };
         setProfile(userProfile);
         console.log('[Auth] Profile fetched successfully:', userProfile.name);
@@ -131,6 +132,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         studyHours: 0,
         badges: [],
         joinedAt: new Date().toISOString(),
+        isPublic: true,
       });
     }
   }, [ensureUserExists]);

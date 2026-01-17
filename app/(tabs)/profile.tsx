@@ -33,6 +33,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  EyeOff,
 } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -267,7 +268,15 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t('profile')}</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{t('profile')}</Text>
+              {profile?.isPublic === false && (
+                <View style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}>
+                  <EyeOff size={12} color={colors.textMuted} />
+                  <Text style={[styles.privacyBadgeText, { color: colors.textMuted }]}>Private</Text>
+                </View>
+              )}
+            </View>
             <TouchableOpacity 
               style={styles.settingsButton} 
               activeOpacity={0.7}
@@ -744,6 +753,23 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     paddingHorizontal: 20,
     marginBottom: 20,
     marginTop: 8,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  privacyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  privacyBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
   },
 
   title: {
