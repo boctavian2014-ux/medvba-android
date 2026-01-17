@@ -522,7 +522,7 @@ export function useStudyPartners(filters?: {
       console.log('[Supabase] Fetching study partners with filters:', filters);
       
       let query = supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .eq('is_public', true);
 
@@ -553,7 +553,7 @@ export function useStudyPartners(filters?: {
         id: user.id,
         email: user.email,
         name: user.name || 'Student',
-        avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+        avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
         city: user.city,
         university: user.university,
         year_of_study: user.year_of_study,
@@ -574,7 +574,7 @@ export function useUserProfile(userId: string | undefined) {
 
       console.log('[Supabase] Fetching user profile:', userId);
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -588,7 +588,7 @@ export function useUserProfile(userId: string | undefined) {
         id: data.id,
         email: data.email,
         name: data.name || 'Student',
-        avatar: data.profile_photo_url || data.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${data.id}`,
+        avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${data.id}`,
         city: data.city,
         university: data.university,
         year_of_study: data.year_of_study,
@@ -628,7 +628,7 @@ export function useUpdateUserProfile() {
       if (input.profile_photo_url !== undefined) updateData.profile_photo_url = input.profile_photo_url;
 
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .update(updateData)
         .eq('id', input.userId)
         .select()
@@ -1053,8 +1053,8 @@ export function useAllRecentAchievements(limit: number = 20) {
       const userIds = [...new Set(achievementsData.map((a: any) => a.user_id))];
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, profile_photo_url, avatar')
+        .from('profiles')
+        .select('id, name, avatar')
         .in('id', userIds);
 
       if (usersError) {
@@ -1066,7 +1066,7 @@ export function useAllRecentAchievements(limit: number = 20) {
           user.id,
           {
             name: user.name || 'Student',
-            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+            avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
           },
         ])
       );
@@ -1616,8 +1616,8 @@ export function useActivityFeed(limit: number = 50) {
       const actorIds = [...new Set(feedData.map((item: any) => item.actor_id))];
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, profile_photo_url, avatar')
+        .from('profiles')
+        .select('id, name, avatar')
         .in('id', actorIds);
 
       if (usersError) {
@@ -1629,7 +1629,7 @@ export function useActivityFeed(limit: number = 50) {
           user.id,
           {
             name: user.name || 'Student',
-            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+            avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
           },
         ])
       );
@@ -1892,8 +1892,8 @@ export function useOnlineFriends(userId?: string) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, profile_photo_url, avatar, is_public')
+        .from('profiles')
+        .select('id, name, avatar, is_public')
         .in('id', userIds);
 
       if (usersError) {
@@ -1913,7 +1913,7 @@ export function useOnlineFriends(userId?: string) {
         .map((user: any) => ({
           id: user.id,
           name: user.name || 'Student',
-          avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+          avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
           lastSeen: presenceMap.get(user.id),
           isOnline: true,
         }));
@@ -1960,8 +1960,8 @@ export function useFriendActivity(userId?: string, limit = 20) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, name, profile_photo_url, avatar')
+        .from('profiles')
+        .select('id, name, avatar')
         .in('id', userIds);
 
       if (usersError) {
@@ -1977,7 +1977,7 @@ export function useFriendActivity(userId?: string, limit = 20) {
           user.id,
           {
             name: user.name || 'Student',
-            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+            avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
           },
         ])
       );
