@@ -16,6 +16,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Doar procesele articulare și pediculii'
       ],
       explanation: 'O vertebră tipică constă dintr-un corp vertebral anterior și un arc vertebral posterior, formând împreună foramenul vertebral și dând naștere la multiple procese.[web:606][web:608][web:619]'
+    },
+    es: {
+      question: '¿Qué componentes están presentes en una vértebra típica?',
+      options: [
+        'Solo el cuerpo vertebral',
+        'Solo el arco vertebral',
+        'El cuerpo vertebral y el arco vertebral que dan lugar a múltiples procesos',
+        'Solo los procesos espinosos y transversos',
+        'Solo los procesos articulares y los pedículos'
+      ],
+      explanation: 'Una vértebra típica consta de un cuerpo vertebral anterior y un arco vertebral posterior, que juntos forman el foramen vertebral y dan lugar a múltiples procesos.[web:606][web:608][web:619]'
+    },
+    pt: {
+      question: 'Que componentes estão presentes numa vértebra típica?',
+      options: [
+        'Apenas o corpo vertebral',
+        'Apenas o arco vertebral',
+        'O corpo vertebral e o arco vertebral que dão origem a múltiplos processos',
+        'Apenas os processos espinhosos e transversos',
+        'Apenas os processos articulares e os pedículos'
+      ],
+      explanation: 'Uma vértebra típica consiste num corpo vertebral anterior e num arco vertebral posterior, formando juntos o forâmen vertebral e dando origem a múltiplos processos.[web:606][web:608][web:619]'
     }
   },
   'gv2': {
@@ -29,6 +51,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Discurile intervertebrale'
       ],
       explanation: 'Arcul vertebral este format dintr-o pereche de pediculi și o pereche de lamine, care se proiectează posterior de la corpul vertebral.[web:609][web:610][web:619]'
+    },
+    es: {
+      question: '¿Qué estructuras forman el arco vertebral de una vértebra típica?',
+      options: [
+        'Los pedículos y las láminas',
+        'Los procesos transversos y espinosos',
+        'Solo los procesos articulares',
+        'El cuerpo y el proceso espinoso',
+        'Los discos intervertebrales'
+      ],
+      explanation: 'El arco vertebral está formado por un par de pedículos y un par de láminas, que se proyectan posteriormente desde el cuerpo vertebral.[web:609][web:610][web:619]'
+    },
+    pt: {
+      question: 'Que estruturas formam o arco vertebral de uma vértebra típica?',
+      options: [
+        'Os pedículos e as lâminas',
+        'Os processos transversos e espinhosos',
+        'Apenas os processos articulares',
+        'O corpo e o processo espinhoso',
+        'Os discos intervertebrais'
+      ],
+      explanation: 'O arco vertebral é formado por um par de pedículos e um par de lâminas, que se projetam posteriormente a partir do corpo vertebral.[web:609][web:610][web:619]'
     }
   },
   'gv3': {
@@ -42,6 +86,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Trei procese: unul spinos și două articulare'
       ],
       explanation: 'Un arc vertebral tipic susține șapte procese: unul spinos, două transversale și patru procese articulare (perechi superioare și inferioare).[web:609][web:610][web:619]'
+    },
+    es: {
+      question: '¿Cuántos procesos surgen típicamente del arco vertebral de una vértebra típica y cuáles son?',
+      options: [
+        'Cuatro procesos: dos transversos y dos espinosos',
+        'Cinco procesos: uno espinoso, dos transversos y dos articulares',
+        'Siete procesos: uno espinoso, dos transversos y cuatro articulares (dos superiores, dos inferiores)',
+        'Ocho procesos: dos espinosos, dos transversos y cuatro articulares',
+        'Tres procesos: uno espinoso y dos articulares'
+      ],
+      explanation: 'Un arco vertebral típico sostiene siete procesos: uno espinoso, dos transversos y cuatro procesos articulares (pares superior e inferior).[web:609][web:610][web:619]'
+    },
+    pt: {
+      question: 'Quantos processos surgem tipicamente do arco vertebral de uma vértebra típica e quais são?',
+      options: [
+        'Quatro processos: dois transversos e dois espinhosos',
+        'Cinco processos: um espinhoso, dois transversos e dois articulares',
+        'Sete processos: um espinhoso, dois transversos e quatro articulares (dois superiores, dois inferiores)',
+        'Oito processos: dois espinhosos, dois transversos e quatro articulares',
+        'Três processos: um espinhoso e dois articulares'
+      ],
+      explanation: 'Um arco vertebral típico suporta sete processos: um espinhoso, dois transversos e quatro processos articulares (pares superior e inferior).[web:609][web:610][web:619]'
     }
   },
   'gv4': {
@@ -55,6 +121,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Permit mișcarea între vertebre'
       ],
       explanation: 'Pediculii conectează corpul vertebral la restul arcului vertebral și formează pereții laterali ai foramenului vertebral.'
+    },
+    es: {
+      question: '¿Cuál es la función principal de los pedículos en una vértebra?',
+      options: [
+        'Protegen la médula espinal',
+        'Conectan el cuerpo vertebral con el arco vertebral',
+        'Forman la articulación con la costilla',
+        'Soportan el peso corporal',
+        'Permiten el movimiento entre vértebras'
+      ],
+      explanation: 'Los pedículos conectan el cuerpo vertebral con el resto del arco vertebral y forman las paredes laterales del foramen vertebral.'
+    },
+    pt: {
+      question: 'Qual é a função principal dos pedículos numa vértebra?',
+      options: [
+        'Protegem a medula espinal',
+        'Conectam o corpo vertebral ao arco vertebral',
+        'Formam a articulação com a costela',
+        'Suportam o peso corporal',
+        'Permitem o movimento entre vértebras'
+      ],
+      explanation: 'Os pedículos conectam o corpo vertebral ao resto do arco vertebral e formam as paredes laterais do forame vertebral.'
     }
   },
   'gv5': {
@@ -68,6 +156,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Țesutul adipos'
       ],
       explanation: 'Măduva spinării trece prin foramenul vertebral, care este format din corpul vertebral anterior și arcul vertebral posterior.'
+    },
+    es: {
+      question: '¿Qué estructura pasa a través del foramen vertebral?',
+      options: [
+        'Los nervios espinales',
+        'La médula espinal',
+        'Los vasos sanguíneos vertebrales',
+        'El líquido cefalorraquídeo',
+        'El tejido adiposo'
+      ],
+      explanation: 'La médula espinal pasa a través del foramen vertebral, que está formado por el cuerpo vertebral anterior y el arco vertebral posterior.'
+    },
+    pt: {
+      question: 'Que estrutura passa através do forame vertebral?',
+      options: [
+        'Os nervos espinais',
+        'A medula espinal',
+        'Os vasos sanguíneos vertebrais',
+        'O líquido cefalorraquidiano',
+        'O tecido adiposo'
+      ],
+      explanation: 'A medula espinal passa através do forame vertebral, que é formado pelo corpo vertebral anterior e o arco vertebral posterior.'
     }
   },
   'cl1': {
@@ -81,6 +191,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'În formă de spirală'
       ],
       explanation: 'Clavicula are o curbură în formă de S - convexă anterior la jumătatea medială și concavă anterior la jumătatea laterală.'
+    },
+    es: {
+      question: '¿Cuál de las siguientes describe mejor la forma de la clavícula?',
+      options: [
+        'Recta en toda su longitud',
+        'Curvada en forma de S',
+        'Curvada uniformemente convexa',
+        'Curvada uniformemente cóncava',
+        'En forma de espiral'
+      ],
+      explanation: 'La clavícula tiene una curvatura en forma de S - convexa anteriormente en su mitad medial y cóncava anteriormente en su mitad lateral.'
+    },
+    pt: {
+      question: 'Qual das seguintes descreve melhor a forma da clavícula?',
+      options: [
+        'Reta em todo o comprimento',
+        'Curvada em forma de S',
+        'Curvada uniformemente convexa',
+        'Curvada uniformemente côncava',
+        'Em forma de espiral'
+      ],
+      explanation: 'A clavícula tem uma curvatura em forma de S - convexa anteriormente na sua metade medial e côncava anteriormente na sua metade lateral.'
     }
   },
   'hum1': {
@@ -94,6 +226,28 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Superior'
       ],
       explanation: 'Tubercul mare al humerusului este poziționat lateral la capătul proximal al humerusului și servește drept punct de inserție pentru mușchii rotatori.'
+    },
+    es: {
+      question: '¿Cuál es la posición del tubérculo mayor del húmero?',
+      options: [
+        'Anterior',
+        'Posterior',
+        'Lateral',
+        'Medial',
+        'Superior'
+      ],
+      explanation: 'El tubérculo mayor del húmero está posicionado lateralmente en el extremo proximal del húmero y sirve como punto de inserción para los músculos rotadores.'
+    },
+    pt: {
+      question: 'Qual é a posição do tubérculo maior do úmero?',
+      options: [
+        'Anterior',
+        'Posterior',
+        'Lateral',
+        'Medial',
+        'Superior'
+      ],
+      explanation: 'O tubérculo maior do úmero está posicionado lateralmente na extremidade proximal do úmero e serve como ponto de inserção para os músculos rotadores.'
     }
   },
   'io-001': {
@@ -101,6 +255,16 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       question: 'Care organ este responsabil pentru producerea de insulină?',
       options: ['Ficatul', 'Pancreasul', 'Rinichiul', 'Splina'],
       explanation: 'Pancreasul produce insulină în celulele beta ale insulelor Langerhans, care reglează nivelurile de glucoză din sânge.'
+    },
+    es: {
+      question: '¿Qué órgano es responsable de producir insulina?',
+      options: ['El hígado', 'El páncreas', 'El riñón', 'El bazo'],
+      explanation: 'El páncreas produce insulina en las células beta de los islotes de Langerhans, que regulan los niveles de glucosa en sangre.'
+    },
+    pt: {
+      question: 'Que órgão é responsável por produzir insulina?',
+      options: ['O fígado', 'O pâncreas', 'O rim', 'O baço'],
+      explanation: 'O pâncreas produz insulina nas células beta das ilhotas de Langerhans, que regulam os níveis de glicose no sangue.'
     }
   },
   'io-002': {
@@ -108,6 +272,16 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       question: 'Unde este localizat apendicele?',
       options: ['Cadranul superior stâng', 'Cadranul superior drept', 'Cadranul inferior stâng', 'Cadranul inferior drept'],
       explanation: 'Apendicele este localizat în cadranul inferior drept al abdomenului, atașat de cecul intestinului gros.'
+    },
+    es: {
+      question: '¿Dónde se localiza el apéndice?',
+      options: ['Cuadrante superior izquierdo', 'Cuadrante superior derecho', 'Cuadrante inferior izquierdo', 'Cuadrante inferior derecho'],
+      explanation: 'El apéndice se localiza en el cuadrante inferior derecho del abdomen, unido al ciego del intestino grueso.'
+    },
+    pt: {
+      question: 'Onde está localizado o apêndice?',
+      options: ['Quadrante superior esquerdo', 'Quadrante superior direito', 'Quadrante inferior esquerdo', 'Quadrante inferior direito'],
+      explanation: 'O apêndice está localizado no quadrante inferior direito do abdómen, ligado ao ceco do intestino grosso.'
     }
   },
   'hn-001': {
@@ -115,6 +289,16 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       question: 'Care nerv cranian este responsabil pentru expresiile faciale?',
       options: ['Trigemen (V)', 'Facial (VII)', 'Glosofaringian (IX)', 'Vag (X)'],
       explanation: 'Nervul facial (CN VII) inervează mușchii expresiei faciale și transportă și senzațiile gustative din cele două treimi anterioare ale limbii.'
+    },
+    es: {
+      question: '¿Qué nervio craneal es responsable de las expresiones faciales?',
+      options: ['Trigémino (V)', 'Facial (VII)', 'Glosofaríngeo (IX)', 'Vago (X)'],
+      explanation: 'El nervio facial (CN VII) inerva los músculos de la expresión facial y también transporta las sensaciones gustativas de los dos tercios anteriores de la lengua.'
+    },
+    pt: {
+      question: 'Que nervo craniano é responsável pelas expressões faciais?',
+      options: ['Trigémeo (V)', 'Facial (VII)', 'Glossofaríngeo (IX)', 'Vago (X)'],
+      explanation: 'O nervo facial (CN VII) inerva os músculos da expressão facial e também transporta as sensações gustativas dos dois terços anteriores da língua.'
     }
   },
   'na-001': {
@@ -122,6 +306,16 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       question: 'Care structură conectează cele două emisfere cerebrale?',
       options: ['Puntea', 'Corpul calos', 'Talamusul', 'Hipotalamusul'],
       explanation: 'Corpul calos este cea mai mare structură de substanță albă din creier, conectând emisferele cerebrale stângă și dreaptă și facilitând comunicarea interhemisferică.'
+    },
+    es: {
+      question: '¿Qué estructura conecta los dos hemisferios cerebrales?',
+      options: ['El puente', 'El cuerpo calloso', 'El tálamo', 'El hipotálamo'],
+      explanation: 'El cuerpo calloso es la estructura de sustancia blanca más grande del cerebro, conectando los hemisferios cerebrales izquierdo y derecho y facilitando la comunicación interhemisférica.'
+    },
+    pt: {
+      question: 'Que estrutura conecta os dois hemisférios cerebrais?',
+      options: ['A ponte', 'O corpo caloso', 'O tálamo', 'O hipotálamo'],
+      explanation: 'O corpo caloso é a maior estrutura de substância branca do cérebro, conectando os hemisférios cerebrais esquerdo e direito e facilitando a comunicação inter-hemisférica.'
     }
   },
   'na-002': {
@@ -129,6 +323,16 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
       question: 'Care parte a creierului este în principal responsabilă pentru coordonarea motorie?',
       options: ['Cerebrumul', 'Cerebelul', 'Trunchiul cerebral', 'Sistemul limbic'],
       explanation: 'Cerebelul este responsabil pentru coordonarea mișcărilor voluntare, menținerea echilibrului și învățarea motorie.'
+    },
+    es: {
+      question: '¿Qué parte del cerebro es principalmente responsable de la coordinación motora?',
+      options: ['El cerebro', 'El cerebelo', 'El tronco encefálico', 'El sistema límbico'],
+      explanation: 'El cerebelo es responsable de coordinar los movimientos voluntarios, mantener el equilibrio y el aprendizaje motor.'
+    },
+    pt: {
+      question: 'Que parte do cérebro é principalmente responsável pela coordenação motora?',
+      options: ['O cérebro', 'O cerebelo', 'O tronco cerebral', 'O sistema límbico'],
+      explanation: 'O cerebelo é responsável por coordenar os movimentos voluntários, manter o equilíbrio e a aprendizagem motora.'
     }
   },
   'pc1': {
