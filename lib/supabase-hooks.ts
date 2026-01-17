@@ -1876,12 +1876,8 @@ export function useOnlineFriends(userId?: string) {
         .neq('user_id', userId);
 
       if (presenceError) {
-        console.error('[Supabase] Error fetching online friends:', JSON.stringify({
-          message: presenceError.message,
-          details: presenceError.details,
-          hint: presenceError.hint,
-          code: presenceError.code
-        }));
+        console.error('[Supabase] Error fetching online friends:', presenceError.message);
+        console.error('[Supabase] Error details:', presenceError);
         return [];
       }
 
@@ -1897,10 +1893,8 @@ export function useOnlineFriends(userId?: string) {
         .in('id', userIds);
 
       if (usersError) {
-        console.error('[Supabase] Error fetching user data for online friends:', JSON.stringify({
-          message: usersError.message,
-          code: usersError.code
-        }));
+        console.error('[Supabase] Error fetching user data for online friends:', usersError.message);
+        console.error('[Supabase] Error details:', usersError);
         return [];
       }
 
@@ -1944,12 +1938,8 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .limit(limit);
 
       if (presenceError) {
-        console.error('[Supabase] Error fetching friend activity:', JSON.stringify({
-          message: presenceError.message,
-          details: presenceError.details,
-          hint: presenceError.hint,
-          code: presenceError.code
-        }));
+        console.error('[Supabase] Error fetching friend activity:', presenceError.message);
+        console.error('[Supabase] Error details:', presenceError);
         return [];
       }
 
@@ -1965,10 +1955,8 @@ export function useFriendActivity(userId?: string, limit = 20) {
         .in('id', userIds);
 
       if (usersError) {
-        console.error('[Supabase] Error fetching user data for friend activity:', JSON.stringify({
-          message: usersError.message,
-          code: usersError.code
-        }));
+        console.error('[Supabase] Error fetching user data for friend activity:', usersError.message);
+        console.error('[Supabase] Error details:', usersError);
         return [];
       }
 
