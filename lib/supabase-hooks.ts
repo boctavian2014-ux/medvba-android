@@ -1869,40 +1869,52 @@ export function useOnlineFriends(userId?: string) {
       const fiveMinutesAgo = new Date();
       fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
       
-      const { data, error } = await supabase
+      const { data: presenceData, error: presenceError } = await supabase
         .from('user_presence')
-        .select(`
-          user_id,
-          last_seen,
-          profiles(
-            id,
-            name,
-            avatar,
-            is_public
-          )
-        `)
+        .select('user_id, last_seen')
         .gte('last_seen', fiveMinutesAgo.toISOString())
         .neq('user_id', userId);
 
-      if (error) {
-        console.error('[Supabase] Error fetching online friends:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+      if (presenceError) {
+        console.error('[Supabase] Error fetching online friends:', JSON.stringify({
+          message: presenceError.message,
+          details: presenceError.details,
+          hint: presenceError.hint,
+          code: presenceError.code
+        }));
         return [];
       }
 
-      console.log('[Supabase] Raw online friends data:', data);
+      if (!presenceData || presenceData.length === 0) {
+        return [];
+      }
 
-      return (data || [])
-        .filter((item: any) => item.profiles && item.profiles.is_public)
-        .map((item: any) => ({
-          id: item.profiles.id,
-          name: item.profiles.name,
-          avatar: item.profiles.avatar,
-          lastSeen: item.last_seen,
+      const userIds = presenceData.map((p: any) => p.user_id);
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, profile_photo_url, avatar, is_public')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('[Supabase] Error fetching user data for online friends:', JSON.stringify({
+          message: usersError.message,
+          code: usersError.code
+        }));
+        return [];
+      }
+
+      const presenceMap = new Map(
+        presenceData.map((p: any) => [p.user_id, p.last_seen])
+      );
+
+      return (usersData || [])
+        .filter((user: any) => user.is_public)
+        .map((user: any) => ({
+          id: user.id,
+          name: user.name || 'Student',
+          avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+          lastSeen: presenceMap.get(user.id),
           isOnline: true,
         }));
     },
@@ -1925,35 +1937,67 @@ export function useFriendActivity(userId?: string, limit = 20) {
       
       const { data: presenceData, error: presenceError } = await supabase
         .from('user_presence')
-        .select(`
-          user_id,
-          last_seen,
-          profiles!inner(id, name, avatar)
-        `)
+        .select('user_id, last_seen')
         .gte('last_seen', thirtyMinutesAgo.toISOString())
         .neq('user_id', userId)
         .order('last_seen', { ascending: false })
         .limit(limit);
 
       if (presenceError) {
-        console.error('[Supabase] Error fetching friend activity:', {
+        console.error('[Supabase] Error fetching friend activity:', JSON.stringify({
           message: presenceError.message,
           details: presenceError.details,
           hint: presenceError.hint,
           code: presenceError.code
-        });
+        }));
         return [];
       }
 
-      return (presenceData || []).map((item: any, index: number) => ({
-        id: `activity_${item.user_id}_${index}`,
-        userId: item.profiles.id,
-        userName: item.profiles.name,
-        userAvatar: item.profiles.avatar,
-        activityType: 'came_online' as const,
-        timestamp: item.last_seen,
-        metadata: {},
-      }));
+      if (!presenceData || presenceData.length === 0) {
+        return [];
+      }
+
+      const userIds = presenceData.map((p: any) => p.user_id);
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, profile_photo_url, avatar')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('[Supabase] Error fetching user data for friend activity:', JSON.stringify({
+          message: usersError.message,
+          code: usersError.code
+        }));
+        return [];
+      }
+
+      const usersMap = new Map(
+        (usersData || []).map((user: any) => [
+          user.id,
+          {
+            name: user.name || 'Student',
+            avatar: user.profile_photo_url || user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
+          },
+        ])
+      );
+
+      return presenceData.map((item: any, index: number) => {
+        const userInfo = usersMap.get(item.user_id) || {
+          name: 'Student',
+          avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${item.user_id}`,
+        };
+
+        return {
+          id: `activity_${item.user_id}_${index}`,
+          userId: item.user_id,
+          userName: userInfo.name,
+          userAvatar: userInfo.avatar,
+          activityType: 'came_online' as const,
+          timestamp: item.last_seen,
+          metadata: {},
+        };
+      });
     },
     enabled: !!userId,
     staleTime: 60000,
