@@ -651,4 +651,14 @@ export const ro: Record<string, string> = {
   'paywall.noPurchasesFound': 'Nu s-au găsit achiziții anterioare.',
   'paywall.errorRestore': 'Nu s-au putut restaura achizițiile. Încearcă din nou.',
   'paywall.ok': 'OK',
+
+  // Premium Features
+  'premium.feature1': 'Toate cele 10.000+ întrebări de anatomie',
+  'premium.feature2': 'Quiz nelimitat (fără limita de 5 întrebări/zi)',
+  'premium.feature3': 'Tutore AI personalizat',
+  'premium.feature4': 'Statistici avansate și rapoarte detaliate',
+  'premium.feature5': 'Sesiuni de studiu colaborative',
+  'premium.feature6': 'Acces prioritar la conținut nou',
+  'premium.feature7': 'Certificat de finalizare',
+  'premium.feature8': 'Suport premium dedicat',
 };

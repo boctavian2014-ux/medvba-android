@@ -6,7 +6,7 @@ import { Stack, router } from 'expo-router';
 import { Crown, Check } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { PREMIUM_FEATURES } from '@/constants/subscription';
+import { PREMIUM_FEATURE_KEYS } from '@/constants/subscription';
 import GlassCard from '@/components/GlassCard';
 import PremiumBadge from '@/components/PremiumBadge';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -122,13 +122,13 @@ export default function PaywallScreen() {
           </View>
 
           <View style={styles.featuresContainer}>
-            {PREMIUM_FEATURES.map((feature, index) => (
+            {PREMIUM_FEATURE_KEYS.map((featureKey, index) => (
               <View key={index} style={styles.featureRow}>
                 <View style={[styles.checkIcon, { backgroundColor: colors.success + '20' }]}>
                   <Check size={16} color={colors.success} strokeWidth={3} />
                 </View>
                 <Text style={[styles.featureText, { color: colors.text }]}>
-                  {feature}
+                  {t(featureKey)}
                 </Text>
               </View>
             ))}

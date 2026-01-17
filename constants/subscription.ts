@@ -1,14 +1,14 @@
 export const FREE_DAILY_QUIZ_LIMIT = 5;
 
-export const PREMIUM_FEATURES = [
-  'Toate cele 10.000+ întrebări de anatomie',
-  'Quiz nelimitat (fără limita de 5 întrebări/zi)',
-  'Tutore AI personalizat',
-  'Statistici avansate și rapoarte detaliate',
-  'Sesiuni de studiu colaborative',
-  'Acces prioritar la conținut nou',
-  'Certificat de finalizare',
-  'Suport premium dedicat',
+export const PREMIUM_FEATURE_KEYS = [
+  'premium.feature1',
+  'premium.feature2',
+  'premium.feature3',
+  'premium.feature4',
+  'premium.feature5',
+  'premium.feature6',
+  'premium.feature7',
+  'premium.feature8',
 ];
 
 export const PRICING = {
