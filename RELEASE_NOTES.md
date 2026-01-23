@@ -1,10 +1,10 @@
-# Medix Study Hub - Release Notes
+# MEDVBA - Release Notes
 
 ## Version 1.0.0 (Initial Launch)
 
 **Release Date:** January 2026
 
-### 🎉 Welcome to Medix Study Hub!
+### 🎉 Welcome to MEDVBA!
 
 Your ultimate companion for medical exam preparation. Master anatomy, physiology, and more with our comprehensive learning platform.
 
@@ -117,7 +117,7 @@ Your ultimate companion for medical exam preparation. Master anatomy, physiology
 
 ### 📋 Permissions Explained
 
-When using Medix Study Hub, we may request the following permissions:
+When using MEDVBA, we may request the following permissions:
 
 - **Notifications (Optional):**
   - Purpose: Remind you about scheduled study sessions and daily streaks
@@ -125,7 +125,7 @@ When using Medix Study Hub, we may request the following permissions:
 
 - **Camera & Microphone (Via Zoom):**
   - Purpose: When joining live study rooms, Zoom will request camera/microphone access for video calls
-  - These permissions are handled by the Zoom app, not directly by Medix Study Hub
+  - These permissions are handled by the Zoom app, not directly by MEDVBA
   - You can join study rooms audio-only if you prefer
 
 ---
@@ -152,7 +152,7 @@ Need help? We're here for you!
 
 ### 🙏 Thank You
 
-Thank you for choosing Medix Study Hub for your medical education journey! We're committed to providing the best study experience and helping you achieve your exam goals.
+Thank you for choosing MEDVBA for your medical education journey! We're committed to providing the best study experience and helping you achieve your exam goals.
 
 Good luck with your studies! 🩺📚
 

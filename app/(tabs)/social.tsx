@@ -37,13 +37,13 @@ import {
   AlertTriangle,
   CheckCircle,
   User,
+  EyeOff,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
 import RoomChat from '@/components/RoomChat';
 import OnlineIndicator from '@/components/OnlineIndicator';
-import { activities } from '@/mocks/activities';
 import {
   useStudyRooms,
   useCreateStudyRoom,
@@ -56,12 +56,13 @@ import {
   AchievementType,
   useOnlineFriends,
   useFriendActivity,
+  useActivityFeed,
 } from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 
-const BLOCKED_USERS_KEY = '@medix_blocked_users';
-const USER_REPORTS_KEY = '@medix_user_reports';
+const BLOCKED_USERS_KEY = '@medvba_blocked_users';
+const USER_REPORTS_KEY = '@medvba_user_reports';
 
 interface BlockedUser {
   id: string;
@@ -93,6 +94,8 @@ const activityIcons: Record<string, React.ComponentType<{ color: string; size: n
   exam_passed: Star,
   study_room: Users,
   milestone: Target,
+  started_chat: MessageCircle,
+  joined_room: Users,
 };
 
 const formatTimeAgo = (date: Date): string => {
@@ -283,11 +286,15 @@ export default function SocialScreen() {
 
   const isUserBlocked = (userId: string) => blockedUsers.some(u => u.id === userId);
 
+  const isProfilePublic = profile?.isPublic !== false;
+
   const studyRoomsQuery = useStudyRooms();
   const upcomingSessionsQuery = useUpcomingSessions();
   const recentAchievementsQuery = useAllRecentAchievements(15);
-  const onlineFriendsQuery = useOnlineFriends(user?.id);
-  const friendActivityQuery = useFriendActivity(user?.id, 10);
+  const presenceUserId = isProfilePublic ? user?.id : undefined;
+  const onlineFriendsQuery = useOnlineFriends(presenceUserId);
+  const friendActivityQuery = useFriendActivity(presenceUserId, 10);
+  const activityFeedQuery = useActivityFeed(user?.id, 20);
 
   const studyRooms: StudyRoom[] = (studyRoomsQuery.data ?? []).map((room: any) => ({
     ...room,
@@ -377,8 +384,12 @@ export default function SocialScreen() {
     Promise.all([
       studyRoomsQuery.refetch(),
       upcomingSessionsQuery.refetch(),
+      recentAchievementsQuery.refetch(),
+      onlineFriendsQuery.refetch(),
+      friendActivityQuery.refetch(),
+      activityFeedQuery.refetch(),
     ]).finally(() => setRefreshing(false));
-  }, [studyRoomsQuery, upcomingSessionsQuery]);
+  }, [studyRoomsQuery, upcomingSessionsQuery, recentAchievementsQuery, onlineFriendsQuery, friendActivityQuery, activityFeedQuery]);
 
   const handleReaction = (activityId: string, emoji: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -434,6 +445,7 @@ export default function SocialScreen() {
   const recentAchievements: RecentAchievementWithUser[] = recentAchievementsQuery.data ?? [];
   const onlineFriends = onlineFriendsQuery.data ?? [];
   const friendActivity = friendActivityQuery.data ?? [];
+  const activityFeed = activityFeedQuery.data ?? [];
 
   const getAchievementTitle = (type: AchievementType): string => {
     const titles: Record<AchievementType, string> = {
@@ -688,7 +700,27 @@ export default function SocialScreen() {
             </View>
           )}
 
-          {onlineFriends.length > 0 && (
+          {!isProfilePublic && (
+            <GlassCard style={styles.activityCard}>
+              <View style={styles.activityHeader}>
+                <View style={styles.activityTypeIcon}>
+                  <EyeOff color={colors.textMuted} size={18} />
+                </View>
+                <View style={styles.activityUserInfo}>
+                  <Text style={styles.activityUserName}>Private profile</Text>
+                  <Text style={styles.activityTime}>Only you can see your activity</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push('/settings')}
+                style={styles.joinButton}
+              >
+                <Text style={styles.joinButtonText}>Manage privacy</Text>
+              </TouchableOpacity>
+            </GlassCard>
+          )}
+
+          {isProfilePublic && onlineFriends.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Users color={colors.success} size={18} />
@@ -716,7 +748,7 @@ export default function SocialScreen() {
             </View>
           )}
 
-          {friendActivity.length > 0 && (
+          {isProfilePublic && friendActivity.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Clock color={colors.secondary} size={18} />
@@ -782,46 +814,74 @@ export default function SocialScreen() {
               </GlassCard>
             ))}
             
-            {activities.map((activity) => {
+            {activityFeed.map((activity) => {
               const IconComponent = activityIcons[activity.type] || Star;
               const userReaction = reactedActivities[activity.id];
-              
+
+              const title = (() => {
+                switch (activity.type) {
+                  case 'achievement':
+                    return t('social.achievementUnlocked');
+                  case 'started_chat':
+                    return t('social.startedChat');
+                  case 'joined_room':
+                    return t('social.joinedRoom');
+                  case 'milestone':
+                    return t('social.milestoneReached');
+                  default:
+                    return t('social.activity');
+                }
+              })();
+
+              const description = (() => {
+                if (activity.type === 'started_chat') {
+                  return activity.payload?.title
+                    ? `${t('social.chatTitle')}: ${activity.payload.title}`
+                    : t('social.startedChatDesc');
+                }
+                if (activity.type === 'joined_room') {
+                  return activity.payload?.roomName
+                    ? `${t('social.room')}: ${activity.payload.roomName}`
+                    : t('social.joinedRoomDesc');
+                }
+                if (activity.type === 'milestone') {
+                  return activity.payload?.label || t('social.milestoneDesc');
+                }
+                return activity.payload?.description || '';
+              })();
+
               return (
                 <GlassCard key={activity.id} style={styles.activityCard}>
                   <View style={styles.activityHeader}>
-                    <Image source={{ uri: activity.userAvatar }} style={styles.activityAvatar} />
+                    <Image source={{ uri: activity.actorAvatar }} style={styles.activityAvatar} />
                     <View style={styles.activityUserInfo}>
-                      <Text style={styles.activityUserName}>{activity.userName}</Text>
-                      <Text style={styles.activityTime}>{formatTimeAgo(activity.timestamp)}</Text>
+                      <Text style={styles.activityUserName}>{activity.actorName}</Text>
+                      <Text style={styles.activityTime}>{formatTimeAgo(new Date(activity.createdAt))}</Text>
                     </View>
                     <View style={styles.activityTypeIcon}>
-                      <IconComponent 
-                        color={activity.type === 'streak' ? colors.streakOrange : colors.primary} 
-                        size={18} 
+                      <IconComponent
+                        color={activity.type === 'milestone' ? colors.streakOrange : colors.primary}
+                        size={18}
                       />
                     </View>
                   </View>
-                  
-                  <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activityDescription}>{activity.description}</Text>
-                  
+
+                  <Text style={styles.activityTitle}>{title}</Text>
+                  {description ? (
+                    <Text style={styles.activityDescription}>{description}</Text>
+                  ) : null}
+
                   <View style={styles.reactionsRow}>
-                    {activity.reactions.map((reaction, index) => (
+                    {['👍', '🔥', '🎉'].map((emoji) => (
                       <TouchableOpacity
-                        key={index}
+                        key={emoji}
                         style={[
                           styles.reactionBadge,
-                          userReaction === reaction.emoji && styles.reactionBadgeActive
+                          userReaction === emoji && styles.reactionBadgeActive
                         ]}
-                        onPress={() => handleReaction(activity.id, reaction.emoji)}
+                        onPress={() => handleReaction(activity.id, emoji)}
                       >
-                        <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
-                        <Text style={[
-                          styles.reactionCount,
-                          userReaction === reaction.emoji && styles.reactionCountActive
-                        ]}>
-                          {reaction.count + (userReaction === reaction.emoji ? 1 : 0)}
-                        </Text>
+                        <Text style={styles.reactionEmoji}>{emoji}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>

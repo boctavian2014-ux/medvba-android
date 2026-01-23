@@ -73,7 +73,7 @@ function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: Set
   );
 }
 
-const BLOCKED_USERS_KEY = '@medix_blocked_users';
+const BLOCKED_USERS_KEY = '@medvba_blocked_users';
 
 interface BlockedUser {
   id: string;
@@ -520,13 +520,13 @@ export default function SettingsScreen() {
                 icon={<HelpCircle color={colors.warning} size={22} />}
                 title={t('settings.helpCenter')}
                 subtitle={t('settings.helpCenterSubtitle')}
-                onPress={() => console.log('Help')}
+                onPress={() => router.push('/support/help-center')}
               />
               <SettingsItem
                 icon={<Mail color={colors.accentPink} size={22} />}
                 title={t('settings.contactSupport')}
                 subtitle={t('settings.contactSupportSubtitle')}
-                onPress={() => console.log('Contact')}
+                onPress={() => router.push('/support/contact-support')}
                 showBorder={false}
               />
             </View>

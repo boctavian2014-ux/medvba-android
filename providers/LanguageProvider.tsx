@@ -8,7 +8,7 @@ import { log } from '@/lib/log';
 
 export type Language = 'en' | 'ro';
 
-const LANGUAGE_STORAGE_KEY = '@medix_language';
+const LANGUAGE_STORAGE_KEY = '@medvba_language';
 
 const translations: Record<Language, Record<string, string>> = {
   en,

@@ -1,7 +1,7 @@
 # Low-End Device Testing Guide
 
 ## Overview
-Testing on low-end devices ensures Medix Study Hub performs well for all users, regardless of their device capabilities. This guide provides instructions for testing the app on devices with limited resources.
+Testing on low-end devices ensures MEDVBA performs well for all users, regardless of their device capabilities. This guide provides instructions for testing the app on devices with limited resources.
 
 ## Target Device Specifications
 

@@ -211,7 +211,7 @@ describe('AuthProvider', () => {
   describe('Onboarding', () => {
     it('should check onboarding status on init', async () => {
       (AsyncStorage.getItem as jest.Mock).mockImplementation((key) => {
-        if (key === '@medix_onboarding_complete') {
+        if (key === '@medvba_onboarding_complete') {
           return Promise.resolve('true');
         }
         return Promise.resolve(null);
@@ -238,7 +238,7 @@ describe('AuthProvider', () => {
       await result.current.completeOnboarding();
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        '@medix_onboarding_complete',
+        '@medvba_onboarding_complete',
         'true'
       );
       expect(result.current.hasCompletedOnboarding).toBe(true);

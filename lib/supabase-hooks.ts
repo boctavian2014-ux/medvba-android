@@ -923,6 +923,7 @@ export function useUpsertDailyProgress() {
 export type AchievementType =
   | 'first_quiz'
   | 'quiz_master'
+  | 'quiz_completed_10'
   | 'perfect_score'
   | 'streak_7'
   | 'streak_30'
@@ -943,6 +944,14 @@ export interface UserAchievement {
   achievementType: AchievementType;
   earnedAt: string;
   metadata: Record<string, any>;
+}
+
+export interface UserAchievementRow {
+  id: string;
+  user_id: string;
+  achievement_type: AchievementType;
+  metadata: Record<string, any> | null;
+  earned_at: string;
 }
 
 export function useUserAchievements(userId: string | undefined) {
@@ -1050,21 +1059,19 @@ export function useAllRecentAchievements(limit: number = 20) {
   });
 }
 
+/**
+ * Grants an achievement for the current user.
+ * Resolves to true when a row is returned; false on error or null data.
+ */
 export function useGrantAchievement() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: {
-      userId: string;
-      achievementType: AchievementType;
-      metadata?: Record<string, any>;
-    }) => {
-      console.log('[Supabase] Granting achievement:', input.achievementType, 'to user:', input.userId);
+    mutationFn: async (achievementId: AchievementType): Promise<boolean> => {
+      console.log('[Supabase] Granting achievement:', achievementId, 'for current user');
 
-      const { data, error } = await supabase.rpc('grant_achievement', {
-        target_user_id: input.userId,
-        achievement_name: input.achievementType,
-        achievement_metadata: input.metadata || {},
+      const { data, error } = await supabase.rpc('grant_my_achievement', {
+        p_achievement: achievementId,
       });
 
       if (error) {
@@ -1074,21 +1081,26 @@ export function useGrantAchievement() {
           details: error.details,
           hint: error.hint,
         };
-        console.error('[Supabase] RPC error granting achievement:', JSON.stringify(errorDetails, null, 2));
-        throw error;
+
+        if (error.message?.includes('Not authenticated')) {
+          console.warn('[Supabase] grant_my_achievement not authenticated:', JSON.stringify(errorDetails, null, 2));
+          return false;
+        }
+
+        console.error('[Supabase] grant_my_achievement error:', JSON.stringify(errorDetails, null, 2));
+        return false;
       }
 
-      if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        const errorMsg = data.error || 'Unknown error granting achievement';
-        console.error('[Supabase] Achievement function returned error:', JSON.stringify({ error: errorMsg, data }, null, 2));
-        throw new Error(errorMsg);
+      if (!data) {
+        console.warn('[Supabase] grant_my_achievement returned no data');
+        return false;
       }
 
       console.log('[Supabase] Achievement granted:', data);
-      return data;
+      return true;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['userAchievements', variables.userId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userAchievements'] });
       queryClient.invalidateQueries({ queryKey: ['recentAchievements'] });
     },
   });
@@ -1137,6 +1149,13 @@ export function useCheckAchievements(userId: string | undefined) {
 
       if (totalQuestions >= 1 && !earnedAchievements.has('first_quiz')) {
         earned.push('first_quiz');
+      }
+
+      if (totalQuestions >= 10) {
+        progressMap['quiz_completed_10'] = { current: totalQuestions, required: 10 };
+        if (!earnedAchievements.has('quiz_completed_10')) earned.push('quiz_completed_10');
+      } else {
+        progressMap['quiz_completed_10'] = { current: totalQuestions, required: 10 };
       }
 
       if (totalQuestions >= 100) {
@@ -1543,71 +1562,63 @@ export interface ActivityFeedItem {
   createdAt: string;
 }
 
-export function useActivityFeed(limit: number = 50) {
+export function useActivityFeed(userId?: string, limit = 20) {
   return useQuery({
-    queryKey: ['activityFeed', limit],
+    queryKey: ['activityFeed', userId, limit],
     queryFn: async () => {
-      console.log('[Supabase] Fetching activity feed');
-
-      const { data: feedData, error: feedError } = await supabase
+      console.log('[Supabase] Fetching activity feed...');
+      const { data, error } = await supabase
         .from('activity_feed')
-        .select('*')
+        .select('id, actor_id, type, payload, created_at, chat_id')
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (feedError) {
-        console.error('[Supabase] Error fetching activity feed:', JSON.stringify({ message: feedError.message, code: feedError.code, details: feedError.details }));
+      if (error) {
+        console.error('[Supabase] Error fetching activity feed:', JSON.stringify({
+          message: error.message, code: error.code, details: error.details
+        }));
         return [];
       }
 
-      if (!feedData || feedData.length === 0) {
+      if (!data || data.length === 0) {
         return [];
       }
 
-      const actorIds = [...new Set(feedData.map((item: any) => item.actor_id))];
-      
-      const { data: usersData, error: usersError } = await supabase
+      const actorIds = [...new Set(data.map(item => item.actor_id))];
+
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, name, avatar')
         .in('id', actorIds);
 
-      if (usersError) {
-        console.error('[Supabase] Error fetching activity feed users:', JSON.stringify({ message: usersError.message, code: usersError.code, details: usersError.details }));
+      if (profilesError) {
+        console.error('[Supabase] Error fetching activity actor profiles:', JSON.stringify({
+          message: profilesError.message, code: profilesError.code, details: profilesError.details
+        }));
       }
 
-      const usersMap = new Map(
-        (usersData || []).map((user: any) => [
-          user.id,
-          {
-            name: user.name || 'Student',
-            avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${user.id}`,
-          },
-        ])
+      const profilesMap = new Map(
+        (profilesData || []).map(profile => [profile.id, profile])
       );
 
-      console.log('[Supabase] Fetched', feedData.length, 'activity feed items');
-
-      return feedData.map((item: any) => {
-        const userInfo = usersMap.get(item.actor_id) || {
-          name: 'Student',
-          avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${item.actor_id}`,
-        };
-
+      return data.map((item: any) => {
+        const profile = profilesMap.get(item.actor_id);
         return {
           id: item.id,
           actorId: item.actor_id,
-          actorName: userInfo.name,
-          actorAvatar: userInfo.avatar,
+          actorName: profile?.name || (item.actor_id === userId ? 'You' : 'Student'),
+          actorAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.actor_id}`,
           type: item.type as ActivityFeedType,
           chatId: item.chat_id,
-          payload: item.payload || {},
           createdAt: item.created_at,
-        };
-      }) as ActivityFeedItem[];
+          payload: item.payload || {},
+        } as ActivityFeedItem;
+      });
     },
-    staleTime: 30000,
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
+    enabled: true,
+    staleTime: 60000,
+    refetchInterval: 60000,
+    retry: false,
   });
 }
 
@@ -1971,6 +1982,63 @@ export function useFriendActivity(userId?: string, limit = 20) {
       });
     },
     enabled: !!userId,
+    staleTime: 60000,
+    refetchInterval: 60000,
+    retry: false,
+  });
+}export function useActivityFeed(userId?: string, limit = 20) {
+  return useQuery({
+    queryKey: ['activityFeed', limit],
+    queryFn: async () => {
+      console.log('[Supabase] Fetching activity feed...');
+      const { data, error } = await supabase
+        .from('activity_feed')
+        .select('id, actor_id, type, payload, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('[Supabase] Error fetching activity feed:', JSON.stringify({
+          message: error.message, code: error.code, details: error.details
+        }));
+        return [];
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      const actorIds = [...new Set(data.map(item => item.actor_id))];
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, avatar')
+        .in('id', actorIds);
+
+      if (profilesError) {
+        console.error('[Supabase] Error fetching activity actor profiles:', JSON.stringify({
+          message: profilesError.message, code: profilesError.code, details: profilesError.details
+        }));
+      }
+
+      const profilesMap = new Map(
+        (profilesData || []).map(profile => [profile.id, profile])
+      );
+
+      return data.map((item: any) => {
+        const profile = profilesMap.get(item.actor_id);
+        return {
+          id: item.id,
+          actorId: item.actor_id,
+          actorName: profile?.name || (item.actor_id === userId ? 'You' : 'Student'),
+          actorAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.actor_id}`,
+          type: item.type,
+          createdAt: item.created_at,
+          payload: item.payload || {},
+        } as ActivityFeedItem;
+      });
+    },
+    enabled: true,
     staleTime: 60000,
     refetchInterval: 60000,
     retry: false,

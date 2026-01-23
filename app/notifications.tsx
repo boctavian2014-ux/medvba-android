@@ -18,7 +18,7 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const NOTIFICATIONS_KEY = '@medix_notifications';
+const NOTIFICATIONS_KEY = '@medvba_notifications';
 
 interface NotificationSettings {
   studyReminders: boolean;

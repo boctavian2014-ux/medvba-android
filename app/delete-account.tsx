@@ -34,9 +34,9 @@ const STORAGE_KEYS_TO_CLEAR = [
   'quiz_all_time_stats',
   'quiz_streak_data',
   'quiz_weekly_history',
-  '@medix_blocked_users',
-  '@medix_user_reports',
-  '@medix_app_language',
+  '@medvba_blocked_users',
+  '@medvba_user_reports',
+  '@medvba_app_language',
 ];
 
 type DeletionStep = 'confirm' | 'deleting' | 'success';
@@ -117,7 +117,7 @@ export default function DeleteAccountScreen() {
             </View>
             <Text style={styles.successTitle}>Account Deleted</Text>
             <Text style={styles.successText}>
-              Your account has been permanently deleted. Thank you for using Medix Study Hub.
+              Your account has been permanently deleted. Thank you for using MEDVBA.
             </Text>
             <TouchableOpacity
               style={styles.finishButton}
@@ -185,7 +185,7 @@ export default function DeleteAccountScreen() {
             </View>
             <Text style={styles.warningTitle}>This action is permanent</Text>
             <Text style={styles.warningText}>
-              Deleting your Medix Study Hub account will permanently remove your profile, 
+              Deleting your MEDVBA account will permanently remove your profile, 
               quiz history, study rooms you host, and all associated data. This action cannot be undone.
             </Text>
           </View>

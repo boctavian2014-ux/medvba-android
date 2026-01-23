@@ -3,12 +3,13 @@ import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
+import { useUserProfile } from '@/lib/supabase-hooks';
 import { AppState } from 'react-native';
 
 import { monitoring } from '@/lib/monitoring';
 import type { UserProfile } from '@/types/user';
 
-const ONBOARDING_COMPLETE_KEY = '@medix_onboarding_complete';
+const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
 interface AuthState {
   session: Session | null;
@@ -36,6 +37,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const { data: userProfile } = useUserProfile(user?.id);
 
   const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted: { current: boolean }) => {
     try {
@@ -336,7 +338,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   useEffect(() => {
     if (!user?.id) return;
 
+    const shouldPublishPresence = userProfile?.is_public !== false;
+
     const updatePresence = async () => {
+      if (!shouldPublishPresence) return;
+
       try {
         await supabase
           .from('user_presence')
@@ -364,7 +370,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       clearInterval(presenceInterval);
       subscription.remove();
     };
-  }, [user?.id]);
+  }, [user?.id, userProfile?.is_public]);
 
   return {
     session,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
@@ -163,6 +164,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
     return (allTimeStats.totalCorrectAnswers / allTimeStats.totalQuestionsAnswered) * 100;
   }, [allTimeStats.totalQuestionsAnswered, allTimeStats.totalCorrectAnswers]);
 
+  // Achievement grant errors are non-blocking; quiz_completed_10 is granted via grant_my_achievement.
   const checkAndGrantAchievements = useCallback(async () => {
     if (!userId) return;
 
@@ -175,21 +177,18 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         
         for (const achievementType of newAchievements) {
           try {
-            await grantAchievementMutation.mutateAsync({
-              userId,
-              achievementType,
-              metadata: {
-                totalQuestions: allTimeStats.totalQuestionsAnswered,
-                currentStreak: streakData.currentStreak,
-                accuracy: accuracy,
-              },
-            });
-            console.log('[QuizProgress] Granted achievement:', achievementType);
-          } catch (error: any) {
-            if (error?.message?.includes('already has this achievement')) {
-              console.log('[QuizProgress] Achievement already granted:', achievementType);
+            const success = await grantAchievementMutation.mutateAsync(achievementType);
+
+            if (!success) {
+              Alert.alert(
+                'Achievement not saved',
+                'Could not save your achievement. It will not affect your progress.'
+              );
               continue;
             }
+
+            console.log('[QuizProgress] Granted achievement:', achievementType);
+          } catch (error: any) {
             console.error('[QuizProgress] Error granting achievement:', achievementType, JSON.stringify({
               message: error?.message || String(error),
               code: error?.code,
@@ -197,6 +196,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
               hint: error?.hint,
               name: error?.name,
             }, null, 2));
+            Alert.alert(
+              'Achievement not saved',
+              'Could not save your achievement. It will not affect your progress.'
+            );
           }
         }
       }
