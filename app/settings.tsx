@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { 
   X, 
@@ -106,6 +107,15 @@ export default function SettingsScreen() {
   const [photoUri, setPhotoUri] = useState<string | undefined>();
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const appVersion =
+    Constants.expoConfig?.version ||
+    (Constants as any)?.manifest?.version ||
+    'unknown';
+  const iosBuild = Constants.expoConfig?.ios?.buildNumber;
+  const androidBuild = Constants.expoConfig?.android?.versionCode;
+  const buildLabel = Platform.OS === 'ios' ? iosBuild : androidBuild;
+  const appVersionLabel = buildLabel ? `${appVersion} (${buildLabel})` : appVersion;
 
   useEffect(() => {
     loadBlockedUsers();
@@ -628,7 +638,7 @@ export default function SettingsScreen() {
               <SettingsItem
                 icon={<Info color={colors.textSecondary} size={22} />}
                 title={t('settings.appVersion')}
-                subtitle="1.0.0"
+                subtitle={appVersionLabel}
                 onPress={() => {}}
                 showBorder={false}
               />
