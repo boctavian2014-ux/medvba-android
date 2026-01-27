@@ -922,21 +922,21 @@ export function useUpsertDailyProgress() {
 
 export type AchievementType =
   | 'first_quiz'
-  | 'quiz_master'
   | 'quiz_completed_10'
   | 'perfect_score'
-  | 'streak_7'
-  | 'streak_30'
-  | 'streak_100'
-  | 'questions_100'
-  | 'questions_500'
-  | 'questions_1000'
+  | 'week_streak'
+  | 'month_streak'
+  | 'grand_master'
+  | 'hundred_questions'
+  | 'five_hundred_questions'
+  | 'thousand_questions'
+  | 'anatomy_master'
+  | 'speed_demon'
   | 'social_butterfly'
-  | 'helpful_tutor'
-  | 'room_creator'
+  | 'top_ten'
+  | 'champion'
   | 'early_bird'
-  | 'night_owl'
-  | 'weekend_warrior';
+  | 'night_owl';
 
 export interface UserAchievement {
   id: string;
@@ -1159,45 +1159,45 @@ export function useCheckAchievements(userId: string | undefined) {
       }
 
       if (totalQuestions >= 100) {
-        progressMap['questions_100'] = { current: totalQuestions, required: 100 };
-        if (!earnedAchievements.has('questions_100')) earned.push('questions_100');
+        progressMap['hundred_questions'] = { current: totalQuestions, required: 100 };
+        if (!earnedAchievements.has('hundred_questions')) earned.push('hundred_questions');
       } else {
-        progressMap['questions_100'] = { current: totalQuestions, required: 100 };
+        progressMap['hundred_questions'] = { current: totalQuestions, required: 100 };
       }
 
       if (totalQuestions >= 500) {
-        progressMap['questions_500'] = { current: totalQuestions, required: 500 };
-        if (!earnedAchievements.has('questions_500')) earned.push('questions_500');
+        progressMap['five_hundred_questions'] = { current: totalQuestions, required: 500 };
+        if (!earnedAchievements.has('five_hundred_questions')) earned.push('five_hundred_questions');
       } else {
-        progressMap['questions_500'] = { current: totalQuestions, required: 500 };
+        progressMap['five_hundred_questions'] = { current: totalQuestions, required: 500 };
       }
 
       if (totalQuestions >= 1000) {
-        progressMap['questions_1000'] = { current: totalQuestions, required: 1000 };
-        if (!earnedAchievements.has('questions_1000')) earned.push('questions_1000');
+        progressMap['thousand_questions'] = { current: totalQuestions, required: 1000 };
+        if (!earnedAchievements.has('thousand_questions')) earned.push('thousand_questions');
       } else {
-        progressMap['questions_1000'] = { current: totalQuestions, required: 1000 };
+        progressMap['thousand_questions'] = { current: totalQuestions, required: 1000 };
       }
 
       if (currentStreak >= 7) {
-        progressMap['streak_7'] = { current: currentStreak, required: 7 };
-        if (!earnedAchievements.has('streak_7')) earned.push('streak_7');
+        progressMap['week_streak'] = { current: currentStreak, required: 7 };
+        if (!earnedAchievements.has('week_streak')) earned.push('week_streak');
       } else {
-        progressMap['streak_7'] = { current: currentStreak, required: 7 };
+        progressMap['week_streak'] = { current: currentStreak, required: 7 };
       }
 
       if (currentStreak >= 30) {
-        progressMap['streak_30'] = { current: currentStreak, required: 30 };
-        if (!earnedAchievements.has('streak_30')) earned.push('streak_30');
+        progressMap['month_streak'] = { current: currentStreak, required: 30 };
+        if (!earnedAchievements.has('month_streak')) earned.push('month_streak');
       } else {
-        progressMap['streak_30'] = { current: currentStreak, required: 30 };
+        progressMap['month_streak'] = { current: currentStreak, required: 30 };
       }
 
       if (currentStreak >= 100) {
-        progressMap['streak_100'] = { current: currentStreak, required: 100 };
-        if (!earnedAchievements.has('streak_100')) earned.push('streak_100');
+        progressMap['grand_master'] = { current: currentStreak, required: 100 };
+        if (!earnedAchievements.has('grand_master')) earned.push('grand_master');
       } else {
-        progressMap['streak_100'] = { current: currentStreak, required: 100 };
+        progressMap['grand_master'] = { current: currentStreak, required: 100 };
       }
 
       console.log('[Supabase] Achievement check complete:', earned.length, 'new achievements earned');
@@ -1982,63 +1982,6 @@ export function useFriendActivity(userId?: string, limit = 20) {
       });
     },
     enabled: !!userId,
-    staleTime: 60000,
-    refetchInterval: 60000,
-    retry: false,
-  });
-}export function useActivityFeed(userId?: string, limit = 20) {
-  return useQuery({
-    queryKey: ['activityFeed', limit],
-    queryFn: async () => {
-      console.log('[Supabase] Fetching activity feed...');
-      const { data, error } = await supabase
-        .from('activity_feed')
-        .select('id, actor_id, type, payload, created_at')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        console.error('[Supabase] Error fetching activity feed:', JSON.stringify({
-          message: error.message, code: error.code, details: error.details
-        }));
-        return [];
-      }
-
-      if (!data || data.length === 0) {
-        return [];
-      }
-
-      const actorIds = [...new Set(data.map(item => item.actor_id))];
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name, avatar')
-        .in('id', actorIds);
-
-      if (profilesError) {
-        console.error('[Supabase] Error fetching activity actor profiles:', JSON.stringify({
-          message: profilesError.message, code: profilesError.code, details: profilesError.details
-        }));
-      }
-
-      const profilesMap = new Map(
-        (profilesData || []).map(profile => [profile.id, profile])
-      );
-
-      return data.map((item: any) => {
-        const profile = profilesMap.get(item.actor_id);
-        return {
-          id: item.id,
-          actorId: item.actor_id,
-          actorName: profile?.name || (item.actor_id === userId ? 'You' : 'Student'),
-          actorAvatar: profile?.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.actor_id}`,
-          type: item.type,
-          createdAt: item.created_at,
-          payload: item.payload || {},
-        } as ActivityFeedItem;
-      });
-    },
-    enabled: true,
     staleTime: 60000,
     refetchInterval: 60000,
     retry: false,

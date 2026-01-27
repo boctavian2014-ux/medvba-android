@@ -66,3 +66,31 @@ EXCEPTION WHEN OTHERS THEN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant achievement for the current authenticated user
+CREATE OR REPLACE FUNCTION public.grant_my_achievement(p_achievement text)
+RETURNS public.user_achievements
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid := (SELECT auth.uid());
+  v_row public.user_achievements;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  INSERT INTO public.user_achievements (user_id, achievement_type)
+  VALUES (v_uid, p_achievement)
+  ON CONFLICT (user_id, achievement_type)
+  DO UPDATE SET earned_at = public.user_achievements.earned_at
+  RETURNING * INTO v_row;
+
+  RETURN v_row;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.grant_my_achievement(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.grant_my_achievement(text) TO authenticated;

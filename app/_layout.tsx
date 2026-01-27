@@ -49,8 +49,9 @@ function useProtectedRoute(splashAvailable: boolean) {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const isOnboarding = inAuthGroup && segments[1] === 'onboarding';
 
-    if (!hasCompletedOnboarding && !inAuthGroup) {
+    if (!hasCompletedOnboarding && !isOnboarding) {
       console.log('[Auth] Redirecting to onboarding');
       router.replace('/(auth)/onboarding');
     } else if (!isAuthenticated && !inAuthGroup) {

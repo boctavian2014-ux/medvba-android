@@ -71,7 +71,7 @@ CREATE TABLE user_achievements (
     'streak_7', 'streak_30', 'streak_100',
     'questions_100', 'questions_500', 'questions_1000',
     'social_butterfly', 'helpful_tutor', 'room_creator',
-    'early_bird', 'night_owl', 'weekend_warrior'
+    'early_bird', 'night_owl', 'weekend_warrior', 'quiz_completed_10'
   )),
   earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   metadata JSONB DEFAULT '{}'::jsonb,
@@ -218,6 +218,34 @@ BEGIN
   RETURN achievement_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant achievement for the current authenticated user
+CREATE OR REPLACE FUNCTION public.grant_my_achievement(p_achievement text)
+RETURNS public.user_achievements
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid := (SELECT auth.uid());
+  v_row public.user_achievements;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  INSERT INTO public.user_achievements (user_id, achievement_type)
+  VALUES (v_uid, p_achievement)
+  ON CONFLICT (user_id, achievement_type)
+  DO UPDATE SET earned_at = public.user_achievements.earned_at
+  RETURNING * INTO v_row;
+
+  RETURN v_row;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.grant_my_achievement(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.grant_my_achievement(text) TO authenticated;
 
 
 -- ============================================

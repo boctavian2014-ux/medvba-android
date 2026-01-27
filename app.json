@@ -2,7 +2,7 @@
   "expo": {
     "name": "MEDVBA",
     "slug": "medvba",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "rork-app",
@@ -17,10 +17,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.devaieood.medvba",
       "icon": "./assets/icon.png",
+      "buildNumber": "3",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos"
       }
     },
     "android": {
@@ -28,13 +27,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
+      "versionCode": 3,
       "package": "com.devaieood.medvba",
+      "blockedPermissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "permissions": [
         "android.permission.VIBRATE",
-        "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -64,7 +66,7 @@
         "origin": "https://rork.com/"
       },
       "eas": {
-        "projectId": "c339e1e2-5d69-4425-a4f9-4c37b7d63483"
+        "projectId": "667a66db-a3be-4c1e-b7da-8ad212c92bb4"
       }
     },
     "owner": "devaieood79"

@@ -450,20 +450,21 @@ export default function SocialScreen() {
   const getAchievementTitle = (type: AchievementType): string => {
     const titles: Record<AchievementType, string> = {
       first_quiz: t('achievement.firstQuiz'),
-      quiz_master: t('achievement.quizMaster'),
+      quiz_completed_10: t('achievement.quizCompleted10'),
       perfect_score: t('achievement.perfectScore'),
-      streak_7: t('achievement.streak7'),
-      streak_30: t('achievement.streak30'),
-      streak_100: t('achievement.streak100'),
-      questions_100: t('achievement.questions100'),
-      questions_500: t('achievement.questions500'),
-      questions_1000: t('achievement.questions1000'),
+      week_streak: t('achievement.weekStreak'),
+      month_streak: t('achievement.monthStreak'),
+      grand_master: t('achievement.grandMaster'),
+      hundred_questions: t('achievement.hundredQuestions'),
+      five_hundred_questions: t('achievement.fiveHundredQuestions'),
+      thousand_questions: t('achievement.thousandQuestions'),
+      anatomy_master: t('achievement.anatomyMaster'),
+      speed_demon: t('achievement.speedDemon'),
       social_butterfly: t('achievement.socialButterfly'),
-      helpful_tutor: t('achievement.helpfulTutor'),
-      room_creator: t('achievement.roomCreator'),
+      top_ten: t('achievement.topTen'),
+      champion: t('achievement.champion'),
       early_bird: t('achievement.earlyBird'),
       night_owl: t('achievement.nightOwl'),
-      weekend_warrior: t('achievement.weekendWarrior'),
     };
     return titles[type] || type;
   };
@@ -471,20 +472,21 @@ export default function SocialScreen() {
   const getAchievementDescription = (type: AchievementType): string => {
     const descriptions: Record<AchievementType, string> = {
       first_quiz: t('achievement.firstQuizDesc'),
-      quiz_master: t('achievement.quizMasterDesc'),
+      quiz_completed_10: t('achievement.quizCompleted10Desc'),
       perfect_score: t('achievement.perfectScoreDesc'),
-      streak_7: t('achievement.streak7Desc'),
-      streak_30: t('achievement.streak30Desc'),
-      streak_100: t('achievement.streak100Desc'),
-      questions_100: t('achievement.questions100Desc'),
-      questions_500: t('achievement.questions500Desc'),
-      questions_1000: t('achievement.questions1000Desc'),
+      week_streak: t('achievement.weekStreakDesc'),
+      month_streak: t('achievement.monthStreakDesc'),
+      grand_master: t('achievement.grandMasterDesc'),
+      hundred_questions: t('achievement.hundredQuestionsDesc'),
+      five_hundred_questions: t('achievement.fiveHundredQuestionsDesc'),
+      thousand_questions: t('achievement.thousandQuestionsDesc'),
+      anatomy_master: t('achievement.anatomyMasterDesc'),
+      speed_demon: t('achievement.speedDemonDesc'),
       social_butterfly: t('achievement.socialButterflyDesc'),
-      helpful_tutor: t('achievement.helpfulTutorDesc'),
-      room_creator: t('achievement.roomCreatorDesc'),
+      top_ten: t('achievement.topTenDesc'),
+      champion: t('achievement.championDesc'),
       early_bird: t('achievement.earlyBirdDesc'),
       night_owl: t('achievement.nightOwlDesc'),
-      weekend_warrior: t('achievement.weekendWarriorDesc'),
     };
     return descriptions[type] || t('social.achievementUnlocked');
   };

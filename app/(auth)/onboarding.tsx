@@ -81,7 +81,7 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, isAuthenticated } = useAuth();
   const { t } = useLanguage();
 
   const slides: OnboardingSlide[] = useMemo(() => slidesData.map(slide => ({
@@ -98,8 +98,8 @@ export default function OnboardingScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     await completeOnboarding();
-    router.replace('/(auth)/login');
-  }, [completeOnboarding]);
+    router.replace(isAuthenticated ? '/(tabs)' : '/(auth)/login');
+  }, [completeOnboarding, isAuthenticated]);
 
   const handleNext = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -121,8 +121,8 @@ export default function OnboardingScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     await completeOnboarding();
-    router.replace('/(auth)/login');
-  }, [completeOnboarding]);
+    router.replace(isAuthenticated ? '/(tabs)' : '/(auth)/login');
+  }, [completeOnboarding, isAuthenticated]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {

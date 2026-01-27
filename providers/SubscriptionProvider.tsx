@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
 import { Platform } from 'react-native';
+import { trpc } from '@/lib/trpc';
 
 const FREE_QUIZ_LIMIT = 2;
 const FREE_AI_LIMIT = 1;
@@ -28,6 +29,17 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isLoading: true,
     offerings: null,
   });
+  const [rcAppUserId, setRcAppUserId] = useState<string | null>(null);
+
+  const revenueCatCustomerQuery = trpc.revenuecat.getCustomer.useQuery(
+    { customerId: rcAppUserId ?? 'unknown' },
+    { enabled: !!rcAppUserId, retry: false },
+  );
+
+  const revenueCatSubscriptionsQuery = trpc.revenuecat.getCustomerSubscriptions.useQuery(
+    { customerId: rcAppUserId ?? 'unknown' },
+    { enabled: !!rcAppUserId, retry: false },
+  );
 
   useEffect(() => {
     const initRevenueCat = async () => {
@@ -52,6 +64,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         console.log('[RevenueCat] Configuring SDK for', Platform.OS, 'with key:', apiKey.substring(0, 10) + '...');
         Purchases.configure({ apiKey });
         console.log('[RevenueCat] SDK configured successfully');
+
+        try {
+          const appUserId = await Purchases.getAppUserID();
+          setRcAppUserId(appUserId);
+        } catch (error) {
+          console.error('[RevenueCat] Error fetching app user id:', error);
+        }
       } catch (error) {
         console.error('[RevenueCat] Initialization error:', error);
       }
@@ -242,6 +261,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     freeQuizzesToday: state.freeQuizzesToday,
     freeAiQuestionsToday: state.freeAiQuestionsToday,
     offerings: state.offerings,
+    revenueCatAppUserId: rcAppUserId,
+    revenueCatCustomer: revenueCatCustomerQuery.data ?? null,
+    revenueCatSubscriptions: revenueCatSubscriptionsQuery.data ?? null,
     canStartQuiz,
     canAskAiQuestion,
     incrementQuizCount,
@@ -258,6 +280,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     state.freeQuizzesToday,
     state.freeAiQuestionsToday,
     state.offerings,
+    rcAppUserId,
+    revenueCatCustomerQuery.data,
+    revenueCatSubscriptionsQuery.data,
     canStartQuiz,
     canAskAiQuestion,
     incrementQuizCount,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { Camera, Upload } from 'lucide-react-native';
+import { Upload } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 
@@ -25,13 +25,12 @@ export default function PhotoPicker({
 
   const requestPermissions = async () => {
     if (Platform.OS !== 'web') {
-      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
       const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
-      if (cameraStatus !== 'granted' || libraryStatus !== 'granted') {
+      if (libraryStatus !== 'granted') {
         Alert.alert(
           'Permissions Required',
-          'We need camera and photo library permissions to change your profile picture.',
+          'We need photo library permissions to change your profile picture.',
           [{ text: 'OK' }]
         );
         return false;
@@ -40,7 +39,7 @@ export default function PhotoPicker({
     return true;
   };
 
-  const pickImage = async (useCamera: boolean) => {
+  const pickImage = async () => {
     const hasPermissions = await requestPermissions();
     if (!hasPermissions) return;
 
@@ -48,19 +47,12 @@ export default function PhotoPicker({
       setIsLoading(true);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-      const result = useCamera
-        ? await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          })
-        : await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
       if (!result.canceled && result.assets[0]) {
         onPhotoSelected(result.assets[0].uri);
@@ -82,12 +74,8 @@ export default function PhotoPicker({
       'Choose an option',
       [
         {
-          text: 'Take Photo',
-          onPress: () => pickImage(true),
-        },
-        {
           text: 'Choose from Library',
-          onPress: () => pickImage(false),
+          onPress: () => pickImage(),
         },
         ...(currentPhotoUrl && showRemoveButton && onPhotoRemoved
           ? [
@@ -121,7 +109,7 @@ export default function PhotoPicker({
           <Image source={{ uri: currentPhotoUrl }} style={styles.photo} />
         ) : (
           <View style={styles.placeholder}>
-            <Camera color={Colors.textSecondary} size={size / 3} />
+            <Upload color={Colors.textSecondary} size={size / 3} />
           </View>
         )}
         
