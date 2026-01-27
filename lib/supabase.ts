@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
@@ -28,7 +29,7 @@ const storage = {
         const item = localStorage.getItem(key);
         return item;
       }
-      return await AsyncStorage.getItem(key);
+      return await SecureStore.getItemAsync(key);
     } catch (error) {
       console.error('Error getting item from storage:', error);
       return null;
@@ -40,7 +41,7 @@ const storage = {
         localStorage.setItem(key, value);
         return;
       }
-      await AsyncStorage.setItem(key, value);
+      await SecureStore.setItemAsync(key, value);
     } catch (error) {
       console.error('Error setting item in storage:', error);
     }
@@ -51,7 +52,7 @@ const storage = {
         localStorage.removeItem(key);
         return;
       }
-      await AsyncStorage.removeItem(key);
+      await SecureStore.deleteItemAsync(key);
     } catch (error) {
       console.error('Error removing item from storage:', error);
     }

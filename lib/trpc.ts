@@ -32,7 +32,7 @@ export const trpcClient = trpc.createClient({
       transformer: superjson,
       async headers() {
         const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
+        const token = data?.session?.access_token;
         return token ? { Authorization: `Bearer ${token}` } : {};
       },
     }),

@@ -24,7 +24,7 @@ interface NotificationSettings {
   studyReminders: boolean;
   studyTime: string;
   chatNotifications: boolean;
-  medixUpdates: boolean;
+  medvbaUpdates: boolean;
   soundEnabled: boolean;
   doNotDisturb: boolean;
   doNotDisturbStart: string;
@@ -35,7 +35,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   studyReminders: false,
   studyTime: '09:00',
   chatNotifications: true,
-  medixUpdates: true,
+  medvbaUpdates: true,
   soundEnabled: true,
   doNotDisturb: false,
   doNotDisturbStart: '22:00',
@@ -197,15 +197,15 @@ export default function NotificationsScreen() {
               <View style={[styles.settingItem, styles.settingItemBorder]}>
                 <View style={styles.settingInfo}>
                   <Text style={styles.settingTitle}>
-                    {t('notifications.medixUpdates')}
+                    {t('notifications.medvbaUpdates')}
                   </Text>
                   <Text style={styles.settingDescription}>
-                    {t('notifications.medixUpdatesDesc')}
+                    {t('notifications.medvbaUpdatesDesc')}
                   </Text>
                 </View>
                 <Switch
-                  value={settings.medixUpdates}
-                  onValueChange={(value) => updateSetting('medixUpdates', value)}
+                  value={settings.medvbaUpdates}
+                  onValueChange={(value) => updateSetting('medvbaUpdates', value)}
                   trackColor={{ false: colors.cardBgLight, true: colors.primary }}
                   thumbColor={colors.text}
                 />

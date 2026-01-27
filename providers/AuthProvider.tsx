@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
@@ -38,6 +38,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const { data: userProfile } = useUserProfile(user?.id);
+  const lastPresenceAtRef = useRef(0);
+  const lastIsPublicRef = useRef<boolean | null>(null);
 
   const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted: { current: boolean }) => {
     try {
@@ -340,13 +342,12 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
     const shouldPublishPresence = userProfile?.is_public !== false;
     const PRESENCE_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes
-    let lastPresenceAt = 0;
 
     const updatePresence = async (force = false) => {
       if (!shouldPublishPresence) return;
 
       const now = Date.now();
-      if (!force && now - lastPresenceAt < PRESENCE_THROTTLE_MS) {
+      if (!force && now - lastPresenceAtRef.current < PRESENCE_THROTTLE_MS) {
         return;
       }
 
@@ -357,14 +358,22 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             user_id: user.id,
             last_seen: new Date().toISOString(),
           }, { onConflict: 'user_id' });
-        lastPresenceAt = now;
+        lastPresenceAtRef.current = now;
         console.log('[Auth] Presence updated');
       } catch (error) {
         console.error('[Auth] Error updating presence:', error);
       }
     };
 
-    updatePresence(true);
+    const wasPublic = lastIsPublicRef.current;
+    lastIsPublicRef.current = shouldPublishPresence;
+    if (shouldPublishPresence && wasPublic === false) {
+      updatePresence(true);
+    } else if (shouldPublishPresence && wasPublic === null) {
+      updatePresence(true);
+    } else {
+      updatePresence();
+    }
 
     const presenceInterval = setInterval(updatePresence, PRESENCE_THROTTLE_MS);
 
