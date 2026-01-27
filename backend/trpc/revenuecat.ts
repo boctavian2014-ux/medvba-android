@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import { createRevenueCatClient } from '../revenuecat-client';
-import { createTRPCRouter, publicProcedure } from './create-context';
+import { createTRPCRouter, protectedProcedure } from './create-context';
 
 const customerIdSchema = z.object({
   customerId: z.string().min(1),
@@ -23,7 +23,7 @@ function getRevenueCatConfig() {
 }
 
 export const revenuecatRouter = createTRPCRouter({
-  getCustomer: publicProcedure.input(customerIdSchema).query(async ({ input }) => {
+  getCustomer: protectedProcedure.input(customerIdSchema).query(async ({ input }) => {
     const { apiKey, projectId } = getRevenueCatConfig();
     const client = createRevenueCatClient(apiKey);
 
@@ -49,7 +49,7 @@ export const revenuecatRouter = createTRPCRouter({
 
     return data;
   }),
-  getCustomerSubscriptions: publicProcedure.input(customerIdSchema).query(async ({ input }) => {
+  getCustomerSubscriptions: protectedProcedure.input(customerIdSchema).query(async ({ input }) => {
     const { apiKey, projectId } = getRevenueCatConfig();
     const client = createRevenueCatClient(apiKey);
 

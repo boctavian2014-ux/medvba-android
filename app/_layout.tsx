@@ -24,6 +24,51 @@ try {
 }
 monitoring.init();
 
+if (!__DEV__) {
+  // Silence noisy production logs while keeping warnings/errors.
+  console.log = () => {};
+
+  const sanitizeValue = (value: unknown): unknown => {
+    if (typeof value === "string") {
+      return value
+        .replace(
+          /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,
+          "[redacted-email]"
+        )
+        .replace(/(eyJ[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?)/g, "[redacted-jwt]")
+        .replace(/(sb_publishable_[a-zA-Z0-9._-]+)/g, "[redacted-supabase-key]");
+    }
+    if (value && typeof value === "object") {
+      try {
+        const serialized = JSON.stringify(value);
+        if (serialized) {
+          return sanitizeValue(serialized);
+        }
+      } catch {
+        return "[redacted-object]";
+      }
+    }
+    return value;
+  };
+
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
+  const originalConsoleInfo = console.info;
+  const originalConsoleDebug = console.debug;
+  console.error = (...args: unknown[]) => {
+    originalConsoleError(...args.map(sanitizeValue));
+  };
+  console.warn = (...args: unknown[]) => {
+    originalConsoleWarn(...args.map(sanitizeValue));
+  };
+  console.info = (...args: unknown[]) => {
+    originalConsoleInfo(...args.map(sanitizeValue));
+  };
+  console.debug = (...args: unknown[]) => {
+    originalConsoleDebug(...args.map(sanitizeValue));
+  };
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -81,8 +126,15 @@ function useProtectedRoute(splashAvailable: boolean) {
 function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
   const isLoading = useProtectedRoute(splashAvailable);
   const { colors, colorScheme } = useTheme();
-  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const extraConfig = Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
+  const supabaseUrl =
+    process.env.EXPO_PUBLIC_SUPABASE_URL ||
+    extraConfig.EXPO_PUBLIC_SUPABASE_URL ||
+    extraConfig.supabaseUrl;
+  const supabaseAnonKey =
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+    extraConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+    extraConfig.supabaseAnonKey;
   const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
   const envSource = Constants.executionEnvironment ? ` (${Constants.executionEnvironment})` : "";
 

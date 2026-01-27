@@ -27,6 +27,7 @@ import {
 import Colors from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
+import { trpc } from '@/lib/trpc';
 
 const STORAGE_KEYS_TO_CLEAR = [
   'quiz_daily_progress',
@@ -46,6 +47,7 @@ export default function DeleteAccountScreen() {
   const { user } = useAuth();
   const [confirmText, setConfirmText] = useState('');
   const [step, setStep] = useState<DeletionStep>('confirm');
+  const deleteAccountMutation = trpc.account.deleteSelf.useMutation();
   
 
 
@@ -77,6 +79,7 @@ export default function DeleteAccountScreen() {
     }
 
     try {
+      await deleteAccountMutation.mutateAsync();
       await clearLocalData();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -93,7 +96,7 @@ export default function DeleteAccountScreen() {
         [{ text: 'OK' }]
       );
     }
-  }, [confirmText, user?.id]);
+  }, [confirmText, user?.id, deleteAccountMutation]);
 
   const handleFinish = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

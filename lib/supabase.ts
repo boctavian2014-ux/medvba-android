@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const extraConfig = Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
+const supabaseUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  extraConfig.EXPO_PUBLIC_SUPABASE_URL ||
+  extraConfig.supabaseUrl ||
+  '';
+const supabaseAnonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  extraConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  extraConfig.supabaseAnonKey ||
+  '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(

@@ -339,9 +339,16 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     if (!user?.id) return;
 
     const shouldPublishPresence = userProfile?.is_public !== false;
+    const PRESENCE_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes
+    let lastPresenceAt = 0;
 
-    const updatePresence = async () => {
+    const updatePresence = async (force = false) => {
       if (!shouldPublishPresence) return;
+
+      const now = Date.now();
+      if (!force && now - lastPresenceAt < PRESENCE_THROTTLE_MS) {
+        return;
+      }
 
       try {
         await supabase
@@ -350,19 +357,20 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             user_id: user.id,
             last_seen: new Date().toISOString(),
           }, { onConflict: 'user_id' });
+        lastPresenceAt = now;
         console.log('[Auth] Presence updated');
       } catch (error) {
         console.error('[Auth] Error updating presence:', error);
       }
     };
 
-    updatePresence();
+    updatePresence(true);
 
-    const presenceInterval = setInterval(updatePresence, 60000);
+    const presenceInterval = setInterval(updatePresence, PRESENCE_THROTTLE_MS);
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        updatePresence();
+        updatePresence(true);
       }
     });
 

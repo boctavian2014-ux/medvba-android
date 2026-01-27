@@ -7,7 +7,32 @@ import { createContext } from "./trpc/create-context";
 
 const app = new Hono();
 
-app.use("*", cors());
+const defaultAllowedOrigins = new Set([
+  "https://rork.com",
+  "http://localhost:3000",
+  "http://localhost:8081",
+  "http://localhost:8082",
+  "http://localhost:8083",
+]);
+const envAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set([
+  ...defaultAllowedOrigins,
+  ...envAllowedOrigins,
+]);
+
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (!origin) return "";
+      return allowedOrigins.has(origin) ? origin : "";
+    },
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  }),
+);
 
 app.use(
   "/trpc/*",
