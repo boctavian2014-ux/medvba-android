@@ -4,7 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
+import Constants from "expo-constants";
 
 import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
@@ -80,6 +81,10 @@ function useProtectedRoute(splashAvailable: boolean) {
 function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
   const isLoading = useProtectedRoute(splashAvailable);
   const { colors, colorScheme } = useTheme();
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
+  const envSource = Constants.executionEnvironment ? ` (${Constants.executionEnvironment})` : "";
 
   if (isLoading) {
     return (
@@ -92,6 +97,13 @@ function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
   return (
     <>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      {!hasSupabaseConfig && (
+        <View style={[styles.envBanner, { backgroundColor: colors.error }]}>
+          <Text style={styles.envBannerText}>
+            Missing Supabase config{envSource}. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.
+          </Text>
+        </View>
+      )}
       <Stack
         key={colorScheme}
         screenOptions={{ 
@@ -141,6 +153,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  envBanner: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  envBannerText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 
