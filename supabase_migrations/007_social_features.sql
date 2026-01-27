@@ -71,7 +71,11 @@ CREATE TABLE user_achievements (
     'streak_7', 'streak_30', 'streak_100',
     'questions_100', 'questions_500', 'questions_1000',
     'social_butterfly', 'helpful_tutor', 'room_creator',
-    'early_bird', 'night_owl', 'weekend_warrior', 'quiz_completed_10'
+    'early_bird', 'night_owl', 'weekend_warrior',
+    'quiz_completed_10',
+    'week_streak', 'month_streak', 'grand_master',
+    'hundred_questions', 'five_hundred_questions', 'thousand_questions',
+    'anatomy_master', 'speed_demon', 'top_ten', 'champion'
   )),
   earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   metadata JSONB DEFAULT '{}'::jsonb,

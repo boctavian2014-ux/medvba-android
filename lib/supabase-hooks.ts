@@ -922,21 +922,31 @@ export function useUpsertDailyProgress() {
 
 export type AchievementType =
   | 'first_quiz'
+  | 'quiz_master'
   | 'quiz_completed_10'
   | 'perfect_score'
+  | 'streak_7'
+  | 'streak_30'
+  | 'streak_100'
   | 'week_streak'
   | 'month_streak'
   | 'grand_master'
+  | 'questions_100'
+  | 'questions_500'
+  | 'questions_1000'
   | 'hundred_questions'
   | 'five_hundred_questions'
   | 'thousand_questions'
   | 'anatomy_master'
   | 'speed_demon'
   | 'social_butterfly'
+  | 'helpful_tutor'
+  | 'room_creator'
   | 'top_ten'
   | 'champion'
   | 'early_bird'
-  | 'night_owl';
+  | 'night_owl'
+  | 'weekend_warrior';
 
 export interface UserAchievement {
   id: string;

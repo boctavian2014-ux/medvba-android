@@ -19,7 +19,8 @@
       "icon": "./assets/icon.png",
       "buildNumber": "3",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos"
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone for live study sessions"
       }
     },
     "android": {
