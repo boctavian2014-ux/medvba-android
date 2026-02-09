@@ -97,17 +97,6 @@ function useProtectedRoute(splashAvailable: boolean) {
     const inAuthGroup = segments[0] === '(auth)';
     const isOnboarding = inAuthGroup && segments[1] === 'onboarding';
 
-    if (!hasCompletedOnboarding && !isOnboarding) {
-      console.log('[Auth] Redirecting to onboarding');
-      router.replace('/(auth)/onboarding');
-    } else if (!isAuthenticated && !inAuthGroup) {
-      console.log('[Auth] Redirecting to login');
-      router.replace('/(auth)/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      console.log('[Auth] Redirecting to tabs');
-      router.replace('/(tabs)');
-    }
-
     if (!splashHidden && splashAvailable) {
       setSplashHidden(true);
       setTimeout(async () => {
@@ -117,6 +106,22 @@ function useProtectedRoute(splashAvailable: boolean) {
           // Ignore - splash screen not available or already hidden
         }
       }, 100);
+    }
+
+    if (!hasCompletedOnboarding) {
+      if (!isOnboarding) {
+        console.log('[Auth] Redirecting to onboarding');
+        router.replace('/(auth)/onboarding');
+      }
+      return;
+    }
+
+    if (!isAuthenticated && !inAuthGroup) {
+      console.log('[Auth] Redirecting to login');
+      router.replace('/(auth)/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      console.log('[Auth] Redirecting to tabs');
+      router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden, splashAvailable]);
 

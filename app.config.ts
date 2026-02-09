@@ -60,7 +60,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
   slug: 'medvba',
   version: '1.0.4',
   orientation: 'portrait',
-  icon: './assets/icon.png',
+  icon: './assets/images/icon.png',
   scheme: 'rork-app',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
@@ -72,7 +72,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.devaieood.medvba',
-    icon: './assets/icon.png',
+    icon: './assets/images/icon.png',
     buildNumber: '3',
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
@@ -80,7 +80,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: './assets/adaptive-icon.png',
+      foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
     versionCode: 9,

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -71,9 +71,9 @@ export default function TutorScreen() {
     timestamp: new Date(),
   }), [t]);
 
-  if (messages.length === 0) {
-    setMessages([getInitialMessage()]);
-  }
+  useEffect(() => {
+    setMessages((prev) => (prev.length === 0 ? [getInitialMessage()] : prev));
+  }, [getInitialMessage]);
 
   const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
     const systemPrompt = `You are an expert AI tutor helping students prepare for exams (USMLE, MBBS, anatomy exams, etc.).
