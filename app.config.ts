@@ -58,7 +58,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
   name: 'MEDVBA',
   slug: 'medvba',
-  version: '1.0.6',
+  version: '1.0.7',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'rork-app',
@@ -79,7 +79,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     supportsTablet: false,
     bundleIdentifier: 'com.devaieood.medvba',
     icon: './assets/images/icon.png',
-    buildNumber: '12',
+    buildNumber: '13',
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
     },
@@ -89,8 +89,9 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
-    versionCode: 12,
+    versionCode: 13,
     package: 'com.devaieood.medvba',
+    enableProguard: true,
     blockedPermissions: [
       'android.permission.CAMERA',
       'android.permission.RECORD_AUDIO',
