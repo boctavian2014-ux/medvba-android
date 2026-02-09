@@ -2,6 +2,9 @@
   "name": "expo-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "bunx rork start -p jf700h5s63mnlvb27w3pp --tunnel",
     "start-web": "bunx rork start -p jf700h5s63mnlvb27w3pp --web --tunnel",
@@ -52,6 +55,7 @@
     "jest": "~29.7.0",
     "kysely": "^0.28.9",
     "lucide-react-native": "^0.475.0",
+    "openapi-fetch": "^0.16.0",
     "pg": "^8.16.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
