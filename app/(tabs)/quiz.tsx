@@ -44,11 +44,12 @@ export default function QuizScreen() {
   const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { 
-    isPremium, 
-    canStartQuiz, 
-    incrementQuizCount, 
+    isPremium,
+    isPaywallEnabled,
+    canStartQuiz,
+    incrementQuizCount,
     getRemainingQuizzes,
-    FREE_QUIZ_LIMIT 
+    FREE_QUIZ_LIMIT
   } = useSubscription();
   const { hasActiveSession, sessionState, clearSessionState } = useQuizProgress();
 
@@ -82,14 +83,14 @@ export default function QuizScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Free users can only use Quick Quiz mode
-    if (!isPremium && mode !== 'quick') {
+    if (isPaywallEnabled && !isPremium && mode !== 'quick') {
       console.log('[Quiz] Free user tried to access premium mode:', mode);
       router.push('/paywall' as any);
       return;
     }
 
     // Check if free user has remaining quizzes
-    if (!canStartQuiz()) {
+    if (isPaywallEnabled && !canStartQuiz()) {
       console.log('[Quiz] Free quiz limit reached');
       router.push('/paywall' as any);
       return;
@@ -97,7 +98,7 @@ export default function QuizScreen() {
 
     // Increment quiz count for free users
     const success = await incrementQuizCount();
-    if (!success && !isPremium) {
+    if (isPaywallEnabled && !success && !isPremium) {
       console.log('[Quiz] Failed to increment quiz count');
       router.push('/paywall' as any);
       return;
@@ -129,7 +130,7 @@ export default function QuizScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('quiz.subtitle')}</Text>
           </View>
 
-          {!isPremium && (
+          {isPaywallEnabled && !isPremium && (
             <GlassCard style={styles.freeLimitBanner}>
               <View style={styles.freeLimitContent}>
                 <Text style={[styles.freeLimitText, { color: colors.textSecondary }]}>
@@ -182,7 +183,7 @@ export default function QuizScreen() {
                   <Clock color={colors.text} size={28} />
                   <Text style={[styles.modeTitle, { color: colors.text }]}>{t('quiz.practice')}</Text>
                   <Text style={styles.modeSubtitle}>{t('quiz.practiceCount')}</Text>
-                  {!isPremium && (
+                  {isPaywallEnabled && !isPremium && (
                     <View style={styles.premiumBadge}>
                       <Lock color={colors.warning} size={12} />
                     </View>
@@ -205,7 +206,7 @@ export default function QuizScreen() {
                     <Text style={[styles.modeTitle, { color: colors.text }]}>{t('quiz.examSimulation')}</Text>
                     <Text style={styles.modeSubtitle}>{t('quiz.examDetails')}</Text>
                   </View>
-                  {!isPremium ? (
+                  {isPaywallEnabled && !isPremium ? (
                     <View style={styles.premiumBadge}>
                       <Lock color={colors.warning} size={12} />
                     </View>

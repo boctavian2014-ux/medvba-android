@@ -15,10 +15,11 @@ type PlanType = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
   const { colors, colorScheme } = useTheme();
-  const { offerings, purchasePackage, restorePurchases, isLoading: subLoading } = useSubscription();
+  const { offerings, purchasePackage, restorePurchases, isLoading: subLoading, isPaywallEnabled } = useSubscription();
   const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const [purchasing, setPurchasing] = useState(false);
+  const hasPurchases = Boolean(offerings?.availablePackages?.length);
 
   useEffect(() => {
     if (offerings?.availablePackages.length) {
@@ -26,8 +27,18 @@ export default function PaywallScreen() {
     }
   }, [offerings]);
 
+  useEffect(() => {
+    if (!isPaywallEnabled) {
+      router.replace('/(tabs)/index');
+    }
+  }, [isPaywallEnabled]);
+
+  if (!isPaywallEnabled) {
+    return null;
+  }
+
   const handleUpgrade = async () => {
-    if (!offerings) {
+    if (!hasPurchases) {
       Alert.alert(t('paywall.errorTitle'), t('paywall.errorLoadingOptions'));
       return;
     }
@@ -55,6 +66,10 @@ export default function PaywallScreen() {
   };
 
   const handleRestore = async () => {
+    if (!hasPurchases) {
+      Alert.alert(t('paywall.infoTitle'), t('paywall.errorLoadingOptions'));
+      return;
+    }
     setPurchasing(true);
     try {
       console.log('[Paywall] Restoring purchases...');
@@ -134,11 +149,17 @@ export default function PaywallScreen() {
             ))}
           </View>
 
-          {subLoading || !offerings ? (
+          {subLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                 {t('paywall.loading')}
+              </Text>
+            </View>
+          ) : !hasPurchases ? (
+            <View style={styles.loadingContainer}>
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                {t('paywall.errorLoadingOptions')}
               </Text>
             </View>
           ) : (
@@ -221,41 +242,45 @@ export default function PaywallScreen() {
             </View>
           )}
 
-          <TouchableOpacity
-            style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
-            activeOpacity={0.8}
-            onPress={handleUpgrade}
-            disabled={purchasing || subLoading}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.upgradeButtonGradient}
-            >
-              {purchasing ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <>
-                  <Crown size={20} color="#FFF" strokeWidth={2.5} />
-                  <Text style={styles.upgradeButtonText}>
-                    {t('paywall.upgradeButton')}
-                  </Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+          {hasPurchases && (
+            <>
+              <TouchableOpacity
+                style={[styles.upgradeButton, { backgroundColor: colors.primary }]}
+                activeOpacity={0.8}
+                onPress={handleUpgrade}
+                disabled={purchasing || subLoading}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.primaryDark]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.upgradeButtonGradient}
+                >
+                  {purchasing ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Crown size={20} color="#FFF" strokeWidth={2.5} />
+                      <Text style={styles.upgradeButtonText}>
+                        {t('paywall.upgradeButton')}
+                      </Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.restoreButton}
-            activeOpacity={0.6}
-            onPress={handleRestore}
-            disabled={purchasing}
-          >
-            <Text style={[styles.restoreButtonText, { color: colors.primary }]}>
-              {t('paywall.restoreButton')}
-            </Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.restoreButton}
+                activeOpacity={0.6}
+                onPress={handleRestore}
+                disabled={purchasing}
+              >
+                <Text style={[styles.restoreButtonText, { color: colors.primary }]}>
+                  {t('paywall.restoreButton')}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
 
           <TouchableOpacity
             style={styles.freeButton}

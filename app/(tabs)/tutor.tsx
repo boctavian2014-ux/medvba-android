@@ -51,12 +51,13 @@ export default function TutorScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const router = useRouter();
-  const { 
-    isPremium, 
-    canAskAiQuestion, 
-    incrementAiQuestionCount, 
+  const {
+    isPremium,
+    isPaywallEnabled,
+    canAskAiQuestion,
+    incrementAiQuestionCount,
     getRemainingAiQuestions,
-    FREE_AI_LIMIT 
+    FREE_AI_LIMIT,
   } = useSubscription();
 
   const remainingAiQuestions = getRemainingAiQuestions();
@@ -122,7 +123,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     // Check if free user can ask AI question
-    if (!canAskAiQuestion()) {
+    if (isPaywallEnabled && !canAskAiQuestion()) {
       console.log('[Tutor] Free AI question limit reached');
       router.push('/paywall');
       return;
@@ -130,7 +131,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
 
     // Increment AI question count for free users
     const success = await incrementAiQuestionCount();
-    if (!success && !isPremium) {
+    if (isPaywallEnabled && !success && !isPremium) {
       console.log('[Tutor] Failed to increment AI question count');
       router.push('/paywall');
       return;
@@ -207,12 +208,12 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 <Text style={styles.status}>{t('tutor.alwaysAvailable')}</Text>
               </View>
             </View>
-            {isPremium ? (
+            {isPaywallEnabled && isPremium ? (
               <View style={styles.premiumBadge}>
                 <Sparkles color={colors.warning} size={14} />
                 <Text style={styles.premiumText}>{t('tutor.premium')}</Text>
               </View>
-            ) : (
+            ) : isPaywallEnabled ? (
               <TouchableOpacity 
                 style={styles.upgradeButton}
                 onPress={() => router.push('/paywall')}
@@ -220,7 +221,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
                 <Crown color={colors.warning} size={14} />
                 <Text style={styles.upgradeButtonText}>{t('tutor.upgrade')}</Text>
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
 
           <ScrollView 
@@ -229,7 +230,7 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
           >
-            {!isPremium && (
+            {isPaywallEnabled && !isPremium && (
               <View style={styles.freeLimitBanner}>
                 <View style={styles.freeLimitContent}>
                   <Text style={styles.freeLimitText}>

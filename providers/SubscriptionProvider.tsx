@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
-import { Platform } from 'react-native';
-import { trpc } from '@/lib/trpc';
 
 const FREE_QUIZ_LIMIT = 2;
 const FREE_AI_LIMIT = 1;
+const PAYWALL_ENABLED = false;
+
+type OfferingPackage = {
+  identifier: string;
+  product: {
+    priceString: string;
+  };
+};
+
+type Offerings = {
+  availablePackages: OfferingPackage[];
+} | null;
 
 function getTodayKey(): string {
   const today = new Date();
@@ -18,7 +27,7 @@ interface SubscriptionState {
   freeQuizzesToday: number;
   freeAiQuestionsToday: number;
   isLoading: boolean;
-  offerings: PurchasesOffering | null;
+  offerings: Offerings;
 }
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
@@ -29,55 +38,6 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     isLoading: true,
     offerings: null,
   });
-  const [rcAppUserId, setRcAppUserId] = useState<string | null>(null);
-
-  const revenueCatCustomerQuery = trpc.revenuecat.getCustomer.useQuery(
-    { customerId: rcAppUserId ?? 'unknown' },
-    { enabled: !!rcAppUserId, retry: false },
-  );
-
-  const revenueCatSubscriptionsQuery = trpc.revenuecat.getCustomerSubscriptions.useQuery(
-    { customerId: rcAppUserId ?? 'unknown' },
-    { enabled: !!rcAppUserId, retry: false },
-  );
-
-  useEffect(() => {
-    const initRevenueCat = async () => {
-      try {
-        if (Platform.OS === 'web') {
-          console.log('[RevenueCat] Skipping on web');
-          return;
-        }
-
-        const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY || Platform.select({
-          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
-          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-        });
-
-        if (!apiKey) {
-          console.error('[RevenueCat] API key not found for platform:', Platform.OS);
-          console.error('[RevenueCat] EXPO_PUBLIC_REVENUECAT_TEST_API_KEY:', process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY ? 'SET' : 'NOT SET');
-          setState(prev => ({ ...prev, isLoading: false }));
-          return;
-        }
-
-        console.log('[RevenueCat] Configuring SDK for', Platform.OS, 'with key:', apiKey.substring(0, 10) + '...');
-        Purchases.configure({ apiKey });
-        console.log('[RevenueCat] SDK configured successfully');
-
-        try {
-          const appUserId = await Purchases.getAppUserID();
-          setRcAppUserId(appUserId);
-        } catch (error) {
-          console.error('[RevenueCat] Error fetching app user id:', error);
-        }
-      } catch (error) {
-        console.error('[RevenueCat] Initialization error:', error);
-      }
-    };
-
-    initRevenueCat();
-  }, []);
 
   const todayKey = getTodayKey();
 
@@ -90,34 +50,15 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         AsyncStorage.getItem(`free_ai_questions_${todayKey}`),
       ]);
 
-      let isPremium = false;
-      let offerings: PurchasesOffering | null = null;
-
-      if (Platform.OS !== 'web') {
-        try {
-          console.log('[RevenueCat] Fetching customer info...');
-          const customerInfo: CustomerInfo = await Purchases.getCustomerInfo();
-          isPremium = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
-          console.log('[RevenueCat] Premium status:', isPremium);
-
-          console.log('[RevenueCat] Fetching offerings...');
-          const fetchedOfferings = await Purchases.getOfferings();
-          offerings = fetchedOfferings.current;
-          console.log('[RevenueCat] Offerings loaded:', offerings?.identifier);
-        } catch (error) {
-          console.error('[RevenueCat] Error fetching info:', error);
-        }
-      }
-
       setState({
-        isPremium,
+        isPremium: false,
         freeQuizzesToday: quizCount ? parseInt(quizCount, 10) : 0,
         freeAiQuestionsToday: aiCount ? parseInt(aiCount, 10) : 0,
         isLoading: false,
-        offerings,
+        offerings: null,
       });
 
-      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'AI:', aiCount || 0, 'Premium:', isPremium);
+      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'AI:', aiCount || 0, 'Premium: false');
     } catch (error) {
       console.error('[Subscription] Error loading daily usage:', error);
       setState(prev => ({ ...prev, isLoading: false }));
@@ -129,16 +70,22 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [loadDailyUsage]);
 
   const canStartQuiz = useCallback((): boolean => {
+    if (!PAYWALL_ENABLED) return true;
     if (state.isPremium) return true;
     return state.freeQuizzesToday < FREE_QUIZ_LIMIT;
   }, [state.isPremium, state.freeQuizzesToday]);
 
   const canAskAiQuestion = useCallback((): boolean => {
+    if (!PAYWALL_ENABLED) return true;
     if (state.isPremium) return true;
     return state.freeAiQuestionsToday < FREE_AI_LIMIT;
   }, [state.isPremium, state.freeAiQuestionsToday]);
 
   const incrementQuizCount = useCallback(async (): Promise<boolean> => {
+    if (!PAYWALL_ENABLED) {
+      console.log('[Subscription] Paywall disabled - skipping quiz limit');
+      return true;
+    }
     if (state.isPremium) {
       console.log('[Subscription] Premium user - no quiz limit');
       return true;
@@ -162,6 +109,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [state.isPremium, state.freeQuizzesToday, todayKey]);
 
   const incrementAiQuestionCount = useCallback(async (): Promise<boolean> => {
+    if (!PAYWALL_ENABLED) {
+      console.log('[Subscription] Paywall disabled - skipping AI limit');
+      return true;
+    }
     if (state.isPremium) {
       console.log('[Subscription] Premium user - no AI limit');
       return true;
@@ -185,85 +136,36 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   }, [state.isPremium, state.freeAiQuestionsToday, todayKey]);
 
   const getRemainingQuizzes = useCallback((): number => {
+    if (!PAYWALL_ENABLED) return Infinity;
     if (state.isPremium) return Infinity;
     return Math.max(0, FREE_QUIZ_LIMIT - state.freeQuizzesToday);
   }, [state.isPremium, state.freeQuizzesToday]);
 
   const getRemainingAiQuestions = useCallback((): number => {
+    if (!PAYWALL_ENABLED) return Infinity;
     if (state.isPremium) return Infinity;
     return Math.max(0, FREE_AI_LIMIT - state.freeAiQuestionsToday);
   }, [state.isPremium, state.freeAiQuestionsToday]);
 
-  const purchasePackage = useCallback(async (packageId: string): Promise<boolean> => {
-    if (Platform.OS === 'web') {
-      console.log('[RevenueCat] Purchases not supported on web');
-      return false;
-    }
-
-    try {
-      console.log('[RevenueCat] Starting purchase for package:', packageId);
-      
-      if (!state.offerings) {
-        console.error('[RevenueCat] No offerings available');
-        return false;
-      }
-
-      const packageToPurchase = state.offerings.availablePackages.find(
-        pkg => pkg.identifier === packageId
-      );
-
-      if (!packageToPurchase) {
-        console.error('[RevenueCat] Package not found:', packageId);
-        return false;
-      }
-
-      const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-      const isPremium = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
-      
-      setState(prev => ({ ...prev, isPremium }));
-      console.log('[RevenueCat] Purchase successful, premium status:', isPremium);
-      
-      return isPremium;
-    } catch (error: any) {
-      if (error.userCancelled) {
-        console.log('[RevenueCat] User cancelled purchase');
-      } else {
-        console.error('[RevenueCat] Purchase error:', error);
-      }
-      return false;
-    }
-  }, [state.offerings]);
-
-  const restorePurchases = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'web') {
-      console.log('[RevenueCat] Restore not supported on web');
-      return false;
-    }
-
-    try {
-      console.log('[RevenueCat] Restoring purchases...');
-      const customerInfo = await Purchases.restorePurchases();
-      const isPremium = typeof customerInfo.entitlements.active['premium'] !== 'undefined';
-      
-      setState(prev => ({ ...prev, isPremium }));
-      console.log('[RevenueCat] Restore successful, premium status:', isPremium);
-      
-      return isPremium;
-    } catch (error) {
-      console.error('[RevenueCat] Restore error:', error);
-      return false;
-    }
+  const purchasePackage = useCallback(async (): Promise<boolean> => {
+    console.log('[Subscription] Purchases are temporarily disabled.');
+    return false;
   }, []);
 
+  const restorePurchases = useCallback(async (): Promise<boolean> => {
+    console.log('[Subscription] Restore purchases is temporarily disabled.');
+    return false;
+  }, []);
+
+  const effectivePremium = PAYWALL_ENABLED ? state.isPremium : true;
+
   return useMemo(() => ({
-    isPremium: state.isPremium,
+    isPremium: effectivePremium,
+    isPaywallEnabled: PAYWALL_ENABLED,
     isLoading: state.isLoading,
     freeQuizzesToday: state.freeQuizzesToday,
     freeAiQuestionsToday: state.freeAiQuestionsToday,
     offerings: state.offerings,
-    revenueCatAppUserId: rcAppUserId,
-    revenueCatCustomer: revenueCatCustomerQuery.data ?? null,
-    revenueCatSubscriptions: revenueCatSubscriptionsQuery.data ?? null,
     canStartQuiz,
     canAskAiQuestion,
     incrementQuizCount,
@@ -275,14 +177,12 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     FREE_QUIZ_LIMIT,
     FREE_AI_LIMIT,
   }), [
+    effectivePremium,
     state.isPremium,
     state.isLoading,
     state.freeQuizzesToday,
     state.freeAiQuestionsToday,
     state.offerings,
-    rcAppUserId,
-    revenueCatCustomerQuery.data,
-    revenueCatSubscriptionsQuery.data,
     canStartQuiz,
     canAskAiQuestion,
     incrementQuizCount,

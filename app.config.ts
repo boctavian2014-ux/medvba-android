@@ -129,15 +129,6 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         envFromFile.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       EXPO_PUBLIC_RORK_API_BASE_URL:
         envFromFile.EXPO_PUBLIC_RORK_API_BASE_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL,
-    EXPO_PUBLIC_REVENUECAT_TEST_API_KEY:
-        envFromFile.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY ||
-        process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
-    EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY:
-        envFromFile.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY ||
-        process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-    EXPO_PUBLIC_REVENUECAT_IOS_API_KEY:
-        envFromFile.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY ||
-        process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
     },
     owner: 'devaieood79',
   };

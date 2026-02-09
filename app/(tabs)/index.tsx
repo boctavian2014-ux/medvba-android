@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useAuth } from '@/providers/AuthProvider';
-import { useSubscriptionStatus } from '@/lib/supabase-hooks';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import PremiumBadge from '@/components/PremiumBadge';
@@ -27,8 +27,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const { t, getModuleName } = useLanguage();
   const { colors } = useTheme();
-  const { user, profile } = useAuth();
-  const { data: subscriptionData } = useSubscriptionStatus(user?.id);
+  const { profile } = useAuth();
+  const { isPremium, isPaywallEnabled } = useSubscription();
   const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
   
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
@@ -38,13 +38,13 @@ export default function HomeScreen() {
   const todayGoal = dailyProgress.goal;
   const todayProgress = dailyProgress.questionsAnswered;
 
-  const isPremium = subscriptionData?.isPremium ?? false;
-  const hasReachedDailyLimit = !isPremium && todayProgress >= FREE_DAILY_QUIZ_LIMIT;
+  const hasReachedDailyLimit = isPaywallEnabled && !isPremium && todayProgress >= FREE_DAILY_QUIZ_LIMIT;
 
   const handleUpgradePress = useCallback(() => {
+    if (!isPaywallEnabled) return;
     console.log('[Home] Navigate to paywall');
     router.push('/paywall');
-  }, [router]);
+  }, [router, isPaywallEnabled]);
   
   const handleContinueLearning = useCallback(() => {
     if (hasReachedDailyLimit) {
@@ -121,7 +121,7 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.headerRight}>
-              {!isPremium && (
+              {isPaywallEnabled && !isPremium && (
                 <TouchableOpacity
                   onPress={handleUpgradePress}
                   style={[styles.upgradeButton, { backgroundColor: colors.warning + '20' }]}
@@ -138,7 +138,7 @@ export default function HomeScreen() {
           </View>
 
           <GlassCard style={styles.heroCard} variant="accent">
-            {isPremium && (
+            {isPaywallEnabled && isPremium && (
               <View style={styles.premiumBadgeContainer}>
                 <PremiumBadge size="small" />
               </View>
@@ -248,7 +248,7 @@ export default function HomeScreen() {
                 'neuroanatomy': Brain,
               };
               const IconComponent = iconMap[category.id] || Bone;
-              const isLocked = !isPremium;
+              const isLocked = isPaywallEnabled && !isPremium;
 
               const handleCategoryPress = () => {
                 if (isLocked) {

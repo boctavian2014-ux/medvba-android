@@ -83,7 +83,7 @@ export default function ProfileScreen() {
   const { t } = useLanguage();
   const { user, profile } = useAuth();
   const { colors } = useTheme();
-  const { isPremium } = useSubscription();
+  const { isPremium, isPaywallEnabled } = useSubscription();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
@@ -334,7 +334,7 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-            {!isPremium ? (
+            {isPaywallEnabled && !isPremium ? (
               <TouchableOpacity 
                 style={styles.premiumButton} 
                 activeOpacity={0.8}
@@ -350,7 +350,7 @@ export default function ProfileScreen() {
                   <Text style={styles.premiumButtonText}>{t('profile.upgradeToPremium')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            ) : (
+            ) : isPaywallEnabled ? (
               <View style={styles.premiumBadge}>
                 <LinearGradient
                   colors={['rgba(255, 215, 0, 0.2)', 'rgba(255, 149, 0, 0.15)']}
@@ -361,7 +361,7 @@ export default function ProfileScreen() {
                 <Crown color={colors.warning} size={18} fill={colors.warning} />
                 <Text style={styles.premiumBadgeText}>{t('profile.premiumMember')}</Text>
               </View>
-            )}
+            ) : null}
           </View>
 
 

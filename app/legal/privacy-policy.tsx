@@ -107,9 +107,6 @@ export default function PrivacyPolicyScreen() {
               <Text style={styles.bulletItem}>
                 • <Text style={styles.bold}>{t('privacy.supabase')}</Text> {t('privacy.supabaseDesc')}
               </Text>
-              <Text style={styles.bulletItem}>
-                • <Text style={styles.bold}>{t('privacy.revenueCat')}</Text> {t('privacy.revenueCatDesc')}
-              </Text>
             </View>
             <Text style={styles.paragraph}>
               {t('privacy.thirdPartyNote')}
