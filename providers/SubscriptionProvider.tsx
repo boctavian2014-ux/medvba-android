@@ -1,10 +1,26 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import createContextHook from '@nkzw/create-context-hook';
+import Purchases from 'react-native-purchases';
+import type { CustomerInfo } from 'react-native-purchases';
+import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
+import { useAuth } from '@/providers/AuthProvider';
+import { useUpdateSubscription } from '@/lib/supabase-hooks';
 
-const FREE_QUIZ_LIMIT = 2;
 const FREE_AI_LIMIT = 1;
-const PAYWALL_ENABLED = false;
+const ENTITLEMENT_ID = 'premium';
+
+function getPaywallConfig() {
+  const extra = Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
+  const paywallEnabled = String(extra.EXPO_PUBLIC_PAYWALL_ENABLED ?? 'false') === 'true';
+  const apiKeyIos = extra.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS as string | undefined;
+  const apiKeyAndroid = extra.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID as string | undefined;
+  const apiKey = Platform.OS === 'ios' ? apiKeyIos : apiKeyAndroid;
+  const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+  return { paywallEnabled: paywallEnabled && isNative, apiKey: apiKey ?? '' };
+}
 
 type OfferingPackage = {
   identifier: string;
@@ -30,7 +46,16 @@ interface SubscriptionState {
   offerings: Offerings;
 }
 
+function isPremiumFromCustomerInfo(info: CustomerInfo | null): boolean {
+  if (!info?.entitlements?.active) return false;
+  return Boolean(info.entitlements.active[ENTITLEMENT_ID]);
+}
+
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
+  const { paywallEnabled: PAYWALL_ENABLED, apiKey: REVENUECAT_API_KEY } = useMemo(getPaywallConfig, []);
+  const { user } = useAuth();
+  const updateSubscriptionMutation = useUpdateSubscription();
+
   const [state, setState] = useState<SubscriptionState>({
     isPremium: false,
     freeQuizzesToday: 0,
@@ -39,47 +64,99 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     offerings: null,
   });
 
+  const currentOfferingRef = useRef<any>(null);
+
   const todayKey = getTodayKey();
 
   const loadDailyUsage = useCallback(async () => {
     try {
       console.log('[Subscription] Loading daily usage for', todayKey);
-      
+
       const [quizCount, aiCount] = await Promise.all([
         AsyncStorage.getItem(`free_quiz_count_${todayKey}`),
         AsyncStorage.getItem(`free_ai_questions_${todayKey}`),
       ]);
 
-      setState({
-        isPremium: false,
+      setState((prev) => ({
+        ...prev,
         freeQuizzesToday: quizCount ? parseInt(quizCount, 10) : 0,
         freeAiQuestionsToday: aiCount ? parseInt(aiCount, 10) : 0,
-        isLoading: false,
-        offerings: null,
-      });
+        ...(prev.isLoading && !PAYWALL_ENABLED ? { isLoading: false } : {}),
+      }));
 
-      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'AI:', aiCount || 0, 'Premium: false');
+      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'AI:', aiCount || 0);
     } catch (error) {
       console.error('[Subscription] Error loading daily usage:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [todayKey]);
+  }, [todayKey, PAYWALL_ENABLED]);
 
   useEffect(() => {
     loadDailyUsage();
   }, [loadDailyUsage]);
 
+  useEffect(() => {
+    if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return;
+    }
+
+    let listener: ((info: CustomerInfo) => void) | null = null;
+
+    const initRevenueCat = async () => {
+      try {
+        Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+        if (user?.id) {
+          const { customerInfo } = await Purchases.logIn(user.id);
+          setState((prev) => ({ ...prev, isPremium: isPremiumFromCustomerInfo(customerInfo) }));
+        }
+
+        const offerings = await Purchases.getOfferings();
+        const current = offerings.current;
+        if (current?.availablePackages?.length) {
+          currentOfferingRef.current = current;
+          const mapped: Offerings = {
+            availablePackages: current.availablePackages.map((pkg: any) => ({
+              identifier: pkg.identifier,
+              product: { priceString: pkg.product?.priceString ?? '' },
+            })),
+          };
+          setState((prev) => ({ ...prev, offerings: mapped }));
+        }
+
+        const customerInfo = await Purchases.getCustomerInfo();
+        setState((prev) => ({ ...prev, isPremium: isPremiumFromCustomerInfo(customerInfo), isLoading: false }));
+
+        listener = (info: CustomerInfo) => {
+          setState((prev) => ({ ...prev, isPremium: isPremiumFromCustomerInfo(info) }));
+        };
+        Purchases.addCustomerInfoUpdateListener(listener);
+      } catch (error) {
+        console.error('[Subscription] RevenueCat init error:', error);
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    initRevenueCat();
+
+    return () => {
+      if (listener) {
+        Purchases.removeCustomerInfoUpdateListener(listener);
+      }
+    };
+  }, [PAYWALL_ENABLED, REVENUECAT_API_KEY, user?.id]);
+
   const canStartQuiz = useCallback((): boolean => {
     if (!PAYWALL_ENABLED) return true;
     if (state.isPremium) return true;
-    return state.freeQuizzesToday < FREE_QUIZ_LIMIT;
-  }, [state.isPremium, state.freeQuizzesToday]);
+    return state.freeQuizzesToday < FREE_DAILY_QUIZ_LIMIT;
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday]);
 
   const canAskAiQuestion = useCallback((): boolean => {
     if (!PAYWALL_ENABLED) return true;
     if (state.isPremium) return true;
     return state.freeAiQuestionsToday < FREE_AI_LIMIT;
-  }, [state.isPremium, state.freeAiQuestionsToday]);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday]);
 
   const incrementQuizCount = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED) {
@@ -91,7 +168,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       return true;
     }
 
-    if (state.freeQuizzesToday >= FREE_QUIZ_LIMIT) {
+    if (state.freeQuizzesToday >= FREE_DAILY_QUIZ_LIMIT) {
       console.log('[Subscription] Quiz limit reached');
       return false;
     }
@@ -99,14 +176,14 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const newCount = state.freeQuizzesToday + 1;
     try {
       await AsyncStorage.setItem(`free_quiz_count_${todayKey}`, String(newCount));
-      setState(prev => ({ ...prev, freeQuizzesToday: newCount }));
+      setState((prev) => ({ ...prev, freeQuizzesToday: newCount }));
       console.log('[Subscription] Quiz count incremented to', newCount);
       return true;
     } catch (error) {
       console.error('[Subscription] Error incrementing quiz count:', error);
       return false;
     }
-  }, [state.isPremium, state.freeQuizzesToday, todayKey]);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday, todayKey]);
 
   const incrementAiQuestionCount = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED) {
@@ -126,70 +203,131 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const newCount = state.freeAiQuestionsToday + 1;
     try {
       await AsyncStorage.setItem(`free_ai_questions_${todayKey}`, String(newCount));
-      setState(prev => ({ ...prev, freeAiQuestionsToday: newCount }));
+      setState((prev) => ({ ...prev, freeAiQuestionsToday: newCount }));
       console.log('[Subscription] AI question count incremented to', newCount);
       return true;
     } catch (error) {
       console.error('[Subscription] Error incrementing AI question count:', error);
       return false;
     }
-  }, [state.isPremium, state.freeAiQuestionsToday, todayKey]);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday, todayKey]);
 
   const getRemainingQuizzes = useCallback((): number => {
     if (!PAYWALL_ENABLED) return Infinity;
     if (state.isPremium) return Infinity;
-    return Math.max(0, FREE_QUIZ_LIMIT - state.freeQuizzesToday);
-  }, [state.isPremium, state.freeQuizzesToday]);
+    return Math.max(0, FREE_DAILY_QUIZ_LIMIT - state.freeQuizzesToday);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday]);
 
   const getRemainingAiQuestions = useCallback((): number => {
     if (!PAYWALL_ENABLED) return Infinity;
     if (state.isPremium) return Infinity;
     return Math.max(0, FREE_AI_LIMIT - state.freeAiQuestionsToday);
-  }, [state.isPremium, state.freeAiQuestionsToday]);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday]);
 
-  const purchasePackage = useCallback(async (): Promise<boolean> => {
-    console.log('[Subscription] Purchases are temporarily disabled.');
-    return false;
-  }, []);
+  const syncPremiumToSupabase = useCallback(
+    (type: 'yearly' | 'monthly') => {
+      if (user?.id) {
+        updateSubscriptionMutation.mutateAsync({ userId: user.id, status: 'premium', type }).catch((err) => {
+          console.warn('[Subscription] Supabase sync failed:', err);
+        });
+      }
+    },
+    [user?.id, updateSubscriptionMutation]
+  );
+
+  const purchasePackage = useCallback(
+    async (packageId: string): Promise<boolean> => {
+      if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
+        console.log('[Subscription] Purchases disabled (paywall or API key missing).');
+        return false;
+      }
+
+      const offering = currentOfferingRef.current;
+      if (!offering?.availablePackages?.length) {
+        console.warn('[Subscription] No offerings available for purchase.');
+        return false;
+      }
+
+      const pkg = offering.availablePackages.find((p: any) => p.identifier === packageId);
+      if (!pkg) {
+        console.warn('[Subscription] Package not found:', packageId);
+        return false;
+      }
+
+      try {
+        const { customerInfo } = await Purchases.purchasePackage(pkg);
+        const premium = isPremiumFromCustomerInfo(customerInfo);
+        if (premium) {
+          const isYearly = packageId === '$rc_annual' || String(packageId).toLowerCase().includes('annual');
+          syncPremiumToSupabase(isYearly ? 'yearly' : 'monthly');
+        }
+        return premium;
+      } catch (error: any) {
+        const isCancel = error?.userCancelled === true;
+        if (!isCancel) {
+          console.error('[Subscription] Purchase error:', error);
+        }
+        return false;
+      }
+    },
+    [PAYWALL_ENABLED, REVENUECAT_API_KEY, syncPremiumToSupabase]
+  );
 
   const restorePurchases = useCallback(async (): Promise<boolean> => {
-    console.log('[Subscription] Restore purchases is temporarily disabled.');
-    return false;
-  }, []);
+    if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
+      console.log('[Subscription] Restore disabled (paywall or API key missing).');
+      return false;
+    }
+
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      const premium = isPremiumFromCustomerInfo(customerInfo);
+      if (premium) {
+        syncPremiumToSupabase('yearly');
+      }
+      return premium;
+    } catch (error) {
+      console.error('[Subscription] Restore error:', error);
+      return false;
+    }
+  }, [PAYWALL_ENABLED, REVENUECAT_API_KEY, syncPremiumToSupabase]);
 
   const effectivePremium = PAYWALL_ENABLED ? state.isPremium : true;
 
-  return useMemo(() => ({
-    isPremium: effectivePremium,
-    isPaywallEnabled: PAYWALL_ENABLED,
-    isLoading: state.isLoading,
-    freeQuizzesToday: state.freeQuizzesToday,
-    freeAiQuestionsToday: state.freeAiQuestionsToday,
-    offerings: state.offerings,
-    canStartQuiz,
-    canAskAiQuestion,
-    incrementQuizCount,
-    incrementAiQuestionCount,
-    getRemainingQuizzes,
-    getRemainingAiQuestions,
-    purchasePackage,
-    restorePurchases,
-    FREE_QUIZ_LIMIT,
-    FREE_AI_LIMIT,
-  }), [
-    effectivePremium,
-    state.isPremium,
-    state.isLoading,
-    state.freeQuizzesToday,
-    state.freeAiQuestionsToday,
-    state.offerings,
-    canStartQuiz,
-    canAskAiQuestion,
-    incrementQuizCount,
-    incrementAiQuestionCount,
-    getRemainingQuizzes,
-    getRemainingAiQuestions,
-    purchasePackage,
-    restorePurchases,
-  ]);
+  return useMemo(
+    () => ({
+      isPremium: effectivePremium,
+      isPaywallEnabled: PAYWALL_ENABLED,
+      isLoading: state.isLoading,
+      freeQuizzesToday: state.freeQuizzesToday,
+      freeAiQuestionsToday: state.freeAiQuestionsToday,
+      offerings: state.offerings,
+      canStartQuiz,
+      canAskAiQuestion,
+      incrementQuizCount,
+      incrementAiQuestionCount,
+      getRemainingQuizzes,
+      getRemainingAiQuestions,
+      purchasePackage,
+      restorePurchases,
+      FREE_QUIZ_LIMIT: FREE_DAILY_QUIZ_LIMIT,
+      FREE_AI_LIMIT,
+    }),
+    [
+      effectivePremium,
+      PAYWALL_ENABLED,
+      state.isLoading,
+      state.freeQuizzesToday,
+      state.freeAiQuestionsToday,
+      state.offerings,
+      canStartQuiz,
+      canAskAiQuestion,
+      incrementQuizCount,
+      incrementAiQuestionCount,
+      getRemainingQuizzes,
+      getRemainingAiQuestions,
+      purchasePackage,
+      restorePurchases,
+    ]
+  );
 });

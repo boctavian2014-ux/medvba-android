@@ -438,12 +438,7 @@ export default function QuizSessionScreen() {
   const router = useRouter();
   const { t, getChapterTitle, currentLanguage } = useLanguage();
   const { colors } = useTheme();
-  const { category, mode, resume, chapterId } = useLocalSearchParams<{
-    category: string;
-    mode: string;
-    resume?: string;
-    chapterId?: string;
-  }>();
+  const { category, mode, resume } = useLocalSearchParams<{ category: string; mode: string; resume?: string }>();
   const insets = useSafeAreaInsets();
   
   const topPadding = Math.max(insets.top, Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0);
@@ -478,25 +473,13 @@ export default function QuizSessionScreen() {
 
   useEffect(() => {
     let isMounted = true;
-
+    
     const loadQuestions = async () => {
-      console.log(
-        '[QuizSession] Starting loadQuestions - category:',
-        category,
-        'mode:',
-        mode,
-        'resume:',
-        resume,
-        'chapterId:',
-        chapterId
-      );
-
+      console.log('[QuizSession] Starting loadQuestions - category:', category, 'mode:', mode, 'resume:', resume);
+      
       try {
         if (resume === 'true' && savedSession) {
-          console.log(
-            '[QuizSession] Resuming from saved session at index:',
-            savedSession.currentIndex
-          );
+          console.log('[QuizSession] Resuming from saved session at index:', savedSession.currentIndex);
           if (isMounted) {
             if (!savedSession.questions || savedSession.questions.length === 0) {
               console.error('[QuizSession] Invalid saved session: empty questions');
@@ -504,151 +487,107 @@ export default function QuizSessionScreen() {
               router.replace('/' as any);
               return;
             }
-
+            
             if (savedSession.currentIndex >= savedSession.questions.length) {
               console.error('[QuizSession] Invalid saved session: index out of bounds');
               await clearSessionState();
               router.replace('/' as any);
               return;
             }
-
+            
             setQuestions(savedSession.questions);
             setCurrentIndex(savedSession.currentIndex);
             setScore(savedSession.score);
             setAnsweredInSession(savedSession.answeredInSession);
             setSessionStartedAt(savedSession.startedAt);
             sessionStartTimeRef.current = Date.now();
-            sessionLanguageRef.current =
-              savedSession.sessionLanguage ?? currentLanguage;
+            sessionLanguageRef.current = savedSession.sessionLanguage ?? currentLanguage;
             setIsLoading(false);
           }
           return;
         }
-
+        
         sessionLanguageRef.current = currentLanguage;
         const startedAt = new Date().toISOString();
         if (isMounted) setSessionStartedAt(startedAt);
-
+        
         if (mode === 'sequential') {
           const cat = category || 'upper-lower-limbs';
-
           const allWithChapters = getAllQuestionsWithChapters(cat);
           const seenIds = await getSeenQuestionIds(cat);
-          const unseenFirst = allWithChapters.filter(
-            (qc) => !seenIds.has(qc.question.id)
-          );
-          const seenRest = allWithChapters.filter((qc) =>
-            seenIds.has(qc.question.id)
-          );
-          let orderedWithChapters = [...unseenFirst, ...seenRest];
-
-          if (cat === 'med-admission-barrons' && chapterId) {
-            orderedWithChapters = orderedWithChapters.filter(
-              (qc) => qc.chapterId === chapterId
-            );
-          }
-
-          const baseQuestions = orderedWithChapters.map((qc) => qc.question);
-          console.log(
-            `[QuizSession] Sequential mode: ${orderedWithChapters.length} questions (${unseenFirst.length} unseen first) for ${cat}, chapterId=${chapterId}`
-          );
-
+          const unseenFirst = allWithChapters.filter(qc => !seenIds.has(qc.question.id));
+          const seenRest = allWithChapters.filter(qc => seenIds.has(qc.question.id));
+          const orderedWithChapters = [...unseenFirst, ...seenRest];
+          const baseQuestions = orderedWithChapters.map(qc => qc.question);
+          console.log(`[QuizSession] Sequential mode: ${orderedWithChapters.length} questions (${unseenFirst.length} unseen first) for ${cat}`);
           if (isMounted) {
-            const translatedQuestions = translateAndShuffleQuestions(
-              baseQuestions,
-              currentLanguage
-            );
+            const translatedQuestions = translateAndShuffleQuestions(baseQuestions, currentLanguage);
             setQuestionsWithChapters(orderedWithChapters);
             setQuestions(translatedQuestions);
             setIsLoading(false);
           }
         } else {
-          const questionCount =
-            QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
-          console.log(
-            `[QuizSession] Selecting ${questionCount} questions for mode: ${mode}`
-          );
-
-          const { questions: selectedBase } = await selectQuestionsForQuiz(
+          const questionCount = QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
+          console.log(`[QuizSession] Selecting ${questionCount} questions for mode: ${mode}`);
+          
+          const { questions: selectedQuestions } = await selectQuestionsForQuiz(
             category || 'mixed',
             mode || 'quick',
             questionCount
           );
-
-          let selectedQuestions = selectedBase;
-
-          if (category === 'med-admission-barrons' && chapterId) {
-            const allWithChapters = getAllQuestionsWithChapters(
-              'med-admission-barrons'
-            );
-            const chapterQuestions = allWithChapters
-              .filter((qc) => qc.chapterId === chapterId)
-              .map((qc) => qc.question);
-
-            const pool = chapterQuestions.length > 0 ? chapterQuestions : selectedBase;
-            const shuffled = fisherYatesShuffle(pool);
-            selectedQuestions = shuffled.slice(0, questionCount);
-          }
-
-          console.log(
-            `[QuizSession] Selected ${selectedQuestions.length} questions (after chapter filter)`
-          );
-
+          
+          console.log(`[QuizSession] Selected ${selectedQuestions.length} questions`);
+          
           if (isMounted) {
             if (selectedQuestions.length === 0) {
               console.error('[QuizSession] No questions selected');
               setIsLoading(false);
               return;
             }
-
-            const translatedQuestions = translateAndShuffleQuestions(
-              selectedQuestions,
-              currentLanguage
-            );
+            
+            const translatedQuestions = translateAndShuffleQuestions(selectedQuestions, currentLanguage);
             if (!translatedQuestions || translatedQuestions.length === 0) {
               console.error('[QuizSession] Translation failed');
               setQuestions(selectedQuestions);
             } else {
               setQuestions(translatedQuestions);
             }
-
+            
             if (selectedQuestions.length > 0) {
-              const questionIds = selectedQuestions.map((q) => q.id);
+              const questionIds = selectedQuestions.map(q => q.id);
               await markQuestionsAsSeen(category || 'mixed', questionIds);
-              console.log(
-                `[QuizSession] Marked ${questionIds.length} questions as seen on load`
-              );
-
-            const initialSessionState: SessionState = {
-              category: category || 'mixed',
-              mode: mode || 'quick',
-              questions: translatedQuestions,
-              currentIndex: 0,
-              score: 0,
-              answeredInSession: [],
-              startedAt,
-              sessionLanguage: currentLanguage,
-            };
-            await saveSessionState(initialSessionState);
+              console.log(`[QuizSession] Marked ${questionIds.length} questions as seen on load`);
+              
+              const initialSessionState: SessionState = {
+                category: category || 'mixed',
+                mode: mode || 'quick',
+                questions: translatedQuestions,
+                currentIndex: 0,
+                score: 0,
+                answeredInSession: [],
+                startedAt,
+                sessionLanguage: currentLanguage,
+              };
+              await saveSessionState(initialSessionState);
+            }
+            setIsLoading(false);
           }
+        }
+      } catch (error) {
+        console.error('[QuizSession] Error loading questions:', error);
+        if (isMounted) {
           setIsLoading(false);
         }
       }
-    } catch (error) {
-      console.error('[QuizSession] Error loading questions:', error);
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  loadQuestions();
-
-  return () => {
-    isMounted = false;
-  };
+    };
+    
+    loadQuestions();
+    
+    return () => {
+      isMounted = false;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, mode, resume, chapterId, currentLanguage]);
+  }, [category, mode, resume]);
 
 
 
@@ -755,12 +694,8 @@ export default function QuizSessionScreen() {
     
     await AsyncStorage.setItem('quiz_just_exited', Date.now().toString());
     console.log('[QuizSession] Closing quiz, session state preserved for resume');
-    if (category === 'med-admission-barrons' && chapterId) {
-      router.back();
-    } else {
-      router.replace('/' as any);
-    }
-  }, [addStudyTime, router, category, chapterId]);
+    router.replace('/' as any);
+  }, [addStudyTime, router]);
 
   const handleCopyExplanation = useCallback(async () => {
     if (!currentQuestion?.explanation) return;
@@ -947,12 +882,12 @@ export default function QuizSessionScreen() {
                     disabled={showResult}
                   >
                     <GlassCard
-                      style={StyleSheet.flatten([
+                      style={[
                         styles.optionCard,
-                        ...(isSelected ? [styles.optionSelected] : []),
-                        ...(showCorrect ? [styles.optionCorrect] : []),
-                        ...(showWrong ? [styles.optionWrong] : []),
-                      ])}
+                        isSelected && styles.optionSelected,
+                        showCorrect && styles.optionCorrect,
+                        showWrong && styles.optionWrong,
+                      ]}
                       variant={isSelected ? 'light' : 'default'}
                     >
                       <View style={[

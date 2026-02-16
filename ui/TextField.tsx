@@ -1,0 +1,51 @@
+import React from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
+import { TextInput as PaperTextInput } from 'react-native-paper';
+
+export type UITextFieldProps = {
+  value?: string;
+  defaultValue?: string;
+  onChangeText?: (value: string) => void;
+  placeholder?: string;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'url' | 'decimal-pad';
+  secureTextEntry?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  autocorrection?: boolean;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+};
+
+/**
+ * Cross-platform TextField using React Native Paper (avoids @expo/ui native view warnings on SDK 54).
+ */
+export function UITextField({
+  value,
+  defaultValue,
+  onChangeText,
+  placeholder,
+  keyboardType = 'default',
+  secureTextEntry = false,
+  multiline = false,
+  numberOfLines,
+  autocorrection = true,
+  disabled,
+  style,
+}: UITextFieldProps) {
+  const initialValue = value ?? defaultValue ?? '';
+  return (
+    <PaperTextInput
+      mode="outlined"
+      value={value !== undefined ? value : initialValue}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      keyboardType={keyboardType}
+      secureTextEntry={secureTextEntry}
+      multiline={multiline}
+      numberOfLines={numberOfLines}
+      autoCorrect={autocorrection}
+      disabled={disabled}
+      style={style}
+    />
+  );
+}

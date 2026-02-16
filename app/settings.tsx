@@ -12,6 +12,7 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { Appbar, Button } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,6 +46,7 @@ import {
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage, Language } from '@/providers/LanguageProvider';
+import { SPACING } from '@/theme/paperTheme';
 import { useUserProfile, useUpdateUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
 import PhotoPicker from '@/components/PhotoPicker';
 
@@ -54,9 +56,11 @@ interface SettingsItemProps {
   subtitle?: string;
   onPress: () => void;
   showBorder?: boolean;
+  /** When false, hides the right chevron (e.g. for display-only rows like App Version). */
+  showChevron?: boolean;
 }
 
-function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: SettingsItemProps) {
+function SettingsItem({ icon, title, subtitle, onPress, showBorder = true, showChevron = true }: SettingsItemProps) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity 
@@ -69,7 +73,7 @@ function SettingsItem({ icon, title, subtitle, onPress, showBorder = true }: Set
         <Text style={[styles.settingsItemTitle, { color: colors.text }]}>{title}</Text>
         {subtitle && <Text style={[styles.settingsItemSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>}
       </View>
-      <ChevronRight color={colors.textMuted} size={20} />
+      {showChevron && <ChevronRight color={colors.textMuted} size={20} />}
     </TouchableOpacity>
   );
 }
@@ -158,9 +162,10 @@ export default function SettingsScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
 
-      let photoUrl = profile?.profile_photo_url;
+      let photoUrl: string | undefined = profile?.profile_photo_url ?? (typeof photoUri === 'string' && (photoUri.startsWith('http://') || photoUri.startsWith('https://')) ? photoUri : undefined);
 
-      if (photoUri && photoUri !== profile?.profile_photo_url && photoUri !== profile?.avatar) {
+      const isLocalPhotoUri = typeof photoUri === 'string' && (photoUri.startsWith('file://') || photoUri.startsWith('content://') || photoUri.startsWith('ph://'));
+      if (isLocalPhotoUri && photoUri) {
         setIsUploading(true);
         try {
           photoUrl = await uploadProfilePhoto(user.id, photoUri);
@@ -225,39 +230,27 @@ export default function SettingsScreen() {
         locations={[0, 0.5, 1]}
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
-          <Text style={[styles.title, { color: colors.text }]}>{t('settings.title')}</Text>
-          <TouchableOpacity 
-            style={[styles.closeButton, { backgroundColor: colors.cardBg, borderColor: colors.glassBorder }]} 
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <X color={colors.text} size={24} />
-          </TouchableOpacity>
-        </View>
+        <Appbar.Header style={[styles.appbar, { backgroundColor: colors.background }]}>
+          <Appbar.BackAction onPress={() => router.back()} />
+          <Appbar.Content title={t('settings.title')} />
+        </Appbar.Header>
 
         <ScrollView 
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingHorizontal: SPACING.x3, paddingBottom: SPACING.x4 }]}
         >
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+          <View style={[styles.section, { marginBottom: SPACING.x3 }]}>
+            <View style={[styles.sectionHeader, { marginBottom: SPACING.x2 }]}>
               <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>My Profile</Text>
-              <TouchableOpacity
-                style={[styles.saveProfileButton, { backgroundColor: colors.cardBg, borderColor: colors.primary }, (isSaving || isUploading) && styles.saveProfileButtonDisabled]}
+              <Button
+                mode="outlined"
                 onPress={handleSaveProfile}
+                loading={isSaving || isUploading}
                 disabled={isSaving || isUploading}
-                activeOpacity={0.7}
+                icon="content-save"
               >
-                {isSaving || isUploading ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : (
-                  <>
-                    <Save color={colors.primary} size={16} />
-                    <Text style={[styles.saveProfileButtonText, { color: colors.primary }]}>Save</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+                Save
+              </Button>
             </View>
             <View style={styles.sectionCard}>
               <LinearGradient
@@ -639,8 +632,9 @@ export default function SettingsScreen() {
                 icon={<Info color={colors.textSecondary} size={22} />}
                 title={t('settings.appVersion')}
                 subtitle={appVersionLabel}
-                onPress={() => {}}
+                onPress={() => Alert.alert(t('settings.appVersion'), appVersionLabel)}
                 showBorder={false}
+                showChevron={false}
               />
             </View>
           </View>
@@ -661,6 +655,10 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  appbar: {
+    elevation: 0,
+    shadowOpacity: 0,
   },
   header: {
     flexDirection: 'row',

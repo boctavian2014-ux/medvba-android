@@ -31,6 +31,15 @@ export const ro: Record<string, string> = {
   'auth.fullName': 'Nume complet',
   'auth.namePlaceholder': 'Introdu numele',
   'auth.forgotPassword': 'Ai uitat parola?',
+  'auth.forgotPasswordSubtitle': 'Introdu adresa de email și îți vom trimite instrucțiuni pentru resetarea parolei.',
+  'auth.checkEmailTitle': 'Verifică emailul',
+  'auth.checkEmailMessage': 'Am trimis instrucțiunile de resetare a parolei la',
+  'auth.checkEmailHint': 'Dacă nu găsești emailul, verifică și dosarul Spam.',
+  'auth.backToLogin': 'Înapoi la autentificare',
+  'auth.sendResetLink': 'Trimite link resetare',
+  'auth.rememberPassword': 'Îți amintești parola?',
+  'auth.resetFailed': 'Trimiterea emailului a eșuat. Încearcă din nou.',
+  'auth.error': 'Eroare',
   'auth.signIn': 'Autentificare',
   'auth.signUp': 'Înregistrare',
   'auth.dontHaveAccount': 'Nu ai cont?',
@@ -68,6 +77,9 @@ export const ro: Record<string, string> = {
   // Home Screen
   'home.title': 'Ce vrei să înveți azi?',
   'home.greeting': 'Bună dimineața,',
+  'home.greetingMorning': 'Bună dimineața,',
+  'home.greetingAfternoon': 'Bună ziua,',
+  'home.greetingEvening': 'Bună seara,',
   'home.continueLearning': 'Continuă sesiunea de studiu',
   'home.questionsToday': 'Ai completat {current}/{goal} întrebări azi',
   'home.startQuiz': 'Începe test grilă',
@@ -105,6 +117,9 @@ export const ro: Record<string, string> = {
   'quiz.practiceUnlimited': 'Antrenament nelimitat',
   'quiz.freeQuizzesRemaining': '{remaining}/{total} teste gratuite rămase azi',
   'quiz.dailyLimitReached': 'Limita zilnică de teste atinsă',
+  'quiz.chaptersSubtitle': 'Alege un capitol pentru un test rapid de 10 întrebări.',
+  'quiz.allChapters': 'Toate capitolele',
+  'quiz.questionsShort': 'Q',
 
   // Quiz Session
   'session.loading': 'Se încarcă întrebările…',
@@ -135,6 +150,7 @@ export const ro: Record<string, string> = {
   'module.internalOrgans': 'Organe Interne',
   'module.headNeck': 'Cap și Gât',
   'module.neuroanatomy': 'Neuroanatomie',
+  'module.medAdmissionBarrons': 'Admitere Medicină',
 
   // Medical Subjects
   'subject.anatomy': 'Anatomie',
@@ -353,6 +369,9 @@ export const ro: Record<string, string> = {
   'achievement.champion': 'Campion',
   'achievement.earlyBird': 'Pasăre Matinală',
   'achievement.nightOwl': 'Bufniță de Noapte',
+  'achievement.helpfulTutor': 'Tutor Ajutător',
+  'achievement.roomCreator': 'Creator de Sală',
+  'achievement.weekendWarrior': 'Războinic de Weekend',
 
   // Achievement Descriptions
   'achievement.firstQuizDesc': 'A completat primul quiz',
@@ -372,6 +391,9 @@ export const ro: Record<string, string> = {
   'achievement.championDesc': 'A atins un prag important',
   'achievement.earlyBirdDesc': 'Studiază dimineața devreme',
   'achievement.nightOwlDesc': 'Studiază târziu în noapte',
+  'achievement.helpfulTutorDesc': 'A ajutat alții în comunitate',
+  'achievement.roomCreatorDesc': 'A creat o sală de studiu',
+  'achievement.weekendWarriorDesc': 'A studiat în weekend',
 
   // Settings
   'settings.title': 'Setări',

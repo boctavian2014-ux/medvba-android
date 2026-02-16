@@ -204,6 +204,7 @@ export const categories: Category[] = [
   { id: 'internal-organs', name: 'Internal Organs', icon: 'heart', color: '#4ECDC4', questionCount: 7500, completedCount: 980 },
   { id: 'head-neck', name: 'Head and Neck', icon: 'user', color: '#45B7D1', questionCount: 6800, completedCount: 720 },
   { id: 'neuroanatomy', name: 'Neuroanatomy', icon: 'brain', color: '#DDA0DD', questionCount: 5555, completedCount: 450 },
+  { id: 'med-admission-barrons', name: 'Medical School Entrance Exam', icon: 'stethoscope', color: '#8E44AD', questionCount: 200, completedCount: 0 },
 ];
 
 export * from './questions_bones_axial';
@@ -224,6 +225,7 @@ export * from './questions_neuro_meninges_venous';
 export * from './questions_neuro_ventricular';
 export * from './questions_neuro_eye_orbit';
 export * from './questions_neuro_ear';
+export * from './questions_med_admission';
 
 export const sampleQuestions: Question[] = [
   // Axial skeleton

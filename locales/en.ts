@@ -31,6 +31,15 @@ export const en: Record<string, string> = {
   'auth.fullName': 'Full Name',
   'auth.namePlaceholder': 'Enter your name',
   'auth.forgotPassword': 'Forgot Password?',
+  'auth.forgotPasswordSubtitle': 'Enter your email address and we will send you instructions to reset your password.',
+  'auth.checkEmailTitle': 'Check Your Email',
+  'auth.checkEmailMessage': 'We have sent password reset instructions to',
+  'auth.checkEmailHint': 'If you do not see the email, check your spam folder.',
+  'auth.backToLogin': 'Back to Login',
+  'auth.sendResetLink': 'Send Reset Link',
+  'auth.rememberPassword': 'Remember your password?',
+  'auth.resetFailed': 'Failed to send reset email. Please try again.',
+  'auth.error': 'Error',
   'auth.signIn': 'Sign In',
   'auth.signUp': 'Sign Up',
   'auth.dontHaveAccount': 'Don\'t have an account?',
@@ -68,6 +77,9 @@ export const en: Record<string, string> = {
   // Home Screen
   'home.title': 'What will you study today?',
   'home.greeting': 'Good morning,',
+  'home.greetingMorning': 'Good morning,',
+  'home.greetingAfternoon': 'Good afternoon,',
+  'home.greetingEvening': 'Good evening,',
   'home.continueLearning': 'Continue Learning',
   'home.questionsToday': 'You have completed {current}/{goal} questions today',
   'home.startQuiz': 'Start Quiz',
@@ -105,6 +117,9 @@ export const en: Record<string, string> = {
   'quiz.practiceUnlimited': 'Unlimited practice',
   'quiz.freeQuizzesRemaining': '{remaining}/{total} free quizzes remaining today',
   'quiz.dailyLimitReached': 'Daily quiz limit reached',
+  'quiz.chaptersSubtitle': 'Choose a chapter for a 10-question quick quiz.',
+  'quiz.allChapters': 'All chapters',
+  'quiz.questionsShort': 'Q',
 
   // Quiz Session
   'session.loading': 'Loading questions…',
@@ -135,6 +150,7 @@ export const en: Record<string, string> = {
   'module.internalOrgans': 'Internal Organs',
   'module.headNeck': 'Head & Neck',
   'module.neuroanatomy': 'Neuroanatomy',
+  'module.medAdmissionBarrons': 'Medical School Entrance Exam',
 
   // Common
   'common.questions': 'questions',
@@ -353,6 +369,9 @@ export const en: Record<string, string> = {
   'achievement.champion': 'Champion',
   'achievement.earlyBird': 'Early Bird',
   'achievement.nightOwl': 'Night Owl',
+  'achievement.helpfulTutor': 'Helpful Tutor',
+  'achievement.roomCreator': 'Room Creator',
+  'achievement.weekendWarrior': 'Weekend Warrior',
 
   // Achievement Descriptions
   'achievement.firstQuizDesc': 'Completed their first quiz',
@@ -372,6 +391,9 @@ export const en: Record<string, string> = {
   'achievement.championDesc': 'Reached a major milestone',
   'achievement.earlyBirdDesc': 'Studies early in the morning',
   'achievement.nightOwlDesc': 'Studies late at night',
+  'achievement.helpfulTutorDesc': 'Helped others in the community',
+  'achievement.roomCreatorDesc': 'Created a study room',
+  'achievement.weekendWarriorDesc': 'Studied on the weekend',
 
   // Profile
   'settings.title': 'Settings',

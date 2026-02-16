@@ -1,0 +1,74 @@
+[
+  {
+    "id": "gv1",
+    "category": "upper-lower-limbs",
+    "difficulty": "easy",
+    "question": "Which components are present in a typical vertebra?",
+    "question_ro": "Care componente sunt prezente într-o vertebră tipică?",
+    "options": [
+      "Vertebral body only",
+      "Vertebral arch only",
+      "Vertebral body and vertebral arch giving rise to several processes",
+      "Only spinous and transverse processes",
+      "Only articular processes and pedicles"
+    ],
+    "options_ro": [
+      "Doar corpul vertebral",
+      "Doar arcul vertebral",
+      "Corpul vertebral și arcul vertebral care dau naștere la mai multe procese",
+      "Doar procesele spinoase și transversale",
+      "Doar procesele articulare și pediculii"
+    ],
+    "correctAnswer": 2,
+    "explanation": "A typical vertebra consists of a vertebral body anteriorly and a vertebral arch posteriorly, together forming the vertebral foramen and giving rise to multiple processes.",
+    "explanation_ro": "O vertebră tipică constă dintr-un corp vertebral anterior și un arc vertebral posterior, formând împreună foramenul vertebral și dând naștere la multiple procese."
+  },
+  {
+    "id": "gv2",
+    "category": "upper-lower-limbs",
+    "difficulty": "easy",
+    "question": "Which structures form the vertebral arch of a typical vertebra?",
+    "question_ro": "Care structuri formează arcul vertebral al unei vertebre tipice?",
+    "options": [
+      "Pedicles and laminae",
+      "Transverse and spinous processes",
+      "Articular processes only",
+      "Body and spinous process",
+      "Intervertebral discs"
+    ],
+    "options_ro": [
+      "Pediculii și laminele",
+      "Procesele transversale și spinoase",
+      "Doar procesele articulare",
+      "Corpul și procesul spinos",
+      "Discurile intervertebrale"
+    ],
+    "correctAnswer": 0,
+    "explanation": "The vertebral arch is formed by a pair of pedicles and a pair of laminae, projecting posteriorly from the vertebral body.",
+    "explanation_ro": "Arcul vertebral este format dintr-o pereche de pediculi și o pereche de lamine, care se proiectează posterior de la corpul vertebral."
+  },
+  {
+    "id": "gv3",
+    "category": "upper-lower-limbs",
+    "difficulty": "medium",
+    "question": "How many processes typically arise from the vertebral arch of a typical vertebra and what are they?",
+    "question_ro": "Câte procese apar de obicei din arcul vertebral al unei vertebre tipice și care sunt acestea?",
+    "options": [
+      "Four processes: two transverse and two spinous",
+      "Five processes: one spinous, two transverse and two articular",
+      "Seven processes: one spinous, two transverse and four articular (two superior, two inferior)",
+      "Eight processes: two spinous, two transverse and four articular",
+      "Three processes: one spinos and two articular"
+    ],
+    "options_ro": [
+      "Patru procese: două transversale și două spinoase",
+      "Cinci procese: unul spinos, două transversale și două articulare",
+      "Șapte procese: unul spinos, două transversale și patru articulare (două superioare, două inferioare)",
+      "Opt procese: două spinoase, două transversale și patru articulare",
+      "Trei procese: unul spinos și două articulare"
+    ],
+    "correctAnswer": 2,
+    "explanation": "A typical vertebral arch supports seven processes: one spinous, two transverse and four articular processes (paired superior and inferior).",
+    "explanation_ro": "Un arc vertebral tipic susține șapte procese: unul spinos, două transversale și patru procese articulare (perechi superioare și inferioare)."
+  }
+]

@@ -2,6 +2,8 @@ export interface QuestionTranslation {
   question: string;
   options: string[];
   explanation: string;
+  /** When options order differs from source, override the correct answer index (0-based). */
+  correctAnswer?: number;
 }
 
 export const questionTranslations: Record<string, Record<string, QuestionTranslation>> = {
@@ -1153,7 +1155,8 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Doar vasele limfatice',
         'Doar venele profunde'
       ],
-      explanation: 'Microcirculația constă din arteriole, capilare și venule unde are loc schimbul de gaze, nutrienți și deșeuri între sânge și țesuturi.'
+      explanation: 'Microcirculația constă din arteriole, capilare și venule unde are loc schimbul de gaze, nutrienți și deșeuri între sânge și țesuturi.',
+      correctAnswer: 1
     }
   },
   'mc2': {
@@ -1179,7 +1182,8 @@ export const questionTranslations: Record<string, Record<string, QuestionTransla
         'Doar gravitația',
         'Doar temperatura'
       ],
-      explanation: 'Ecuația Starling descrie echilibrul între presiunea hidrostatică (împinge fluidul afară) și presiunea oncotică (trage fluidul înapoi) atât în capilare cât și în interstițiu.'
+      explanation: 'Ecuația Starling descrie echilibrul între presiunea hidrostatică (împinge fluidul afară) și presiunea oncotică (trage fluidul înapoi) atât în capilare cât și în interstițiu.',
+      correctAnswer: 2
     }
   },
   'mc4': {

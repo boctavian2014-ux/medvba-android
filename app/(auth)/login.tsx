@@ -1,27 +1,24 @@
 import { useState, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
   Alert,
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import colors from '@/constants/colors';
+import { Appbar, Text, Card, useTheme } from 'react-native-paper';
+import { UIButton, UITextField } from '@/ui';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { SPACING } from '@/theme/paperTheme';
 
 export default function LoginScreen() {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +55,7 @@ export default function LoginScreen() {
     }
 
     setIsLoading(true);
-    
+
     try {
       console.log('[Login] Attempting login for:', email);
       const { error } = await signIn(email.trim().toLowerCase(), password);
@@ -67,14 +64,14 @@ export default function LoginScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        
+
         let errorMessage = t('auth.loginFailed');
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = t('auth.invalidCredentials');
         } else if (error.message.includes('Email not confirmed')) {
           errorMessage = t('auth.emailNotConfirmed');
         }
-        
+
         Alert.alert(t('auth.loginFailed'), errorMessage);
       } else {
         if (Platform.OS !== 'web') {
@@ -106,122 +103,114 @@ export default function LoginScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[colors.background, colors.backgroundLight]}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <Appbar.Header
+          style={[styles.appbar, { backgroundColor: theme.colors.background }]}
+          statusBarHeight={0}
+        >
+          <View style={styles.appbarContent} />
+        </Appbar.Header>
 
-      <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingHorizontal: SPACING.x3, paddingTop: SPACING.x3, paddingBottom: SPACING.x3 },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
+            <View style={[styles.header, { marginBottom: SPACING.x5 }]}>
+              <View style={{ marginBottom: SPACING.x3 }}>
                 <Image
-                  source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8m00xerxk064za3jpist0' }}
+                  source={{
+                    uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8m00xerxk064za3jpist0',
+                  }}
                   style={styles.logoImage}
                 />
               </View>
-              <Text style={styles.title}>{t('auth.welcomeBack')}</Text>
-              <Text style={styles.subtitle}>{t('auth.signInSubtitle')}</Text>
+              <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
+                {t('auth.welcomeBack')}
+              </Text>
+              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
+                {t('auth.signInSubtitle')}
+              </Text>
             </View>
 
-            <View style={styles.form}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t('auth.email')}</Text>
-                <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-                  <Mail size={20} color={colors.textSecondary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('auth.emailPlaceholder')}
-                    placeholderTextColor={colors.textMuted}
+            <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+              <Card.Content style={styles.cardContent}>
+                <View style={[styles.inputWrap, { marginBottom: SPACING.x2 }]}>
+                  <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: SPACING.x1 }}>
+                    {t('auth.email')}
+                  </Text>
+                  <UITextField
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
-                      if (errors.email) setErrors({ ...errors, email: undefined });
+                      if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
                     }}
+                    placeholder={t('auth.emailPlaceholder')}
                     keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    editable={!isLoading}
+                    style={styles.input}
                   />
                 </View>
-                {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-              </View>
+                {errors.email ? (
+                  <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                    {errors.email}
+                  </Text>
+                ) : null}
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>{t('auth.password')}</Text>
-                <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-                  <Lock size={20} color={colors.textSecondary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('auth.passwordPlaceholder')}
-                    placeholderTextColor={colors.textMuted}
+                <View style={[styles.inputWrap, { marginTop: SPACING.x2, marginBottom: SPACING.x2 }]}>
+                  <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: SPACING.x1 }}>
+                    {t('auth.password')}
+                  </Text>
+                  <UITextField
                     value={password}
                     onChangeText={(text) => {
                       setPassword(text);
-                      if (errors.password) setErrors({ ...errors, password: undefined });
+                      if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
                     }}
+                    placeholder={t('auth.passwordPlaceholder')}
                     secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoComplete="password"
-                    editable={!isLoading}
+                    style={styles.input}
                   />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={20} color={colors.textSecondary} />
-                    ) : (
-                      <Eye size={20} color={colors.textSecondary} />
-                    )}
-                  </TouchableOpacity>
                 </View>
-                {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-              </View>
+                {errors.password ? (
+                  <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                    {errors.password}
+                  </Text>
+                ) : null}
 
-              <TouchableOpacity
-                onPress={handleForgotPassword}
-                style={styles.forgotButton}
-                disabled={isLoading}
-              >
-                <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
-              </TouchableOpacity>
+                <View style={{ alignSelf: 'flex-end', marginBottom: SPACING.x2 }}>
+                  <UIButton variant="borderless" onPress={handleForgotPassword} disabled={isLoading}>
+                    {t('auth.forgotPassword')}
+                  </UIButton>
+                </View>
 
-              <TouchableOpacity
-                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-                onPress={handleLogin}
-                activeOpacity={0.8}
-                disabled={isLoading}
-              >
-                <LinearGradient
-                  colors={[colors.primary, colors.primaryDark]}
-                  style={styles.loginGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+                <View style={[styles.primaryButton, { marginTop: SPACING.x1 }]}>
+                  <UIButton
+                    variant="borderedProminent"
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                    color={theme.colors.primary}
+                  >
+                    {isLoading ? (t('auth.loading') ?? '...') : t('auth.signIn')}
+                  </UIButton>
+                </View>
+              </Card.Content>
+            </Card>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t('auth.dontHaveAccount')}</Text>
-              <TouchableOpacity onPress={handleSignUp} disabled={isLoading}>
-                <Text style={styles.signUpText}>{t('auth.signUp')}</Text>
-              </TouchableOpacity>
+            <View style={[styles.footer, { marginTop: SPACING.x4, gap: SPACING.x1 }]}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                {t('auth.dontHaveAccount')}
+              </Text>
+              <UIButton variant="borderless" onPress={handleSignUp} disabled={isLoading}>
+                {t('auth.signUp')}
+              </UIButton>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -233,7 +222,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -243,16 +231,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    paddingBottom: 24,
+  },
+  appbar: {
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  appbarContent: {
+    flex: 1,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoContainer: {
-    marginBottom: 24,
   },
   logoImage: {
     width: 100,
@@ -260,94 +248,31 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
+    marginBottom: SPACING.x1,
   },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
+  card: {
+    borderRadius: 16,
+    marginBottom: SPACING.x4,
   },
-  form: {
-    marginBottom: 32,
+  cardContent: {
+    paddingHorizontal: SPACING.x2,
+    paddingTop: SPACING.x2,
+    paddingBottom: SPACING.x3,
   },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardBg,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    gap: 12,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
+  inputWrap: {},
   input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
+    minHeight: 48,
   },
   errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
+    marginTop: SPACING.x1,
+    marginLeft: SPACING.x1,
   },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  loginButton: {
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  loginButtonDisabled: {
-    opacity: 0.7,
-  },
-  loginGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  primaryButton: {
+    marginBottom: SPACING.x1,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-  },
-  footerText: {
-    color: colors.textSecondary,
-    fontSize: 15,
-  },
-  signUpText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
   },
 });

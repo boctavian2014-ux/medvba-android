@@ -153,6 +153,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   useEffect(() => {
     const mountedRef = { current: true };
+    const AUTH_INIT_TIMEOUT_MS = 15000; // 15s max wait so app never stays stuck on splash
 
     const initializeAuth = async () => {
       try {
@@ -162,8 +163,14 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
         if (!mountedRef.current) return;
 
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), AUTH_INIT_TIMEOUT_MS)
+        );
+        const { data: { session: currentSession } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise,
+        ]);
         if (!mountedRef.current) return;
         
         setSession(currentSession);
@@ -183,6 +190,10 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       } catch (error) {
         if (!mountedRef.current) return;
         if (error instanceof Error && error.message.includes('signal is aborted')) {
+          return;
+        }
+        if (error instanceof Error && error.message === 'Auth init timeout') {
+          if (mountedRef.current) setIsLoading(false);
           return;
         }
         console.error('[Auth] Error initializing auth:', error);

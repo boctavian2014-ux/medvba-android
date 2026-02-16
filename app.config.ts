@@ -58,8 +58,8 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
   name: 'MEDVBA',
   slug: 'medvba',
-  version: '1.0.7',
-  orientation: 'portrait',
+  version: '1.0.9',
+  orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'rork-app',
   userInterfaceStyle: 'automatic',
@@ -79,7 +79,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     supportsTablet: false,
     bundleIdentifier: 'com.devaieood.medvba',
     icon: './assets/images/icon.png',
-    buildNumber: '13',
+    buildNumber: '16',
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
     },
@@ -89,9 +89,8 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
-    versionCode: 13,
+    versionCode: 16,
     package: 'com.devaieood.medvba',
-    enableProguard: true,
     blockedPermissions: [
       'android.permission.CAMERA',
       'android.permission.RECORD_AUDIO',
@@ -119,6 +118,16 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
           'The app accesses your photos to let you share them with your friends.',
       },
     ],
+    [
+      'expo-build-properties',
+      {
+        android: {
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
+          buildToolsVersion: '35.0.0',
+        },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
@@ -136,6 +145,12 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         envFromFile.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       EXPO_PUBLIC_RORK_API_BASE_URL:
         envFromFile.EXPO_PUBLIC_RORK_API_BASE_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL,
+      EXPO_PUBLIC_REVENUECAT_API_KEY_IOS:
+        envFromFile.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS,
+      EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID:
+        envFromFile.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID,
+      EXPO_PUBLIC_PAYWALL_ENABLED:
+        envFromFile.EXPO_PUBLIC_PAYWALL_ENABLED ?? process.env.EXPO_PUBLIC_PAYWALL_ENABLED ?? 'false',
     },
     owner: 'devaieood79',
   };

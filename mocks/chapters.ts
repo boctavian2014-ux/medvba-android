@@ -350,6 +350,29 @@ import {
   masticatoryMusclesQuestions
 } from './questions_head_neck_continued';
 
+import {
+  cardioAdmissionSet1,
+  bloodAdmissionSet1,
+  respiratoryAdmissionSet1,
+  metabolismNutritionAdmissionSet1,
+  digestiveAdmissionSet1,
+  nervousAdmissionSet1,
+  introAnatPhysAdmissionSet1,
+  chemBasicsAdmissionSet1,
+  cellBiologyAdmissionSet1,
+  tissuesAdmissionSet1,
+  integumentaryAdmissionSet1,
+  skeletalAdmissionSet1,
+  muscularAdmissionSet1,
+  sensesAdmissionSet1,
+  endocrineAdmissionSet1,
+  lymphaticAdmissionSet1,
+  urinaryAdmissionSet1,
+  reproMaleAdmissionSet1,
+  reproFemaleAdmissionSet1,
+  embryologyAdmissionSet1,
+} from './questions_med_admission';
+
 export interface Chapter {
   id: string;
   name: string;
@@ -635,11 +658,39 @@ export const neuroanatomyChapters: ModuleChapters = {
   ]
 };
 
+export const medAdmissionBarronsChapters: ModuleChapters = {
+  moduleId: 'med-admission-barrons',
+  moduleName: 'Medical School Entrance Exam',
+  chapters: [
+    { id: 'intro-anat-phys', name: 'Introducere în anatomie și fiziologie', questions: introAnatPhysAdmissionSet1 },
+    { id: 'chem-basics', name: 'Bazele chimice ale corpului uman', questions: chemBasicsAdmissionSet1 },
+    { id: 'cell-biology', name: 'Celula și fiziologia celulară', questions: cellBiologyAdmissionSet1 },
+    { id: 'tissues', name: 'Țesuturile', questions: tissuesAdmissionSet1 },
+    { id: 'integumentary', name: 'Sistemul tegumentar', questions: integumentaryAdmissionSet1 },
+    { id: 'skeletal', name: 'Oasele și articulațiile', questions: skeletalAdmissionSet1 },
+    { id: 'muscular', name: 'Sistemul muscular', questions: muscularAdmissionSet1 },
+    { id: 'nervous', name: 'Sistemul nervos', questions: nervousAdmissionSet1 },
+    { id: 'senses', name: 'Organele de simț', questions: sensesAdmissionSet1 },
+    { id: 'endocrine', name: 'Sistemul endocrin', questions: endocrineAdmissionSet1 },
+    { id: 'blood', name: 'Sângele', questions: bloodAdmissionSet1 },
+    { id: 'cardiovascular', name: 'Sistemul cardiovascular', questions: cardioAdmissionSet1 },
+    { id: 'lymphatic', name: 'Sistemul limfatic și imunitatea', questions: lymphaticAdmissionSet1 },
+    { id: 'respiratory', name: 'Sistemul respirator', questions: respiratoryAdmissionSet1 },
+    { id: 'digestive', name: 'Sistemul digestiv', questions: digestiveAdmissionSet1 },
+    { id: 'metabolism', name: 'Metabolism și nutriție', questions: metabolismNutritionAdmissionSet1 },
+    { id: 'urinary', name: 'Sistemul urinar', questions: urinaryAdmissionSet1 },
+    { id: 'repro-male', name: 'Sistemul reproducător masculin', questions: reproMaleAdmissionSet1 },
+    { id: 'repro-female', name: 'Sistemul reproducător feminin', questions: reproFemaleAdmissionSet1 },
+    { id: 'embryology', name: 'Sarcina și dezvoltarea timpurie', questions: embryologyAdmissionSet1 },
+  ],
+};
+
 export const moduleChaptersMap: Record<string, ModuleChapters> = {
   'upper-lower-limbs': upperLowerLimbsChapters,
   'internal-organs': internalOrgansChapters,
   'head-neck': headNeckChapters,
   'neuroanatomy': neuroanatomyChapters,
+  'med-admission-barrons': medAdmissionBarronsChapters,
 };
 
 export function getChaptersForModule(moduleId: string): Chapter[] {

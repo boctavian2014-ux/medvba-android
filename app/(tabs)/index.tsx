@@ -10,18 +10,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Sparkles, Lock, EyeOff } from 'lucide-react-native';
+import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Stethoscope, Sparkles, Lock, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { Card, Button } from 'react-native-paper';
+import { UIButton } from '@/ui';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import GlassCard from '@/components/GlassCard';
 import ProgressRing from '@/components/ProgressRing';
 import PremiumBadge from '@/components/PremiumBadge';
 import { categories } from '@/mocks/questions';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
+import { SPACING } from '@/theme/paperTheme';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -107,9 +109,18 @@ export default function HomeScreen() {
                 source={require('@/assets/images/icon.png')}
                 style={styles.appIcon} 
               />
-              <View>
+              <View style={styles.headerTextWrap}>
                 <View style={styles.greetingRow}>
-                  <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('home.greeting')}</Text>
+                  <Text style={[styles.greeting, { color: colors.textSecondary }]} numberOfLines={1}>
+                    {t(
+                      (() => {
+                        const hour = new Date().getHours();
+                        if (hour >= 18) return 'home.greetingEvening';
+                        if (hour >= 12) return 'home.greetingAfternoon';
+                        return 'home.greetingMorning';
+                      })()
+                    )}
+                  </Text>
                   {profile?.isPublic === false && (
                     <View style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}>
                       <EyeOff size={12} color={colors.textMuted} />
@@ -117,19 +128,23 @@ export default function HomeScreen() {
                     </View>
                   )}
                 </View>
-                <Text style={[styles.userName, { color: colors.text }]}>{profile?.name.split(' ')[0] || 'Student'}</Text>
+                <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+                  {profile?.name?.split(' ')[0] || profile?.email || 'Student'}
+                </Text>
               </View>
             </View>
             <View style={styles.headerRight}>
               {isPaywallEnabled && !isPremium && (
-                <TouchableOpacity
+                <Button
+                  mode="outlined"
                   onPress={handleUpgradePress}
-                  style={[styles.upgradeButton, { backgroundColor: colors.warning + '20' }]}
-                  activeOpacity={0.7}
+                  compact
+                  icon="star"
+                  textColor={colors.warning}
+                  style={[styles.upgradeButton, { borderColor: colors.warning + '40' }]}
                 >
-                  <Sparkles size={16} color={colors.warning} strokeWidth={2.5} />
-                  <Text style={[styles.upgradeButtonText, { color: colors.warning }]}>Upgrade</Text>
-                </TouchableOpacity>
+                  Upgrade
+                </Button>
               )}
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
@@ -137,78 +152,92 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <GlassCard style={styles.heroCard} variant="accent">
+          <Card
+            style={[styles.heroCard, { backgroundColor: colors.primary + '18' }]}
+            mode="elevated"
+            onPress={handleContinueLearning}
+          >
             {isPaywallEnabled && isPremium && (
               <View style={styles.premiumBadgeContainer}>
                 <PremiumBadge size="small" />
               </View>
             )}
             {hasReachedDailyLimit && (
-              <View style={[styles.limitOverlay, { backgroundColor: colors.background + 'E6' }]}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[StyleSheet.absoluteFill, { backgroundColor: colors.background + 'E6', borderRadius: 16, zIndex: 5 }]}
+                onPress={handleContinueLearning}
+              >
+              <View style={styles.limitOverlay}>
                 <Lock size={32} color={colors.warning} strokeWidth={2} />
                 <Text style={[styles.limitTitle, { color: colors.text }]}>Limită Zilnică Atinsă</Text>
                 <Text style={[styles.limitText, { color: colors.textSecondary }]}>
                   Ai răspuns la {FREE_DAILY_QUIZ_LIMIT} întrebări astăzi
                 </Text>
-                <TouchableOpacity
-                  onPress={handleUpgradePress}
-                  style={[styles.limitUpgradeButton, { backgroundColor: colors.warning }]}
-                  activeOpacity={0.8}
-                >
-                  <Sparkles size={16} color="#FFF" strokeWidth={2.5} />
-                  <Text style={styles.limitUpgradeText}>Upgrade Premium</Text>
-                </TouchableOpacity>
+                <View style={styles.limitUpgradeButton}>
+                  <UIButton variant="borderedProminent" onPress={handleUpgradePress} color={colors.warning}>
+                    Upgrade Premium
+                  </UIButton>
+                </View>
               </View>
+              </TouchableOpacity>
             )}
-            <View style={styles.heroContent}>
-              <View style={styles.heroLeft}>
-                <Text style={[styles.heroTitle, { color: colors.text }]}>{t('home.continueLearning')}</Text>
-                <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
-                  {t('home.questionsToday').replace('{current}', String(todayProgress)).replace('{goal}', String(todayGoal))}
-                </Text>
-                <TouchableOpacity 
-                  style={styles.heroButton}
-                  onPress={handleContinueLearning}
-                >
-                  <LinearGradient
-                    colors={[colors.primary, colors.primaryDark]}
-                    style={styles.heroButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    <Play color={colors.text} size={18} fill={colors.text} />
-                    <Text style={[styles.heroButtonText, { color: colors.text }]}>
+            <Card.Content style={styles.heroCardContent}>
+              <View style={styles.heroContent}>
+                <View style={styles.heroLeft}>
+                  <Text style={[styles.heroTitle, { color: colors.text }]}>{t('home.continueLearning')}</Text>
+                  <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
+                    {t('home.questionsToday').replace('{current}', String(todayProgress)).replace('{goal}', String(todayGoal))}
+                  </Text>
+                  <View style={styles.heroButton}>
+                    <UIButton
+                      variant="borderedProminent"
+                      onPress={handleContinueLearning}
+                      color={colors.primary}
+                    >
                       {hasActiveSession ? t('home.continueQuiz') : t('home.startQuiz')}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                    </UIButton>
+                  </View>
+                </View>
+                <ProgressRing 
+                  progress={(todayProgress / todayGoal) * 100} 
+                  size={90} 
+                  strokeWidth={10}
+                  color={colors.accent}
+                  label={t('home.today')}
+                />
               </View>
-              <ProgressRing 
-                progress={(todayProgress / todayGoal) * 100} 
-                size={90} 
-                strokeWidth={10}
-                color={colors.accent}
-                label={t('home.today')}
-              />
-            </View>
-          </GlassCard>
+            </Card.Content>
+          </Card>
 
           <View style={styles.statsRow}>
-            <GlassCard style={styles.statCard}>
-              <TrendingUp color={colors.success} size={24} />
-              <Text style={[styles.statValue, { color: colors.text }]}>{accuracy.toFixed(1)}%</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.accuracy')}</Text>
-            </GlassCard>
-            <GlassCard style={styles.statCard}>
-              <Target color={colors.accentPink} size={24} />
-              <Text style={[styles.statValue, { color: colors.text }]}>{formattedQuestionsCount}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.questions')}</Text>
-            </GlassCard>
-            <GlassCard style={styles.statCard}>
-              <Clock color={colors.warning} size={24} />
-              <Text style={[styles.statValue, { color: colors.text }]}>{formattedStudyTime}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.studyTime')}</Text>
-            </GlassCard>
+            <View style={styles.statCardWrapper}>
+              <Card style={styles.statCard} mode="elevated">
+                <Card.Content style={styles.statCardContent}>
+                  <TrendingUp color={colors.success} size={24} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>{accuracy.toFixed(1)}%</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.accuracy')}</Text>
+                </Card.Content>
+              </Card>
+            </View>
+            <View style={styles.statCardWrapper}>
+              <Card style={styles.statCard} mode="elevated">
+                <Card.Content style={styles.statCardContent}>
+                  <Target color={colors.accentPink} size={24} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>{formattedQuestionsCount}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.questions')}</Text>
+                </Card.Content>
+              </Card>
+            </View>
+            <View style={styles.statCardWrapper}>
+              <Card style={styles.statCard} mode="elevated">
+                <Card.Content style={styles.statCardContent}>
+                  <Clock color={colors.warning} size={24} />
+                  <Text style={[styles.statValue, { color: colors.text }]}>{formattedStudyTime}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.studyTime')}</Text>
+                </Card.Content>
+              </Card>
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -216,29 +245,31 @@ export default function HomeScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.yourProgress')}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.primary }]}>{overallProgress.toFixed(1)}% {t('home.complete')}</Text>
             </View>
-            <GlassCard>
-              <View style={[styles.progressBar, { backgroundColor: colors.cardBgLight }]}>
-                <LinearGradient
-                  colors={[colors.primary, colors.accent]}
-                  style={[styles.progressFill, { width: `${overallProgress}%` }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
-              <View style={styles.progressStats}>
-                <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-                  <Text style={[styles.progressHighlight, { color: colors.text }]}>{completedQuestions.toLocaleString()}</Text> {t('home.ofQuestions').replace('{total}', totalQuestions.toLocaleString())}
-                </Text>
-              </View>
-            </GlassCard>
+            <Card style={styles.progressCard} mode="elevated">
+              <Card.Content>
+                <View style={[styles.progressBar, { backgroundColor: colors.cardBgLight }]}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.accent]}
+                    style={[styles.progressFill, { width: `${overallProgress}%` }]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  />
+                </View>
+                <View style={styles.progressStats}>
+                  <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.progressHighlight, { color: colors.text }]}>{completedQuestions.toLocaleString()}</Text> {t('home.ofQuestions').replace('{total}', totalQuestions.toLocaleString())}
+                  </Text>
+                </View>
+              </Card.Content>
+            </Card>
           </View>
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.quickStartAnatomy')}</Text>
-              <TouchableOpacity onPress={() => router.push('/quiz')}>
-                <Text style={[styles.seeAll, { color: colors.primary }]}>{t('home.seeAll')}</Text>
-              </TouchableOpacity>
+              <Button mode="text" compact onPress={() => router.push('/quiz')} textColor={colors.primary}>
+                {t('home.seeAll')}
+              </Button>
             </View>
             {categories.map((category) => {
               const iconMap: Record<string, React.ComponentType<{ color: string; size: number }>> = {
@@ -246,6 +277,7 @@ export default function HomeScreen() {
                 'internal-organs': Heart,
                 'head-neck': User,
                 'neuroanatomy': Brain,
+                'med-admission-barrons': Stethoscope,
               };
               const IconComponent = iconMap[category.id] || Bone;
               const isLocked = isPaywallEnabled && !isPremium;
@@ -263,51 +295,62 @@ export default function HomeScreen() {
                   return;
                 }
 
+                if (category.id === 'med-admission-barrons') {
+                  router.push('/quiz-chapters?category=med-admission-barrons');
+                  return;
+                }
+
                 router.push({
                   pathname: '/quiz-session',
                   params: { category: category.id, mode: 'sequential' }
                 });
               };
 
+              const label = getModuleName(category.id) || category.name;
               return (
-                <TouchableOpacity 
+                <TouchableOpacity
                   key={category.id}
-                  onPress={handleCategoryPress}
                   activeOpacity={0.7}
+                  onPress={handleCategoryPress}
+                  style={[
+                    styles.categoryCard,
+                    { backgroundColor: colors.cardBg ?? colors.backgroundLight },
+                    isLocked && { opacity: 0.7 },
+                  ]}
                 >
-                  <GlassCard style={[styles.categoryCard, isLocked && { opacity: 0.7 }]}>
-                    <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
-                      {isLocked ? (
-                        <Lock color={category.color} size={20} strokeWidth={2.5} />
-                      ) : (
-                        <IconComponent color={category.color} size={20} />
+                  <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
+                    {isLocked ? (
+                      <Lock color={category.color} size={20} strokeWidth={2.5} />
+                    ) : (
+                      <IconComponent color={category.color} size={20} />
+                    )}
+                  </View>
+                  <View style={styles.categoryInfo}>
+                    <View style={styles.categoryNameRow}>
+                      <Text style={[styles.categoryName, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+                        {label}
+                      </Text>
+                      {isLocked && (
+                        <View style={[styles.premiumTag, { backgroundColor: colors.warning + '20' }]}>
+                          <Sparkles size={10} color={colors.warning} strokeWidth={2.5} />
+                          <Text style={[styles.premiumTagText, { color: colors.warning }]}>Premium</Text>
+                        </View>
                       )}
                     </View>
-                    <View style={styles.categoryInfo}>
-                      <View style={styles.categoryNameRow}>
-                        <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
-                        {isLocked && (
-                          <View style={[styles.premiumTag, { backgroundColor: colors.warning + '20' }]}>
-                            <Sparkles size={10} color={colors.warning} strokeWidth={2.5} />
-                            <Text style={[styles.premiumTagText, { color: colors.warning }]}>Premium</Text>
-                          </View>
-                        )}
-                      </View>
-                      <Text style={[styles.categoryProgress, { color: colors.textSecondary }]}>
-                        {isLocked 
-                          ? 'Unlock premium to access'
-                          : t('home.categoryQuestions')
-                              .replace('{current}', category.completedCount.toLocaleString())
-                              .replace('{total}', category.questionCount.toLocaleString())
-                        }
-                      </Text>
-                    </View>
-                    {isLocked ? (
-                      <Lock color={colors.textMuted} size={20} strokeWidth={2} />
-                    ) : (
-                      <ChevronRight color={colors.textMuted} size={20} />
-                    )}
-                  </GlassCard>
+                    <Text style={[styles.categoryProgress, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {isLocked 
+                        ? 'Unlock premium to access'
+                        : t('home.categoryQuestions')
+                            .replace('{current}', category.completedCount.toLocaleString())
+                            .replace('{total}', category.questionCount.toLocaleString())
+                      }
+                    </Text>
+                  </View>
+                  {isLocked ? (
+                    <Lock color={colors.textMuted} size={20} strokeWidth={2} />
+                  ) : (
+                    <ChevronRight color={colors.textMuted} size={20} />
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -326,32 +369,41 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: SPACING.x3,
+    paddingBottom: SPACING.x3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 8,
+    marginBottom: SPACING.x3,
+    marginTop: SPACING.x1,
   },
   greeting: {
     fontSize: 14,
+    flexShrink: 0,
   },
   userName: {
     fontSize: 24,
     fontWeight: '700' as const,
+    flexShrink: 1,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minWidth: 0,
   },
   privacyBadge: {
     flexDirection: 'row',
@@ -381,16 +433,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   upgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  upgradeButtonText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
+    marginRight: SPACING.x1,
   },
   premiumBadgeContainer: {
     position: 'absolute',
@@ -399,16 +442,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   limitOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 16,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
-    zIndex: 5,
   },
   limitTitle: {
     fontSize: 18,
@@ -423,21 +460,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   limitUpgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 8,
-  },
-  limitUpgradeText: {
-    color: '#FFF',
-    fontSize: 15,
-    fontWeight: '700' as const,
+    marginTop: SPACING.x2,
   },
   heroCard: {
-    marginBottom: 20,
+    marginBottom: SPACING.x3,
     minHeight: 140,
+    borderRadius: 16,
+  },
+  heroCardContent: {
+    paddingVertical: SPACING.x2,
   },
   heroContent: {
     flexDirection: 'row',
@@ -446,46 +477,43 @@ const styles = StyleSheet.create({
   },
   heroLeft: {
     flex: 1,
-    marginRight: 16,
+    marginRight: SPACING.x2,
     justifyContent: 'center',
   },
   heroTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    marginBottom: 6,
+    marginBottom: SPACING.x1,
   },
   heroSubtitle: {
     fontSize: 14,
-    marginBottom: 16,
+    marginBottom: SPACING.x2,
   },
   heroButton: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
   },
-  heroButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 8,
-    flexShrink: 1,
-  },
-  heroButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    flexShrink: 1,
-  },
   statsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    gap: SPACING.x2,
+    marginBottom: SPACING.x3,
+    alignItems: 'stretch',
+  },
+  statCardWrapper: {
+    flex: 1,
+    minWidth: 0,
   },
   statCard: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 16,
+    width: '100%',
+    borderRadius: 16,
     minHeight: 100,
+  },
+  statCardContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.x3,
+    paddingHorizontal: SPACING.x1,
   },
   statValue: {
     fontSize: 20,
@@ -495,15 +523,19 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     marginTop: 2,
+    textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING.x3,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: SPACING.x2,
+  },
+  progressCard: {
+    borderRadius: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -527,7 +559,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   progressStats: {
-    marginTop: 12,
+    marginTop: SPACING.x2,
   },
   progressText: {
     fontSize: 14,
@@ -538,9 +570,12 @@ const styles = StyleSheet.create({
   categoryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: SPACING.x2,
     minHeight: 72,
-    paddingVertical: 12,
+    borderRadius: 16,
+    width: '100%',
+    paddingHorizontal: SPACING.x2,
+    paddingVertical: SPACING.x2,
   },
   categoryIcon: {
     width: 44,
@@ -551,19 +586,23 @@ const styles = StyleSheet.create({
   },
   categoryInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: SPACING.x2,
     justifyContent: 'center',
+    minWidth: 0,
   },
   categoryNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.x1,
     flexWrap: 'wrap',
+    minWidth: 0,
   },
   categoryName: {
     fontSize: 16,
     fontWeight: '600' as const,
     flexShrink: 1,
+    minWidth: 0,
+    flex: 1,
   },
   premiumTag: {
     flexDirection: 'row',

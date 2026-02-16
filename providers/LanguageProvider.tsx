@@ -70,6 +70,7 @@ export const [LanguageProvider, useLanguage] = createContextHook(() => {
       'internal-organs': 'module.internalOrgans',
       'head-neck': 'module.headNeck',
       'neuroanatomy': 'module.neuroanatomy',
+      'med-admission-barrons': 'module.medAdmissionBarrons',
     };
     const key = moduleKeys[moduleId];
     return key ? t(key) : moduleId;

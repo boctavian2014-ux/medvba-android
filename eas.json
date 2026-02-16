@@ -1,13 +1,23 @@
 {
-  "cli": {
-    "version": ">= 16.0.0"
-  },
+  "cli": { "version": ">= 16.0.0" },
   "build": {
     "production": {
       "channel": "production",
-      "android": {
-        "buildType": "app-bundle"
-      }
+      "android": { "buildType": "app-bundle" },
+      "buildArtifactPaths": ["android/app/build/outputs/mapping/release/*"]
+    },
+    "internal": {
+      "channel": "internal",
+      "android": { "buildType": "app-bundle" },
+      "buildArtifactPaths": ["android/app/build/outputs/mapping/release/*"]
+    }
+  },
+  "submit": {
+    "internal": {
+      "android": { "track": "internal" }
+    },
+    "production": {
+      "android": { "track": "production" }
     }
   }
 }

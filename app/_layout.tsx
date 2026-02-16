@@ -7,11 +7,13 @@ import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import Constants from "expo-constants";
 
+import { PaperProvider } from "react-native-paper";
 import { QuizProgressProvider } from "@/providers/QuizProgressProvider";
 import { LanguageProvider } from "@/providers/LanguageProvider";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
+import { getPaperTheme } from "@/theme/paperTheme";
 import { monitoring } from "@/lib/monitoring";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -179,6 +181,14 @@ function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
         }} 
       />
       <Stack.Screen 
+        name="quiz-chapters" 
+        options={{ 
+          headerShown: false,
+          presentation: 'card',
+          animation: 'slide_from_right'
+        }} 
+      />
+      <Stack.Screen 
         name="settings" 
         options={{ 
           presentation: 'modal',
@@ -222,23 +232,34 @@ const styles = StyleSheet.create({
   },
 });
 
+function PaperProviderWrapper({ children }: { children: React.ReactNode }) {
+  const { colors, colorScheme } = useTheme();
+  const paperTheme = React.useMemo(
+    () => getPaperTheme(colors, colorScheme === "dark"),
+    [colors, colorScheme]
+  );
+  return <PaperProvider theme={paperTheme}>{children}</PaperProvider>;
+}
+
 export default function RootLayout() {
   return (
     <ErrorBoundary>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <AuthProvider>
-              <LanguageProvider>
-                <SubscriptionProvider>
-                  <QuizProgressProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <RootLayoutNav splashAvailable={splashScreenAvailable} />
-                    </GestureHandlerRootView>
-                  </QuizProgressProvider>
-                </SubscriptionProvider>
-              </LanguageProvider>
-            </AuthProvider>
+            <PaperProviderWrapper>
+              <AuthProvider>
+                <LanguageProvider>
+                  <SubscriptionProvider>
+                    <QuizProgressProvider>
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        <RootLayoutNav splashAvailable={splashScreenAvailable} />
+                      </GestureHandlerRootView>
+                    </QuizProgressProvider>
+                  </SubscriptionProvider>
+                </LanguageProvider>
+              </AuthProvider>
+            </PaperProviderWrapper>
           </ThemeProvider>
         </QueryClientProvider>
       </trpc.Provider>

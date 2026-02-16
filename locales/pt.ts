@@ -31,6 +31,15 @@ export const pt: Record<string, string> = {
   'auth.fullName': 'Nome completo',
   'auth.namePlaceholder': 'Digite o seu nome',
   'auth.forgotPassword': 'Esqueceu a senha?',
+  'auth.forgotPasswordSubtitle': 'Digite seu e-mail e enviaremos instruções para redefinir sua senha.',
+  'auth.checkEmailTitle': 'Verifique seu e-mail',
+  'auth.checkEmailMessage': 'Enviamos instruções de redefinição de senha para',
+  'auth.checkEmailHint': 'Se não encontrar o e-mail, verifique a pasta de spam.',
+  'auth.backToLogin': 'Voltar ao login',
+  'auth.sendResetLink': 'Enviar link de redefinição',
+  'auth.rememberPassword': 'Lembra da sua senha?',
+  'auth.resetFailed': 'Falha ao enviar o e-mail. Tente novamente.',
+  'auth.error': 'Erro',
   'auth.signIn': 'Entrar',
   'auth.signUp': 'Registar',
   'auth.dontHaveAccount': 'Não tem uma conta?',
@@ -68,6 +77,9 @@ export const pt: Record<string, string> = {
   // Home Screen
   'home.title': 'O que você vai estudar hoje?',
   'home.greeting': 'Bom dia,',
+  'home.greetingMorning': 'Bom dia,',
+  'home.greetingAfternoon': 'Boa tarde,',
+  'home.greetingEvening': 'Boa noite,',
   'home.continueLearning': 'Continuar sessão de estudo',
   'home.questionsToday': 'Você completou {current}/{goal} perguntas hoje',
   'home.startQuiz': 'Iniciar teste',
@@ -135,6 +147,7 @@ export const pt: Record<string, string> = {
   'module.internalOrgans': 'Órgãos internos',
   'module.headNeck': 'Cabeça e pescoço',
   'module.neuroanatomy': 'Neuroanatomia',
+  'module.medAdmissionBarrons': 'Admissão Medicina',
 
   // Medical Subjects
   'subject.anatomy': 'Anatomia',

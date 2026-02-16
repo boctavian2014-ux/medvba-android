@@ -13,6 +13,7 @@ import {
   Heart, 
   User, 
   Brain,
+  Stethoscope,
   Clock,
   Zap,
   Trophy,
@@ -34,6 +35,7 @@ const categoryIcons: Record<string, React.ComponentType<{ color: string; size: n
   'internal-organs': Heart,
   'head-neck': User,
   'neuroanatomy': Brain,
+  'med-admission-barrons': Stethoscope,
 };
 
 type QuizMode = 'practice' | 'exam' | 'quick';
@@ -77,40 +79,38 @@ export default function QuizScreen() {
     setSelectedCategory(categoryId === selectedCategory ? null : categoryId);
   };
 
-
+  const startQuizSession = async (category: string, mode: QuizMode) => {
+    if (isPaywallEnabled && !isPremium && mode !== 'quick') {
+      router.push('/paywall' as any);
+      return;
+    }
+    if (isPaywallEnabled && !canStartQuiz()) {
+      router.push('/paywall' as any);
+      return;
+    }
+    const success = await incrementQuizCount();
+    if (isPaywallEnabled && !success && !isPremium) {
+      router.push('/paywall' as any);
+      return;
+    }
+    router.push({
+      pathname: '/quiz-session' as any,
+      params: { category, mode },
+    });
+  };
 
   const handleStartQuiz = async (mode: QuizMode) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await startQuizSession(selectedCategory || 'mixed', mode);
+  };
 
-    // Free users can only use Quick Quiz mode
-    if (isPaywallEnabled && !isPremium && mode !== 'quick') {
-      console.log('[Quiz] Free user tried to access premium mode:', mode);
-      router.push('/paywall' as any);
+  const handleCategoryPress = (categoryId: string) => {
+    if (categoryId === 'med-admission-barrons') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      router.push('/quiz-chapters?category=med-admission-barrons' as any);
       return;
     }
-
-    // Check if free user has remaining quizzes
-    if (isPaywallEnabled && !canStartQuiz()) {
-      console.log('[Quiz] Free quiz limit reached');
-      router.push('/paywall' as any);
-      return;
-    }
-
-    // Increment quiz count for free users
-    const success = await incrementQuizCount();
-    if (isPaywallEnabled && !success && !isPremium) {
-      console.log('[Quiz] Failed to increment quiz count');
-      router.push('/paywall' as any);
-      return;
-    }
-
-    router.push({
-      pathname: '/quiz-session' as any,
-      params: { 
-        category: selectedCategory || 'mixed',
-        mode: mode
-      }
-    });
+    handleCategorySelect(categoryId);
   };
 
   return (
@@ -233,7 +233,7 @@ export default function QuizScreen() {
                 return (
                   <TouchableOpacity
                     key={category.id}
-                    onPress={() => handleCategorySelect(category.id)}
+                    onPress={() => handleCategoryPress(category.id)}
                   >
                     <GlassCard 
                       style={[

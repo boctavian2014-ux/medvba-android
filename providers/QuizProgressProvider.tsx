@@ -37,6 +37,8 @@ interface SessionState {
   score: number;
   answeredInSession: string[];
   startedAt: string;
+  /** Language when session started; used on resume so language does not switch */
+  sessionLanguage?: 'en' | 'ro';
 }
 
 interface AllTimeStats {
@@ -438,85 +440,86 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
   const updateDailyProgress = useCallback(async (correct: boolean, questionId: string) => {
     try {
       monitoring.logEvent('question_answered', { correct, questionId });
+
+      let newAllTime: AllTimeStats | null = null;
+      let newStreak: StreakData | null = null;
+      let newDaily: DailyProgress | null = null;
+      let newWeeklyEntry: { questionsAnswered: number; correctAnswers: number; studyTimeSeconds: number } | null = null;
+
       setDailyProgress(prev => {
         if (prev.answeredQuestionIds.includes(questionId)) {
           console.log('[QuizProgress] Question already answered today:', questionId);
           return prev;
         }
-
-        const updated: DailyProgress = {
+        newDaily = {
           ...prev,
           date: getTodayDateString(),
           questionsAnswered: prev.questionsAnswered + 1,
           correctAnswers: correct ? prev.correctAnswers + 1 : prev.correctAnswers,
           answeredQuestionIds: [...prev.answeredQuestionIds, questionId],
         };
-
-        console.log('[QuizProgress] Updated daily progress:', updated.questionsAnswered, '/', updated.goal);
-        
-        AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(updated)).catch(err => {
+        console.log('[QuizProgress] Updated daily progress:', newDaily.questionsAnswered, '/', newDaily.goal);
+        AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newDaily)).catch(err => {
           console.error('[QuizProgress] Error saving daily progress:', err);
         });
-
-        return updated;
+        return newDaily;
       });
 
       setAllTimeStats(prev => {
-        const updated: AllTimeStats = {
+        newAllTime = {
           ...prev,
           totalQuestionsAnswered: prev.totalQuestionsAnswered + 1,
           totalCorrectAnswers: correct ? prev.totalCorrectAnswers + 1 : prev.totalCorrectAnswers,
         };
-
-        console.log('[QuizProgress] Updated all-time stats:', updated.totalQuestionsAnswered, 'questions,', updated.totalCorrectAnswers, 'correct');
-        
-        AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(updated)).catch(err => {
+        console.log('[QuizProgress] Updated all-time stats:', newAllTime.totalQuestionsAnswered, 'questions,', newAllTime.totalCorrectAnswers, 'correct');
+        AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(newAllTime)).catch(err => {
           console.error('[QuizProgress] Error saving all-time stats:', err);
         });
-
-        return updated;
+        return newAllTime;
       });
 
       await updateStreak();
+      const today = getTodayDateString();
+      const todayEntryBefore = weeklyHistory.find(e => e.date === today);
       await updateWeeklyHistory(1, correct ? 1 : 0, 0);
+      newWeeklyEntry = {
+        questionsAnswered: (todayEntryBefore?.questionsAnswered || 0) + 1,
+        correctAnswers: (todayEntryBefore?.correctAnswers || 0) + (correct ? 1 : 0),
+        studyTimeSeconds: todayEntryBefore?.studyTimeSeconds || 0,
+      };
 
-      if (userId) {
-        const currentAllTime = allTimeStats;
-        const currentStreak = streakData;
-        const today = getTodayDateString();
-        const todayEntry = weeklyHistory.find(e => e.date === today);
-        
-        const syncPromise = Promise.all([
-          upsertUserProgressAsync({
-            userId,
-            totalQuestionsAnswered: currentAllTime.totalQuestionsAnswered + 1,
-            correctAnswers: correct ? currentAllTime.totalCorrectAnswers + 1 : currentAllTime.totalCorrectAnswers,
-            studyTimeSeconds: currentAllTime.totalStudyTimeSeconds,
-            currentStreak: currentStreak.currentStreak,
-            longestStreak: currentStreak.longestStreak,
-            lastActivityDate: currentStreak.lastActiveDate || null,
-          }),
-          upsertDailyProgressAsync({
-            userId,
-            date: today,
-            questionsAnswered: (todayEntry?.questionsAnswered || 0) + 1,
-            correctAnswers: (todayEntry?.correctAnswers || 0) + (correct ? 1 : 0),
-            studyTimeSeconds: todayEntry?.studyTimeSeconds || 0,
-          }),
-        ]);
+      if (userId && newAllTime) {
+        const streakSnapshot = streakData;
+        const syncPayload = {
+          userId,
+          totalQuestionsAnswered: newAllTime.totalQuestionsAnswered,
+          correctAnswers: newAllTime.totalCorrectAnswers,
+          studyTimeSeconds: newAllTime.totalStudyTimeSeconds,
+          currentStreak: streakSnapshot.currentStreak,
+          longestStreak: streakSnapshot.longestStreak,
+          lastActivityDate: streakSnapshot.lastActiveDate || null,
+        };
+        const dailyPayload = newWeeklyEntry
+          ? { userId, date: today, questionsAnswered: newWeeklyEntry.questionsAnswered, correctAnswers: newWeeklyEntry.correctAnswers, studyTimeSeconds: newWeeklyEntry.studyTimeSeconds }
+          : { userId, date: today, questionsAnswered: 1, correctAnswers: correct ? 1 : 0, studyTimeSeconds: 0 };
 
-        syncPromise.then(() => {
-          console.log('[QuizProgress] Synced to Supabase successfully');
-          checkAndGrantAchievements();
-        }).catch(error => {
-          console.error('[QuizProgress] Error syncing to Supabase:', error);
-        });
+        Promise.all([
+          upsertUserProgressAsync(syncPayload),
+          upsertDailyProgressAsync(dailyPayload),
+        ])
+          .then(() => {
+            console.log('[QuizProgress] Synced to Supabase successfully');
+            checkAndGrantAchievements();
+          })
+          .catch(error => {
+            console.error('[QuizProgress] Error syncing to Supabase:', error);
+          });
       }
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
       monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
-  }, [updateStreak, updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
+  }, [updateStreak, updateWeeklyHistory, userId, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
 
   const saveLastSessionInfo = useCallback(async (category: string, mode: string) => {
     try {

@@ -14,7 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -148,6 +148,7 @@ export default function SocialScreen() {
   const { user, profile } = useAuth();
   const { t, getModuleName } = useLanguage();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [refreshing, setRefreshing] = useState(false);
   const [reactedActivities, setReactedActivities] = useState<Record<string, string>>({});
@@ -450,21 +451,31 @@ export default function SocialScreen() {
   const getAchievementTitle = (type: AchievementType): string => {
     const titles: Record<AchievementType, string> = {
       first_quiz: t('achievement.firstQuiz'),
+      quiz_master: t('achievement.quizMaster'),
       quiz_completed_10: t('achievement.quizCompleted10'),
       perfect_score: t('achievement.perfectScore'),
+      streak_7: t('achievement.weekStreak'),
+      streak_30: t('achievement.monthStreak'),
+      streak_100: t('achievement.grandMaster'),
       week_streak: t('achievement.weekStreak'),
       month_streak: t('achievement.monthStreak'),
       grand_master: t('achievement.grandMaster'),
+      questions_100: t('achievement.hundredQuestions'),
+      questions_500: t('achievement.fiveHundredQuestions'),
+      questions_1000: t('achievement.thousandQuestions'),
       hundred_questions: t('achievement.hundredQuestions'),
       five_hundred_questions: t('achievement.fiveHundredQuestions'),
       thousand_questions: t('achievement.thousandQuestions'),
       anatomy_master: t('achievement.anatomyMaster'),
       speed_demon: t('achievement.speedDemon'),
       social_butterfly: t('achievement.socialButterfly'),
+      helpful_tutor: t('achievement.helpfulTutor'),
+      room_creator: t('achievement.roomCreator'),
       top_ten: t('achievement.topTen'),
       champion: t('achievement.champion'),
       early_bird: t('achievement.earlyBird'),
       night_owl: t('achievement.nightOwl'),
+      weekend_warrior: t('achievement.weekendWarrior'),
     };
     return titles[type] || type;
   };
@@ -472,21 +483,31 @@ export default function SocialScreen() {
   const getAchievementDescription = (type: AchievementType): string => {
     const descriptions: Record<AchievementType, string> = {
       first_quiz: t('achievement.firstQuizDesc'),
+      quiz_master: t('achievement.quizMasterDesc'),
       quiz_completed_10: t('achievement.quizCompleted10Desc'),
       perfect_score: t('achievement.perfectScoreDesc'),
+      streak_7: t('achievement.weekStreakDesc'),
+      streak_30: t('achievement.monthStreakDesc'),
+      streak_100: t('achievement.grandMasterDesc'),
       week_streak: t('achievement.weekStreakDesc'),
       month_streak: t('achievement.monthStreakDesc'),
       grand_master: t('achievement.grandMasterDesc'),
+      questions_100: t('achievement.hundredQuestionsDesc'),
+      questions_500: t('achievement.fiveHundredQuestionsDesc'),
+      questions_1000: t('achievement.thousandQuestionsDesc'),
       hundred_questions: t('achievement.hundredQuestionsDesc'),
       five_hundred_questions: t('achievement.fiveHundredQuestionsDesc'),
       thousand_questions: t('achievement.thousandQuestionsDesc'),
       anatomy_master: t('achievement.anatomyMasterDesc'),
       speed_demon: t('achievement.speedDemonDesc'),
       social_butterfly: t('achievement.socialButterflyDesc'),
+      helpful_tutor: t('achievement.helpfulTutorDesc'),
+      room_creator: t('achievement.roomCreatorDesc'),
       top_ten: t('achievement.topTenDesc'),
       champion: t('achievement.championDesc'),
       early_bird: t('achievement.earlyBirdDesc'),
       night_owl: t('achievement.nightOwlDesc'),
+      weekend_warrior: t('achievement.weekendWarriorDesc'),
     };
     return descriptions[type] || t('social.achievementUnlocked');
   };
@@ -516,7 +537,7 @@ export default function SocialScreen() {
           <View style={styles.header}>
             <View style={styles.headerTop}>
               <View style={styles.headerTextContainer}>
-                <Text style={styles.title}>{t('social.community')}</Text>
+                <Text style={styles.title} numberOfLines={1}>{t('social.community')}</Text>
                 <Text style={styles.subtitle}>{t('social.communitySubtitle')}</Text>
               </View>
               <TouchableOpacity
@@ -1015,7 +1036,7 @@ export default function SocialScreen() {
               </View>
             </ScrollView>
 
-            <View style={styles.modalFooter}>
+            <View style={[styles.modalFooter, { paddingBottom: Math.max(16, insets.bottom) }]}>
               <TouchableOpacity 
                 style={styles.cancelButton}
                 onPress={() => {
@@ -1055,6 +1076,7 @@ export default function SocialScreen() {
           style={styles.modalOverlay}
         >
           <View style={styles.modalContent}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} />
             <LinearGradient
               colors={[colors.cardBg, colors.background]}
               style={StyleSheet.absoluteFill}
@@ -1137,7 +1159,7 @@ export default function SocialScreen() {
               </View>
             </ScrollView>
 
-            <View style={styles.modalFooter}>
+            <View style={[styles.modalFooter, { paddingBottom: Math.max(16, insets.bottom) }]}>
               <TouchableOpacity 
                 style={styles.cancelButton}
                 onPress={() => {
@@ -1330,7 +1352,7 @@ export default function SocialScreen() {
                   </View>
                 </ScrollView>
 
-                <View style={styles.modalFooter}>
+                <View style={[styles.modalFooter, { paddingBottom: Math.max(16, insets.bottom) }]}>
                   <TouchableOpacity 
                     style={styles.cancelButton}
                     onPress={handleCloseReportModal}
@@ -1433,7 +1455,7 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     color: colors.text,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700' as const,
     color: colors.text,
   },
@@ -1874,11 +1896,11 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.82)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.cardBg,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { queryKeys } from './query-keys';
 import { supabase } from './supabase';
 import type { UserAccount } from '@/types/user';
 
@@ -37,7 +38,7 @@ export interface StudySession {
 
 export function useStudyRooms() {
   return useQuery({
-    queryKey: ['studyRooms'],
+    queryKey: queryKeys.studyRoomsList(),
     queryFn: async () => {
       console.log('[Supabase] Fetching study rooms...');
       const { data, error } = await supabase
@@ -107,7 +108,7 @@ export function useCreateStudyRoom() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['studyRooms'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyRooms });
     },
   });
 }
@@ -141,7 +142,7 @@ export function useUpdateStudyRoom() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['studyRooms'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyRooms });
     },
   });
 }

@@ -31,6 +31,15 @@ export const es: Record<string, string> = {
   'auth.fullName': 'Nombre completo',
   'auth.namePlaceholder': 'Ingresa tu nombre',
   'auth.forgotPassword': '¿Olvidaste tu contraseña?',
+  'auth.forgotPasswordSubtitle': 'Introduce tu correo y te enviaremos instrucciones para restablecer la contraseña.',
+  'auth.checkEmailTitle': 'Revisa tu correo',
+  'auth.checkEmailMessage': 'Hemos enviado instrucciones de restablecimiento a',
+  'auth.checkEmailHint': 'Si no ves el correo, revisa la carpeta de spam.',
+  'auth.backToLogin': 'Volver al inicio de sesión',
+  'auth.sendResetLink': 'Enviar enlace de restablecimiento',
+  'auth.rememberPassword': '¿Recuerdas tu contraseña?',
+  'auth.resetFailed': 'Error al enviar el correo. Inténtalo de nuevo.',
+  'auth.error': 'Error',
   'auth.signIn': 'Iniciar sesión',
   'auth.signUp': 'Registrarse',
   'auth.dontHaveAccount': '¿No tienes una cuenta?',
@@ -68,6 +77,9 @@ export const es: Record<string, string> = {
   // Home Screen
   'home.title': '¿Qué estudiarás hoy?',
   'home.greeting': 'Buenos días,',
+  'home.greetingMorning': 'Buenos días,',
+  'home.greetingAfternoon': 'Buenas tardes,',
+  'home.greetingEvening': 'Buenas noches,',
   'home.continueLearning': 'Continuar sesión de estudio',
   'home.questionsToday': 'Has completado {current}/{goal} preguntas hoy',
   'home.startQuiz': 'Iniciar cuestionario',
@@ -135,6 +147,7 @@ export const es: Record<string, string> = {
   'module.internalOrgans': 'Órganos internos',
   'module.headNeck': 'Cabeza y cuello',
   'module.neuroanatomy': 'Neuroanatomía',
+  'module.medAdmissionBarrons': 'Admisión Medicina',
 
   // Medical Subjects
   'subject.anatomy': 'Anatomía',

@@ -1,25 +1,30 @@
 import { useState, useCallback } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, ArrowLeft, KeyRound } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import colors from '@/constants/colors';
+import {
+  Appbar,
+  Text,
+  TextInput,
+  Button,
+  Card,
+  useTheme,
+} from 'react-native-paper';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
+import { SPACING } from '@/theme/paperTheme';
 
 export default function ForgotPasswordScreen() {
+  const theme = useTheme();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -28,16 +33,16 @@ export default function ForgotPasswordScreen() {
 
   const validateEmail = useCallback(() => {
     if (!email.trim()) {
-      setError('Email is required');
+      setError(t('auth.emailRequired'));
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email');
+      setError(t('auth.emailInvalid'));
       return false;
     }
     setError(undefined);
     return true;
-  }, [email]);
+  }, [email, t]);
 
   const handleResetPassword = useCallback(async () => {
     if (!validateEmail()) {
@@ -57,7 +62,7 @@ export default function ForgotPasswordScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        Alert.alert('Error', 'Failed to send reset email. Please try again.');
+        Alert.alert(t('auth.error'), t('auth.resetFailed'));
       } else {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -66,11 +71,11 @@ export default function ForgotPasswordScreen() {
       }
     } catch (err) {
       console.error('[ForgotPassword] Unexpected error:', err);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert(t('auth.error'), t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
-  }, [email, resetPassword, validateEmail]);
+  }, [email, resetPassword, validateEmail, t]);
 
   const handleBack = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -88,45 +93,36 @@ export default function ForgotPasswordScreen() {
 
   if (isSuccess) {
     return (
-      <View style={styles.container}>
-        <LinearGradient
-          colors={[colors.background, colors.backgroundLight]}
-          style={StyleSheet.absoluteFill}
-        />
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <SafeAreaView style={styles.safeArea}>
+          <Appbar.Header
+            style={[styles.appbar, { backgroundColor: theme.colors.background }]}
+            statusBarHeight={0}
+          >
+            <Appbar.Content title="" />
+          </Appbar.Header>
           <View style={styles.successContainer}>
-            <View style={styles.successIconContainer}>
-              <LinearGradient
-                colors={[colors.success, colors.accent]}
-                style={styles.successIcon}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Mail size={48} color="#fff" strokeWidth={1.5} />
-              </LinearGradient>
-            </View>
-            <Text style={styles.successTitle}>Check Your Email</Text>
-            <Text style={styles.successText}>
-              We have sent password reset instructions to{'\n'}
-              <Text style={styles.emailHighlight}>{email}</Text>
-            </Text>
-            <Text style={styles.successHint}>
-              If you do not see the email, check your spam folder.
-            </Text>
-            <TouchableOpacity
-              style={styles.backToLoginButton}
-              onPress={handleBackToLogin}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
-                style={styles.backToLoginGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.backToLoginText}>Back to Login</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <Card style={[styles.successCard, { backgroundColor: theme.colors.primaryContainer }]}>
+              <Card.Content style={styles.successCardContent}>
+                <Text variant="headlineMedium" style={[styles.successTitle, { color: theme.colors.onPrimaryContainer }]}>
+                  {t('auth.checkEmailTitle')}
+                </Text>
+                <Text variant="bodyLarge" style={[styles.successText, { color: theme.colors.onSurfaceVariant }]}>
+                  {t('auth.checkEmailMessage')}{'\n'}
+                  <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>{email}</Text>
+                </Text>
+                <Text variant="bodySmall" style={[styles.successHint, { color: theme.colors.outline }]}>
+                  {t('auth.checkEmailHint')}
+                </Text>
+                <Button
+                  mode="contained"
+                  onPress={handleBackToLogin}
+                  style={{ marginTop: SPACING.x4 }}
+                >
+                  {t('auth.backToLogin')}
+                </Button>
+              </Card.Content>
+            </Card>
           </View>
         </SafeAreaView>
       </View>
@@ -134,93 +130,86 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[colors.background, colors.backgroundLight]}
-        style={StyleSheet.absoluteFill}
-      />
-
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
+        <Appbar.Header
+          style={[styles.appbar, { backgroundColor: theme.colors.background }]}
+          statusBarHeight={0}
+        >
+          <Appbar.BackAction onPress={handleBack} />
+          <Appbar.Content title="" />
+        </Appbar.Header>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              {
+                paddingHorizontal: SPACING.x3,
+                paddingTop: SPACING.x2,
+                paddingBottom: SPACING.x4,
+              },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-              <ArrowLeft size={24} color={colors.text} />
-            </TouchableOpacity>
-
-            <View style={styles.header}>
-              <View style={styles.iconContainer}>
-                <LinearGradient
-                  colors={[colors.warning, colors.streakOrange]}
-                  style={styles.iconGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <KeyRound size={40} color="#fff" strokeWidth={1.5} />
-                </LinearGradient>
-              </View>
-              <Text style={styles.title}>Forgot Password?</Text>
-              <Text style={styles.subtitle}>
-                Enter your email address and we will send you instructions to reset your password.
+            <View style={[styles.header, { marginBottom: SPACING.x5 }]}>
+              <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
+                {t('auth.forgotPassword')}
+              </Text>
+              <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+                {t('auth.forgotPasswordSubtitle')}
               </Text>
             </View>
 
-            <View style={styles.form}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
-                <View style={[styles.inputContainer, error && styles.inputError]}>
-                  <Mail size={20} color={colors.textSecondary} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your email"
-                    placeholderTextColor={colors.textMuted}
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      if (error) setError(undefined);
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoFocus
-                    editable={!isLoading}
-                  />
-                </View>
-                {error && <Text style={styles.errorText}>{error}</Text>}
-              </View>
+            <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
+              <Card.Content style={styles.cardContent}>
+                <TextInput
+                  label={t('auth.email')}
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (error) setError(undefined);
+                  }}
+                  placeholder={t('auth.emailPlaceholder')}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  autoFocus
+                  disabled={isLoading}
+                  error={!!error}
+                  mode="outlined"
+                  style={[styles.input, { marginBottom: error ? 0 : SPACING.x2 }]}
+                  left={<TextInput.Icon icon="email-outline" />}
+                />
+                {error ? (
+                  <Text variant="bodySmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                    {error}
+                  </Text>
+                ) : null}
 
-              <TouchableOpacity
-                style={[styles.resetButton, isLoading && styles.resetButtonDisabled]}
-                onPress={handleResetPassword}
-                activeOpacity={0.8}
-                disabled={isLoading}
-              >
-                <LinearGradient
-                  colors={[colors.warning, colors.streakOrange]}
-                  style={styles.resetGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                <Button
+                  mode="contained"
+                  onPress={handleResetPassword}
+                  loading={isLoading}
+                  disabled={isLoading}
+                  style={{ marginTop: SPACING.x3 }}
                 >
-                  {isLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.resetButtonText}>Send Reset Link</Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+                  {t('auth.sendResetLink')}
+                </Button>
+              </Card.Content>
+            </Card>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Remember your password?</Text>
-              <TouchableOpacity onPress={handleBackToLogin} disabled={isLoading}>
-                <Text style={styles.signInText}>Sign In</Text>
-              </TouchableOpacity>
+            <View style={[styles.footer, { marginTop: SPACING.x4, gap: SPACING.x1 }]}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                {t('auth.rememberPassword')}
+              </Text>
+              <Button mode="text" onPress={handleBackToLogin} disabled={isLoading} compact>
+                {t('auth.signIn')}
+              </Button>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -232,7 +221,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
@@ -242,167 +230,65 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: 24,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.cardBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 30,
+  appbar: {
+    elevation: 0,
+    shadowOpacity: 0,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  iconContainer: {
-    marginBottom: 24,
-  },
-  iconGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
+    marginBottom: SPACING.x2,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    paddingHorizontal: 10,
+    paddingHorizontal: SPACING.x2,
   },
-  form: {
-    marginBottom: 32,
+  card: {
+    borderRadius: 16,
+    marginBottom: SPACING.x4,
   },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardBg,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    gap: 12,
-  },
-  inputError: {
-    borderColor: colors.error,
+  cardContent: {
+    paddingHorizontal: SPACING.x2,
+    paddingTop: SPACING.x2,
+    paddingBottom: SPACING.x3,
   },
   input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
+    backgroundColor: 'transparent',
   },
   errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  resetButton: {
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  resetButtonDisabled: {
-    opacity: 0.7,
-  },
-  resetGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resetButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    marginTop: SPACING.x1,
+    marginLeft: SPACING.x1,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-  },
-  footerText: {
-    color: colors.textSecondary,
-    fontSize: 15,
-  },
-  signInText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
   },
   successContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.x3,
   },
-  successIconContainer: {
-    marginBottom: 32,
+  successCard: {
+    borderRadius: 16,
   },
-  successIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  successCardContent: {
+    padding: SPACING.x4,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   successTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
+    marginBottom: SPACING.x2,
+    textAlign: 'center',
   },
   successText: {
-    fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  emailHighlight: {
-    color: colors.primary,
-    fontWeight: '600',
+    marginBottom: SPACING.x2,
   },
   successHint: {
-    fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
-    marginBottom: 32,
-  },
-  backToLoginButton: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    width: '100%',
-  },
-  backToLoginGradient: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backToLoginText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
   },
 });
