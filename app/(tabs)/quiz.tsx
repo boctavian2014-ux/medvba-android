@@ -45,11 +45,10 @@ export default function QuizScreen() {
   const { t, getModuleName } = useLanguage();
   const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { 
+  const {
     isPremium,
     isPaywallEnabled,
     canStartQuiz,
-    incrementQuizCount,
     getRemainingQuizzes,
     FREE_QUIZ_LIMIT
   } = useSubscription();
@@ -80,16 +79,7 @@ export default function QuizScreen() {
   };
 
   const startQuizSession = async (category: string, mode: QuizMode) => {
-    if (isPaywallEnabled && !isPremium && mode !== 'quick') {
-      router.push('/paywall' as any);
-      return;
-    }
     if (isPaywallEnabled && !canStartQuiz()) {
-      router.push('/paywall' as any);
-      return;
-    }
-    const success = await incrementQuizCount();
-    if (isPaywallEnabled && !success && !isPremium) {
       router.push('/paywall' as any);
       return;
     }

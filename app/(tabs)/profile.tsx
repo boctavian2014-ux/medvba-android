@@ -334,23 +334,7 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
-            {isPaywallEnabled && !isPremium ? (
-              <TouchableOpacity 
-                style={styles.premiumButton} 
-                activeOpacity={0.8}
-                onPress={() => router.push('/paywall' as any)}
-              >
-                <LinearGradient
-                  colors={[colors.warning, '#FF9500', '#FFB800']}
-                  style={styles.premiumGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Crown color={colors.background} size={18} />
-                  <Text style={styles.premiumButtonText}>{t('profile.upgradeToPremium')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ) : isPaywallEnabled ? (
+            {isPaywallEnabled && isPremium ? (
               <View style={styles.premiumBadge}>
                 <LinearGradient
                   colors={['rgba(255, 215, 0, 0.2)', 'rgba(255, 149, 0, 0.15)']}
@@ -416,6 +400,34 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>{t('profile.dayStreak')}</Text>
             </View>
           </View>
+
+          {isPaywallEnabled && !isPremium && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push('/paywall' as any)}
+              style={styles.upgradeBannerSection}
+            >
+              <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                style={styles.upgradeBannerGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.upgradeBannerLeft}>
+                  <View style={styles.upgradeBannerIconWrap}>
+                    <Crown color="#FFF" size={24} strokeWidth={2.5} />
+                  </View>
+                  <View style={styles.upgradeBannerTextWrap}>
+                    <Text style={styles.upgradeBannerTitle}>Deblocheaza Premium</Text>
+                    <Text style={styles.upgradeBannerSubtitle}>Acces nelimitat la intrebari si functii</Text>
+                  </View>
+                </View>
+                <View style={styles.upgradeBannerCta}>
+                  <Text style={styles.upgradeBannerCtaText}>Upgrade Acum</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -914,6 +926,54 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     color: colors.warning,
   },
 
+  upgradeBannerSection: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  upgradeBannerGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+  },
+  upgradeBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  upgradeBannerIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  upgradeBannerTextWrap: {
+    flex: 1,
+  },
+  upgradeBannerTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFF',
+    marginBottom: 2,
+  },
+  upgradeBannerSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+  },
+  upgradeBannerCta: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  upgradeBannerCtaText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFF',
+  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

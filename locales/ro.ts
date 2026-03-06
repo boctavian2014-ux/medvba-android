@@ -414,6 +414,8 @@ export const ro: Record<string, string> = {
   'settings.helpCenterSubtitle': 'Întrebări frecvente și tutoriale',
   'settings.contactSupport': 'Contactează asistența',
   'settings.contactSupportSubtitle': 'contact@devaieood.com',
+  'settings.manageSubscription': 'Gestionează Abonamentul',
+  'settings.manageSubscriptionSubtitle': 'Modifică planul, anulează sau restaurează achizițiile',
   'support.helpCenterTitle': 'Centru de ajutor',
   'support.helpCenterSubtitle': 'Răspunsuri rapide la întrebări frecvente.',
   'support.contactSupport': 'Contactează suportul',
@@ -705,6 +707,7 @@ export const ro: Record<string, string> = {
   'paywall.monthly': 'Lunar',
   'paywall.recommended': 'Recomandat',
   'paywall.save37': 'Economisești 37%',
+  'paywall.save17': 'Economisești 17%',
   'paywall.perYear': '/an',
   'paywall.perMonth': '/lună',
   'paywall.billedAnnually': 'Facturat anual',
@@ -724,6 +727,9 @@ export const ro: Record<string, string> = {
   'paywall.noPurchasesFound': 'Nu s-au găsit achiziții anterioare.',
   'paywall.errorRestore': 'Nu s-au putut restaura achizițiile. Încearcă din nou.',
   'paywall.ok': 'OK',
+  'paywall.webMessage': 'Abonamentele sunt disponibile în aplicația iOS și Android. Descarcă aplicația pentru a trece la Pro.',
+  'paywall.expoGoMessage': 'Abonamentele necesită un build de dezvoltare. Construiește cu EAS pentru a testa achizițiile.',
+  'paywall.webSubtext': 'Abonamentul tău se va sincroniza pe toate dispozitivele.',
 
   // Premium Features
   'premium.feature1': 'Toate cele 10.000+ întrebări de anatomie',

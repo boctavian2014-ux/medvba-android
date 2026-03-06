@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Stethoscope, Sparkles, Lock, EyeOff } from 'lucide-react-native';
+import { Play, TrendingUp, Target, Clock, ChevronRight, Bone, Heart, User, Brain, Stethoscope, Sparkles, Lock, EyeOff, Crown } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Card, Button } from 'react-native-paper';
 import { UIButton } from '@/ui';
@@ -134,18 +134,6 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.headerRight}>
-              {isPaywallEnabled && !isPremium && (
-                <Button
-                  mode="outlined"
-                  onPress={handleUpgradePress}
-                  compact
-                  icon="star"
-                  textColor={colors.warning}
-                  style={[styles.upgradeButton, { borderColor: colors.warning + '40' }]}
-                >
-                  Upgrade
-                </Button>
-              )}
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
               </TouchableOpacity>
@@ -209,6 +197,30 @@ export default function HomeScreen() {
               </View>
             </Card.Content>
           </Card>
+
+          {isPaywallEnabled && !isPremium && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleUpgradePress}
+              style={styles.upgradeBanner}
+            >
+              <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                style={styles.upgradeBannerGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.upgradeBannerIcon}>
+                  <Crown color="#FFF" size={24} strokeWidth={2.5} />
+                </View>
+                <View style={styles.upgradeBannerText}>
+                  <Text style={styles.upgradeBannerTitle}>Upgrade la Premium</Text>
+                  <Text style={styles.upgradeBannerSubtitle}>Acces nelimitat la toate întrebările</Text>
+                </View>
+                <ChevronRight color="#FFF" size={22} />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.statsRow}>
             <View style={styles.statCardWrapper}>
@@ -432,8 +444,38 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
   },
-  upgradeButton: {
-    marginRight: SPACING.x1,
+  upgradeBanner: {
+    marginBottom: SPACING.x3,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  upgradeBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+  },
+  upgradeBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  upgradeBannerText: {
+    flex: 1,
+  },
+  upgradeBannerTitle: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#FFF',
+    marginBottom: 2,
+  },
+  upgradeBannerSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
   },
   premiumBadgeContainer: {
     position: 'absolute',

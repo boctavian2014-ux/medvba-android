@@ -12,13 +12,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Clock, CheckCircle, XCircle, ChevronRight, Copy } from 'lucide-react-native';
+import { X, Clock, CheckCircle, XCircle, ChevronRight, Copy, Lock, Crown } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useQuizProgress, type SessionState } from '@/providers/QuizProgressProvider';
+import { useSubscription } from '@/providers/SubscriptionProvider';
 import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
 import { useLanguage } from '@/providers/LanguageProvider';
@@ -449,13 +450,15 @@ export default function QuizSessionScreen() {
   const topPadding = Math.max(insets.top, Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0);
   const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 16 : 0);
   
-  const { 
-    updateDailyProgress, 
-    saveSessionState, 
-    clearSessionState, 
+  const {
+    updateDailyProgress,
+    saveSessionState,
+    clearSessionState,
     sessionState: savedSession,
-    addStudyTime 
+    addStudyTime
   } = useQuizProgress();
+  const { incrementQuestionAnsweredCount, isPaywallEnabled, isPremium, freeQuestionsAnsweredToday, FREE_QUIZ_LIMIT } = useSubscription();
+  const [limitReached, setLimitReached] = useState(false);
   
   const sessionStartTimeRef = useRef<number>(Date.now());
   const sessionLanguageRef = useRef<'en' | 'ro' | undefined>(undefined);
@@ -678,26 +681,32 @@ export default function QuizSessionScreen() {
       console.warn('[QuizSession] Invalid state for answer selection');
       return;
     }
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswer(index);
     setShowResult(true);
-    
+
     const isCorrect = index === currentQuestion.correctAnswer;
-    
+
     if (isCorrect) {
       setScore(prev => prev + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
-    
+
     await updateDailyProgress(isCorrect, currentQuestion.id);
     await markQuestionsAsSeen(category || 'mixed', [currentQuestion.id]);
-    
+
+    // Increment per-question count and check limit
+    const withinLimit = await incrementQuestionAnsweredCount();
+    if (!withinLimit) {
+      setLimitReached(true);
+    }
+
     const newAnsweredInSession = [...answeredInSession, currentQuestion.id];
     setAnsweredInSession(newAnsweredInSession);
-    
+
     if (mode !== 'sequential') {
       const updatedSessionState: SessionState = {
         category: category || 'mixed',
@@ -712,7 +721,7 @@ export default function QuizSessionScreen() {
       await saveSessionState(updatedSessionState);
       console.log('[QuizSession] Saved progress after question', currentIndex + 1);
     }
-  }, [showResult, currentQuestion, updateDailyProgress, answeredInSession, mode, category, questions, currentIndex, score, sessionStartedAt, saveSessionState]);
+  }, [showResult, currentQuestion, updateDailyProgress, answeredInSession, mode, category, questions, currentIndex, score, sessionStartedAt, saveSessionState, incrementQuestionAnsweredCount]);
 
   const handleNext = useCallback(async () => {
     if (!questions || questions.length === 0) {
@@ -876,6 +885,53 @@ export default function QuizSessionScreen() {
             <Text style={styles.loadingText}>{t('session.error')}</Text>
             <TouchableOpacity style={styles.backButton} onPress={handleClose}>
               <Text style={styles.backButtonText}>{t('session.goBack')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  if (limitReached) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={[colors.background, colors.backgroundLight]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[styles.safeArea, { paddingTop: topPadding, paddingBottom: bottomPadding }]}>
+          <View style={styles.limitReachedContainer}>
+            <View style={styles.limitReachedIconWrap}>
+              <Lock size={48} color={colors.warning} strokeWidth={2} />
+            </View>
+            <Text style={styles.limitReachedTitle}>Limita Atinsă</Text>
+            <Text style={styles.limitReachedSubtitle}>
+              Ai răspuns la {FREE_QUIZ_LIMIT} întrebări astăzi. Upgrade la Premium pentru acces nelimitat!
+            </Text>
+            <Text style={styles.limitReachedScore}>
+              Scor: {score}/{currentIndex + 1}
+            </Text>
+            <TouchableOpacity
+              style={styles.limitReachedUpgradeButton}
+              activeOpacity={0.8}
+              onPress={() => router.push('/paywall' as any)}
+            >
+              <LinearGradient
+                colors={[colors.warning, '#FF9500', '#FFB800']}
+                style={styles.limitReachedUpgradeGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Crown color="#FFF" size={20} strokeWidth={2.5} />
+                <Text style={styles.limitReachedUpgradeText}>Upgrade Premium</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.limitReachedBackButton}
+              activeOpacity={0.7}
+              onPress={handleClose}
+            >
+              <Text style={styles.limitReachedBackText}>Înapoi</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1313,5 +1369,66 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: colors.text,
+  },
+  limitReachedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  limitReachedIconWrap: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 184, 0, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  limitReachedTitle: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  limitReachedSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  limitReachedScore: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: colors.primary,
+    marginBottom: 32,
+  },
+  limitReachedUpgradeButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 16,
+  },
+  limitReachedUpgradeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    gap: 10,
+  },
+  limitReachedUpgradeText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#FFF',
+  },
+  limitReachedBackButton: {
+    paddingVertical: 14,
+  },
+  limitReachedBackText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
   },
 });

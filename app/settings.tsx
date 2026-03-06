@@ -19,11 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { 
-  X, 
-  Shield, 
-  FileText, 
-  Heart, 
+import {
+  X,
+  Shield,
+  FileText,
+  Heart,
   ChevronRight,
   Bell,
   Moon,
@@ -42,10 +42,14 @@ import {
   Eye,
   EyeOff,
   Save,
+  Crown,
+  CreditCard,
 } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage, Language } from '@/providers/LanguageProvider';
+import { useSubscription } from '@/providers/SubscriptionProvider';
+import { presentCustomerCenter } from '@/lib/revenuecat';
 import { SPACING } from '@/theme/paperTheme';
 import { useUserProfile, useUpdateUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
 import PhotoPicker from '@/components/PhotoPicker';
@@ -97,6 +101,7 @@ export default function SettingsScreen() {
   const { user, signOut, refreshProfile } = useAuth();
   const { currentLanguage, changeLanguage, t } = useLanguage();
   const { colors, preference: themePreference } = useTheme();
+  const { isPremium, isPaywallEnabled } = useSubscription();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   
   const { data: profile } = useUserProfile(user?.id);
@@ -563,6 +568,35 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+
+          {isPaywallEnabled && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Abonament</Text>
+              <View style={[styles.sectionCard, { borderColor: colors.glassBorder }]}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
+                  style={StyleSheet.absoluteFill}
+                />
+                {isPremium ? (
+                  <SettingsItem
+                    icon={<CreditCard color={colors.success} size={22} />}
+                    title={t('settings.manageSubscription') || 'Manage Subscription'}
+                    subtitle={t('settings.manageSubscriptionSubtitle') || 'Change plan, cancel, or restore purchases'}
+                    onPress={() => presentCustomerCenter()}
+                    showBorder={false}
+                  />
+                ) : (
+                  <SettingsItem
+                    icon={<Crown color={colors.warning} size={22} />}
+                    title="Upgrade la Premium"
+                    subtitle="Acces nelimitat la toate întrebările"
+                    onPress={() => router.push('/paywall' as any)}
+                    showBorder={false}
+                  />
+                )}
+              </View>
+            </View>
+          )}
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.account')}</Text>

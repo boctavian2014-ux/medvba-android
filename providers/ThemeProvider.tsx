@@ -85,3 +85,17 @@ export const useTheme = () => {
   if (!ctx) throw new Error('useTheme must be used inside ThemeProvider');
   return ctx;
 };
+
+const FALLBACK_THEME: ThemeContextValue = {
+  colors: darkColors,
+  colorScheme: 'dark',
+  preference: 'system',
+  setPreference: () => {},
+  isTransitioning: false,
+};
+
+/** Safe version that returns default dark theme when outside provider (e.g. modal edge cases) */
+export const useThemeSafe = () => {
+  const ctx = useContext(ThemeContext);
+  return ctx ?? FALLBACK_THEME;
+};

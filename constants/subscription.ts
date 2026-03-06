@@ -1,4 +1,11 @@
-export const FREE_DAILY_QUIZ_LIMIT = 5;
+export const FREE_DAILY_QUIZ_LIMIT = 10;
+
+/** Entitlement identifier in RevenueCat dashboard - "Dev AI LTD. EOOD Pro" */
+export const ENTITLEMENT_ID = 'pro';
+
+/** Package identifiers for Monthly and Yearly products */
+export const PACKAGE_MONTHLY = 'monthly';
+export const PACKAGE_YEARLY = 'yearly';
 
 export const PREMIUM_FEATURE_KEYS = [
   'premium.feature1',
@@ -13,23 +20,23 @@ export const PREMIUM_FEATURE_KEYS = [
 
 export const PRICING = {
   monthly: {
-    price: '19.99 RON',
-    priceValue: 19.99,
+    price: '50 RON',
+    priceValue: 50,
     period: 'lună',
     description: 'Facturat lunar',
   },
   yearly: {
-    price: '149.99 RON',
-    priceValue: 149.99,
+    price: '500 RON',
+    priceValue: 500,
     period: 'an',
     description: 'Facturat anual',
-    savings: '37%',
-    savingsText: 'Economisești 37% (90 RON/an)',
+    savings: '17%',
+    savingsText: 'Economisești 17% (100 RON/an)',
   },
 };
 
 export const FREE_FEATURES = [
-  '5 întrebări gratuite pe zi',
+  '10 întrebări gratuite pe zi',
   'Acces la 1.000+ întrebări de bază',
   'Statistici de bază',
   'Comunitate de învățare',

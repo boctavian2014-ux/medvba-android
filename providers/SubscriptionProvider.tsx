@@ -5,12 +5,11 @@ import Constants from 'expo-constants';
 import createContextHook from '@nkzw/create-context-hook';
 import Purchases from 'react-native-purchases';
 import type { CustomerInfo } from 'react-native-purchases';
-import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
+import { ENTITLEMENT_ID, FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUpdateSubscription } from '@/lib/supabase-hooks';
 
 const FREE_AI_LIMIT = 1;
-const ENTITLEMENT_ID = 'premium';
 
 function getPaywallConfig() {
   const extra = Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
@@ -19,7 +18,8 @@ function getPaywallConfig() {
   const apiKeyAndroid = extra.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID as string | undefined;
   const apiKey = Platform.OS === 'ios' ? apiKeyIos : apiKeyAndroid;
   const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
-  return { paywallEnabled: paywallEnabled && isNative, apiKey: apiKey ?? '' };
+  // Allow paywall on web for testing (shows "Download app" message; no real purchases)
+  return { paywallEnabled: paywallEnabled, apiKey: apiKey ?? '', isNative };
 }
 
 type OfferingPackage = {
@@ -41,6 +41,7 @@ function getTodayKey(): string {
 interface SubscriptionState {
   isPremium: boolean;
   freeQuizzesToday: number;
+  freeQuestionsAnsweredToday: number;
   freeAiQuestionsToday: number;
   isLoading: boolean;
   offerings: Offerings;
@@ -52,13 +53,14 @@ function isPremiumFromCustomerInfo(info: CustomerInfo | null): boolean {
 }
 
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
-  const { paywallEnabled: PAYWALL_ENABLED, apiKey: REVENUECAT_API_KEY } = useMemo(getPaywallConfig, []);
+  const { paywallEnabled: PAYWALL_ENABLED, apiKey: REVENUECAT_API_KEY, isNative: IS_NATIVE } = useMemo(getPaywallConfig, []);
   const { user } = useAuth();
   const updateSubscriptionMutation = useUpdateSubscription();
 
   const [state, setState] = useState<SubscriptionState>({
     isPremium: false,
     freeQuizzesToday: 0,
+    freeQuestionsAnsweredToday: 0,
     freeAiQuestionsToday: 0,
     isLoading: true,
     offerings: null,
@@ -72,19 +74,21 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     try {
       console.log('[Subscription] Loading daily usage for', todayKey);
 
-      const [quizCount, aiCount] = await Promise.all([
+      const [quizCount, questionsAnsweredCount, aiCount] = await Promise.all([
         AsyncStorage.getItem(`free_quiz_count_${todayKey}`),
+        AsyncStorage.getItem(`free_questions_answered_${todayKey}`),
         AsyncStorage.getItem(`free_ai_questions_${todayKey}`),
       ]);
 
       setState((prev) => ({
         ...prev,
         freeQuizzesToday: quizCount ? parseInt(quizCount, 10) : 0,
+        freeQuestionsAnsweredToday: questionsAnsweredCount ? parseInt(questionsAnsweredCount, 10) : 0,
         freeAiQuestionsToday: aiCount ? parseInt(aiCount, 10) : 0,
         ...(prev.isLoading && !PAYWALL_ENABLED ? { isLoading: false } : {}),
       }));
 
-      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'AI:', aiCount || 0);
+      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'Questions answered:', questionsAnsweredCount || 0, 'AI:', aiCount || 0);
     } catch (error) {
       console.error('[Subscription] Error loading daily usage:', error);
       setState((prev) => ({ ...prev, isLoading: false }));
@@ -97,6 +101,12 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   useEffect(() => {
     if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
+      setState((prev) => ({ ...prev, isLoading: false }));
+      return;
+    }
+
+    // Skip RevenueCat SDK on web (no native IAP); paywall UI still shows fallback message
+    if (!IS_NATIVE) {
       setState((prev) => ({ ...prev, isLoading: false }));
       return;
     }
@@ -144,13 +154,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         Purchases.removeCustomerInfoUpdateListener(listener);
       }
     };
-  }, [PAYWALL_ENABLED, REVENUECAT_API_KEY, user?.id]);
+  }, [PAYWALL_ENABLED, REVENUECAT_API_KEY, IS_NATIVE, user?.id]);
 
   const canStartQuiz = useCallback((): boolean => {
     if (!PAYWALL_ENABLED) return true;
     if (state.isPremium) return true;
-    return state.freeQuizzesToday < FREE_DAILY_QUIZ_LIMIT;
-  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday]);
+    return state.freeQuestionsAnsweredToday < FREE_DAILY_QUIZ_LIMIT;
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuestionsAnsweredToday]);
 
   const canAskAiQuestion = useCallback((): boolean => {
     if (!PAYWALL_ENABLED) return true;
@@ -185,6 +195,26 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     }
   }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday, todayKey]);
 
+  const incrementQuestionAnsweredCount = useCallback(async (): Promise<boolean> => {
+    if (!PAYWALL_ENABLED) {
+      return true;
+    }
+    if (state.isPremium) {
+      return true;
+    }
+
+    const newCount = state.freeQuestionsAnsweredToday + 1;
+    try {
+      await AsyncStorage.setItem(`free_questions_answered_${todayKey}`, String(newCount));
+      setState((prev) => ({ ...prev, freeQuestionsAnsweredToday: newCount }));
+      console.log('[Subscription] Questions answered count incremented to', newCount);
+      return newCount <= FREE_DAILY_QUIZ_LIMIT;
+    } catch (error) {
+      console.error('[Subscription] Error incrementing questions answered count:', error);
+      return true;
+    }
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuestionsAnsweredToday, todayKey]);
+
   const incrementAiQuestionCount = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED) {
       console.log('[Subscription] Paywall disabled - skipping AI limit');
@@ -215,8 +245,8 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const getRemainingQuizzes = useCallback((): number => {
     if (!PAYWALL_ENABLED) return Infinity;
     if (state.isPremium) return Infinity;
-    return Math.max(0, FREE_DAILY_QUIZ_LIMIT - state.freeQuizzesToday);
-  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday]);
+    return Math.max(0, FREE_DAILY_QUIZ_LIMIT - state.freeQuestionsAnsweredToday);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeQuestionsAnsweredToday]);
 
   const getRemainingAiQuestions = useCallback((): number => {
     if (!PAYWALL_ENABLED) return Infinity;
@@ -258,7 +288,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         const { customerInfo } = await Purchases.purchasePackage(pkg);
         const premium = isPremiumFromCustomerInfo(customerInfo);
         if (premium) {
-          const isYearly = packageId === '$rc_annual' || String(packageId).toLowerCase().includes('annual');
+          const isYearly = packageId === '$rc_annual' || packageId === 'yearly' || String(packageId).toLowerCase().includes('annual');
           syncPremiumToSupabase(isYearly ? 'yearly' : 'monthly');
         }
         return premium;
@@ -300,11 +330,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       isPaywallEnabled: PAYWALL_ENABLED,
       isLoading: state.isLoading,
       freeQuizzesToday: state.freeQuizzesToday,
+      freeQuestionsAnsweredToday: state.freeQuestionsAnsweredToday,
       freeAiQuestionsToday: state.freeAiQuestionsToday,
       offerings: state.offerings,
       canStartQuiz,
       canAskAiQuestion,
       incrementQuizCount,
+      incrementQuestionAnsweredCount,
       incrementAiQuestionCount,
       getRemainingQuizzes,
       getRemainingAiQuestions,
@@ -318,11 +350,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       PAYWALL_ENABLED,
       state.isLoading,
       state.freeQuizzesToday,
+      state.freeQuestionsAnsweredToday,
       state.freeAiQuestionsToday,
       state.offerings,
       canStartQuiz,
       canAskAiQuestion,
       incrementQuizCount,
+      incrementQuestionAnsweredCount,
       incrementAiQuestionCount,
       getRemainingQuizzes,
       getRemainingAiQuestions,

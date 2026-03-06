@@ -207,7 +207,9 @@ function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
         name="paywall" 
         options={{ 
           presentation: 'modal',
-          animation: 'slide_from_bottom'
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          headerShadowVisible: false,
         }} 
       />
     </Stack>

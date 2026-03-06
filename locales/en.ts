@@ -414,6 +414,8 @@ export const en: Record<string, string> = {
   'settings.helpCenterSubtitle': 'FAQs and tutorials',
   'settings.contactSupport': 'Contact Support',
   'settings.contactSupportSubtitle': 'contact@devaieood.com',
+  'settings.manageSubscription': 'Manage Subscription',
+  'settings.manageSubscriptionSubtitle': 'Change plan, cancel, or restore purchases',
   'support.helpCenterTitle': 'Help Center',
   'support.helpCenterSubtitle': 'Quick answers to common questions.',
   'support.contactSupport': 'Contact Support',
@@ -705,6 +707,7 @@ export const en: Record<string, string> = {
   'paywall.monthly': 'Monthly',
   'paywall.recommended': 'Recommended',
   'paywall.save37': 'Save 37%',
+  'paywall.save17': 'Save 17%',
   'paywall.perYear': '/year',
   'paywall.perMonth': '/month',
   'paywall.billedAnnually': 'Billed annually',
@@ -724,6 +727,9 @@ export const en: Record<string, string> = {
   'paywall.noPurchasesFound': 'No previous purchases found.',
   'paywall.errorRestore': 'Could not restore purchases. Please try again.',
   'paywall.ok': 'OK',
+  'paywall.webMessage': 'Subscriptions are available in the iOS and Android app. Download the app to upgrade to Pro.',
+  'paywall.expoGoMessage': 'Subscriptions require a development build. Build with EAS to test purchases.',
+  'paywall.webSubtext': 'Your subscription will sync across all your devices.',
 
   // Premium Features
   'premium.feature1': 'All 10,000+ anatomy questions',
