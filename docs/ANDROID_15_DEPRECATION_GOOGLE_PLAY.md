@@ -13,11 +13,21 @@ Google afișează un avertisment de tipul:
 Aceste apeluri **nu sunt în codul tău**, ci în **dependențe**:
 
 - **React Native** – `StatusBarModule`, `WindowUtilKt`
-- **react-native-screens** – `ScreenWindowTraits`
+- **react-native-screens** – `ScreenWindowTraits` (poate fi redus instalând `react-native-edge-to-edge`, vezi mai jos)
 - **Material / BottomSheet** – `EdgeToEdgeUtils`, `SheetDialog`
 - **Expo** – e.g. `ExpoCropImageUtils`
+- **AndroidX** – `EdgeToEdgeApi28`
 
 Pe Android 15 (API 35) aceste API-uri sunt depreciate; migrarea la noile API-uri (WindowInsets etc.) se face treptat în fiecare bibliotecă.
+
+## Ce poți instala pentru a reduce avertismentele
+
+1. **`react-native-edge-to-edge`** (recomandat)  
+   Pachetul este deja în `package.json`. Rulează `bun install` sau `npm install`.  
+   - **react-native-screens** (4.16+) detectează dacă acest pachet este instalat și **nu mai folosește** `setStatusBarColor` / `setNavigationBarColor` pe ecrane, ceea ce elimină o parte din avertismente (ScreenWindowTraits).  
+   - **Nu** adăuga plugin-ul în `app.config.ts` – Expo 54 folosește deja `edgeToEdgeEnabled` din Gradle; pachetul este doar pentru ca react-native-screens să recunoască edge-to-edge și să ocolească API-urile depreciate.
+
+2. **Restul avertismentelor** (React Native core, Material, Expo image picker, AndroidX) **nu se pot elimina** prin instalare de pachete – codul este în bibliotecile respective. Dispăr definitiv doar când Expo / React Native / Material vor migra la noile API-uri (de obicei la upgrade-uri majore de SDK).
 
 ## Ce este deja configurat în proiect
 
@@ -40,7 +50,8 @@ Da. Mesajul este în general **informativ/advisory**. Aplicația poate fi public
 
 1. **Acum**
    - Păstrezi configurația actuală (edge-to-edge + lint suppress).
-   - Poți răspunde la Google (dacă există câmp de notă) cu ceva de genul: *"Deprecated API usage is in third-party code (React Native, react-native-screens, Expo). We have edge-to-edge enabled and will update when the stack migrates."*
+   - Ai instalat **react-native-edge-to-edge** ca dependență (fără plugin în app.config) ca **react-native-screens** să nu mai apeleze API-urile depreciate pentru status/navigation bar pe ecrane. După `bun install` / `npm install`, fă un **build nou** (EAS sau `npx expo prebuild` + build local) ca modificările native să intre în aplicație.
+   - Poți răspunde la Google (dacă există câmp de notă) cu ceva de genul: *"Deprecated API usage is in third-party code (React Native, react-native-screens, Expo). We have edge-to-edge enabled and react-native-edge-to-edge for screens; we will update when the rest of the stack migrates."*
 
 2. **Pe termen lung**
    - Actualizări periodice la **Expo** și **react-native-screens**; noile versiuni vor migra treptat de la API-urile depreciate.
