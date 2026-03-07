@@ -349,7 +349,7 @@ export default function SocialScreen() {
 
     const maxParts = parseInt(newRoomMaxParticipants, 10);
     if (maxParts > 10) {
-      Alert.alert(t('social.errorTitle'), 'Maximum participants cannot exceed 10');
+      Alert.alert(t('social.errorTitle'), t('social.maxParticipantsExceed'));
       return;
     }
 

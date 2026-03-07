@@ -904,12 +904,12 @@ export default function QuizSessionScreen() {
             <View style={styles.limitReachedIconWrap}>
               <Lock size={48} color={colors.warning} strokeWidth={2} />
             </View>
-            <Text style={styles.limitReachedTitle}>Limita Atinsă</Text>
+            <Text style={styles.limitReachedTitle}>{t('session.limitReachedTitle')}</Text>
             <Text style={styles.limitReachedSubtitle}>
-              Ai răspuns la {FREE_QUIZ_LIMIT} întrebări astăzi. Upgrade la Premium pentru acces nelimitat!
+              {t('session.limitReachedMessage').replace('{count}', String(FREE_QUIZ_LIMIT))}
             </Text>
             <Text style={styles.limitReachedScore}>
-              Scor: {score}/{currentIndex + 1}
+              {t('session.limitReachedScore').replace('{score}', String(score)).replace('{total}', String(currentIndex + 1))}
             </Text>
             <TouchableOpacity
               style={styles.limitReachedUpgradeButton}
@@ -923,7 +923,7 @@ export default function QuizSessionScreen() {
                 end={{ x: 1, y: 0 }}
               >
                 <Crown color="#FFF" size={20} strokeWidth={2.5} />
-                <Text style={styles.limitReachedUpgradeText}>Upgrade Premium</Text>
+                <Text style={styles.limitReachedUpgradeText}>{t('session.upgradePremium')}</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity
@@ -931,7 +931,7 @@ export default function QuizSessionScreen() {
               activeOpacity={0.7}
               onPress={handleClose}
             >
-              <Text style={styles.limitReachedBackText}>Înapoi</Text>
+              <Text style={styles.limitReachedBackText}>{t('session.back')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -983,7 +983,11 @@ export default function QuizSessionScreen() {
               )}
               {currentQuestion.difficulty && (
                 <View style={styles.difficultyBadge}>
-                  <Text style={styles.difficultyText}>{currentQuestion.difficulty}</Text>
+                  <Text style={styles.difficultyText}>
+                    {(['easy', 'medium', 'hard'].includes(currentQuestion.difficulty)
+                      ? t(`session.difficulty${currentQuestion.difficulty.charAt(0).toUpperCase()}${currentQuestion.difficulty.slice(1)}` as 'session.difficultyEasy' | 'session.difficultyMedium' | 'session.difficultyHard')
+                      : currentQuestion.difficulty)}
+                  </Text>
                 </View>
               )}
               <Text style={styles.questionText}>{currentQuestion.question || t('session.questionUnavailable')}</Text>

@@ -11,7 +11,12 @@
     "start-web": "bunx rork start -p jf700h5s63mnlvb27w3pp --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p jf700h5s63mnlvb27w3pp --web --tunnel",
     "start:backend": "tsx backend/server.ts",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "db:generate-sql": "tsx scripts/generate-questions-sql.ts",
+    "db:migrate": "tsx scripts/migrate-questions-to-supabase.ts",
+    "db:migrate:clear": "tsx scripts/migrate-questions-to-supabase.ts --clear"
   },
   "dependencies": {
     "@expo/ui": "^0.2.0-beta.9",

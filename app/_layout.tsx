@@ -17,6 +17,7 @@ import { getPaperTheme } from "@/theme/paperTheme";
 import { monitoring } from "@/lib/monitoring";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 let splashScreenAvailable = true;
 try {
@@ -132,18 +133,9 @@ function useProtectedRoute(splashAvailable: boolean) {
 
 function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
   const isLoading = useProtectedRoute(splashAvailable);
+  const segments = useSegments();
   const { colors, colorScheme } = useTheme();
-  const extraConfig = Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
-  const supabaseUrl =
-    process.env.EXPO_PUBLIC_SUPABASE_URL ||
-    extraConfig.EXPO_PUBLIC_SUPABASE_URL ||
-    extraConfig.supabaseUrl;
-  const supabaseAnonKey =
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-    extraConfig.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
-    extraConfig.supabaseAnonKey;
-  const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
-  const envSource = Constants.executionEnvironment ? ` (${Constants.executionEnvironment})` : "";
+  const inAuthGroup = segments[0] === "(auth)";
 
   if (isLoading) {
     return (
@@ -153,13 +145,16 @@ function RootLayoutNav({ splashAvailable }: { splashAvailable: boolean }) {
     );
   }
 
+  const envSource = Constants.executionEnvironment ? ` (${Constants.executionEnvironment})` : "";
+  const showEnvBanner = !isSupabaseConfigured && __DEV__ && !inAuthGroup;
+
   return (
     <>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      {!hasSupabaseConfig && (
+      {showEnvBanner && (
         <View style={[styles.envBanner, { backgroundColor: colors.error }]}>
-          <Text style={styles.envBannerText}>
-            Missing Supabase config{envSource}. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.
+          <Text style={styles.envBannerText} numberOfLines={1}>
+            Missing Supabase: set EXPO_PUBLIC_SUPABASE_URL & ANON_KEY in .env{envSource}
           </Text>
         </View>
       )}
@@ -224,12 +219,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   envBanner: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   envBannerText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
 });

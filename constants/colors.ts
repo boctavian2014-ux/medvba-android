@@ -11,8 +11,8 @@ export const darkColors = {
   
   background: '#0A1628',
   backgroundLight: '#0F2139',
-  cardBg: 'rgba(255, 255, 255, 0.08)',
-  cardBgLight: 'rgba(255, 255, 255, 0.12)',
+  cardBg: 'rgba(255, 255, 255, 0.12)',
+  cardBgLight: 'rgba(255, 255, 255, 0.18)',
   glassBorder: 'rgba(255, 255, 255, 0.15)',
   
   text: '#FFFFFF',
@@ -46,8 +46,8 @@ export const lightColors = {
   
   background: '#FFFFFF',
   backgroundLight: '#F8F9FA',
-  cardBg: 'rgba(0, 0, 0, 0.03)',
-  cardBgLight: 'rgba(0, 0, 0, 0.05)',
+  cardBg: 'rgba(0, 0, 0, 0.05)',
+  cardBgLight: 'rgba(0, 0, 0, 0.08)',
   glassBorder: 'rgba(0, 0, 0, 0.1)',
   
   text: '#0F172A',

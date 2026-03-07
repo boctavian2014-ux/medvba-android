@@ -418,12 +418,12 @@ export default function ProfileScreen() {
                     <Crown color="#FFF" size={24} strokeWidth={2.5} />
                   </View>
                   <View style={styles.upgradeBannerTextWrap}>
-                    <Text style={styles.upgradeBannerTitle}>Deblocheaza Premium</Text>
-                    <Text style={styles.upgradeBannerSubtitle}>Acces nelimitat la intrebari si functii</Text>
+                    <Text style={styles.upgradeBannerTitle}>{t('profile.upgradeBannerTitle')}</Text>
+                    <Text style={styles.upgradeBannerSubtitle}>{t('profile.upgradeBannerSubtitle')}</Text>
                   </View>
                 </View>
                 <View style={styles.upgradeBannerCta}>
-                  <Text style={styles.upgradeBannerCtaText}>Upgrade Acum</Text>
+                  <Text style={styles.upgradeBannerCtaText}>{t('profile.upgradeCta')}</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>

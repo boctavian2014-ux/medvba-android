@@ -727,8 +727,9 @@ export function useUserProgress(userId: string | undefined) {
           console.log('[Supabase] No user progress found, will create on first update');
           return null;
         }
-        console.error('[Supabase] Error fetching user progress:', JSON.stringify({ message: error.message, code: error.code, details: error.details }));
-        throw error;
+        // Fail gracefully: app continues with local data (no throw = no red error overlay)
+        console.warn('[Supabase] Error fetching user progress (using local data):', error.message);
+        return null;
       }
 
       return {
@@ -747,7 +748,7 @@ export function useUserProgress(userId: string | undefined) {
     enabled: !!userId,
     staleTime: 60000,
     gcTime: 300000,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });

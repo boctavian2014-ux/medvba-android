@@ -17,6 +17,7 @@ export type UIButtonProps = {
 
 /**
  * Cross-platform Button using React Native Paper (avoids @expo/ui native view warnings on SDK 54).
+ * For contained/borderedProminent buttons, color is used as background and text uses a contrasting color (white).
  */
 export function UIButton({
   children,
@@ -28,8 +29,19 @@ export function UIButton({
   icon,
 }: UIButtonProps) {
   const mode = variant === 'borderless' || variant === 'plain' ? 'text' : variant === 'bordered' || variant === 'outlined' ? 'outlined' : 'contained';
+  const isContained = mode === 'contained';
+  const buttonColor = isContained && color ? color : undefined;
+  const textColor = isContained && color ? '#FFFFFF' : color;
   return (
-    <PaperButton mode={mode} onPress={onPress} disabled={disabled} icon={icon} textColor={color} style={style}>
+    <PaperButton
+      mode={mode}
+      onPress={onPress}
+      disabled={disabled}
+      icon={icon}
+      buttonColor={buttonColor}
+      textColor={textColor}
+      style={style}
+    >
       {children}
     </PaperButton>
   );
