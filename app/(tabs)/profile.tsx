@@ -38,10 +38,9 @@ import {
 import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
-import { leaderboard } from '@/mocks/users';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { useAuth } from '@/providers/AuthProvider';
-import { useZoomRequests } from '@/lib/supabase-hooks';
+import { useLeaderboard, useZoomRequests } from '@/lib/supabase-hooks';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -101,6 +100,7 @@ export default function ProfileScreen() {
   } = useQuizProgress();
 
   const { data: zoomRequests = [] } = useZoomRequests(user?.id);
+  const { data: leaderboard = [] } = useLeaderboard(selectedPeriod);
 
 
 
@@ -418,12 +418,12 @@ export default function ProfileScreen() {
                     <Crown color="#FFF" size={24} strokeWidth={2.5} />
                   </View>
                   <View style={styles.upgradeBannerTextWrap}>
-                    <Text style={styles.upgradeBannerTitle}>Deblocheaza Premium</Text>
-                    <Text style={styles.upgradeBannerSubtitle}>Acces nelimitat la intrebari si functii</Text>
+                    <Text style={styles.upgradeBannerTitle}>{t('profile.upgradeBannerTitle')}</Text>
+                    <Text style={styles.upgradeBannerSubtitle}>{t('profile.upgradeBannerSubtitle')}</Text>
                   </View>
                 </View>
                 <View style={styles.upgradeBannerCta}>
-                  <Text style={styles.upgradeBannerCtaText}>Upgrade Acum</Text>
+                  <Text style={styles.upgradeBannerCtaText}>{t('profile.upgradeBannerCta')}</Text>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -551,31 +551,38 @@ export default function ProfileScreen() {
                 {[1, 0, 2].map((index) => {
                   const user = leaderboard[index];
                   const heights = [90, 70, 60];
-                  const colors: readonly [string, string][] = [
+                  const medalColors: readonly [string, string][] = [
                     ['#FFD700', '#FFA500'],
                     ['#C0C0C0', '#A8A8A8'],
                     ['#CD7F32', '#8B4513'],
                   ];
                   const podiumIndex = [1, 0, 2].indexOf(index);
-                  
+
                   return (
-                    <View key={user.id} style={styles.podiumItem}>
+                    <View key={user?.id ?? `podium-${index}`} style={styles.podiumItem}>
                       <View style={styles.podiumAvatarContainer}>
                         <LinearGradient
-                          colors={colors[podiumIndex]}
+                          colors={medalColors[podiumIndex]}
                           style={styles.podiumAvatarBorder}
                         >
-                          <Image source={{ uri: user.avatar }} style={styles.podiumAvatar} />
+                          <Image
+                            source={{ uri: user?.avatar ?? 'https://api.dicebear.com/7.x/avataaars/png?seed=placeholder' }}
+                            style={styles.podiumAvatar}
+                          />
                         </LinearGradient>
-                        <View style={[styles.podiumBadge, { backgroundColor: colors[podiumIndex][0] }]}>
-                          <Text style={styles.podiumBadgeText}>{user.rank}</Text>
+                        <View style={[styles.podiumBadge, { backgroundColor: medalColors[podiumIndex][0] }]}>
+                          <Text style={styles.podiumBadgeText}>{user?.rank ?? index + 1}</Text>
                         </View>
                       </View>
-                      <Text style={styles.podiumName} numberOfLines={1}>{user.name.split(' ')[0]}</Text>
-                      <Text style={styles.podiumPoints}>{(user.points / 1000).toFixed(1)}k</Text>
+                      <Text style={styles.podiumName} numberOfLines={1}>
+                        {user ? user.name.split(' ')[0] : '—'}
+                      </Text>
+                      <Text style={styles.podiumPoints}>
+                        {user ? (user.points >= 1000 ? `${(user.points / 1000).toFixed(1)}k` : String(user.points)) : '0'}
+                      </Text>
                       <View style={[styles.podiumBar, { height: heights[podiumIndex] }]}>
                         <LinearGradient
-                          colors={colors[podiumIndex]}
+                          colors={medalColors[podiumIndex]}
                           style={StyleSheet.absoluteFill}
                         />
                       </View>
@@ -590,7 +597,7 @@ export default function ProfileScreen() {
                   style={[
                     styles.leaderboardItem,
                     index < 3 && styles.leaderboardItemBorder,
-                    user.id === 'current' && styles.leaderboardItemHighlight,
+                    user.id === profile?.id && styles.leaderboardItemHighlight,
                   ]}
                 >
                   <Text style={styles.leaderboardRank}>#{user.rank}</Text>

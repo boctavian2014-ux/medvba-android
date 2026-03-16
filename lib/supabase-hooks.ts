@@ -535,7 +535,12 @@ export function useStudyPartners(filters?: {
       }
 
       if (filters?.searchQuery) {
-        query = query.or(`name.ilike.%${filters.searchQuery}%,bio.ilike.%${filters.searchQuery}%`);
+        // Escape LIKE wildcards (%, _, \) so user input is treated literally
+        const escaped = String(filters.searchQuery)
+          .replace(/\\/g, '\\\\')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_');
+        query = query.or(`name.ilike.%${escaped}%,bio.ilike.%${escaped}%`);
       }
 
       const { data, error } = await query
@@ -795,6 +800,45 @@ export function useUpsertUserProgress() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['userProgress', variables.userId] });
     },
+  });
+}
+
+export interface LeaderboardUser {
+  id: string;
+  name: string;
+  avatar: string;
+  points: number;
+  streak: number;
+  rank: number;
+}
+
+export function useLeaderboard(period: 'daily' | 'weekly' | 'monthly' | 'allTime' = 'allTime', limit = 20) {
+  return useQuery({
+    queryKey: ['leaderboard', period, limit],
+    queryFn: async () => {
+      console.log('[Supabase] Fetching leaderboard:', period);
+      const { data, error } = await supabase.rpc('get_leaderboard', {
+        p_period: period,
+        p_limit: limit,
+      });
+
+      if (error) {
+        console.error('[Supabase] Error fetching leaderboard:', JSON.stringify({ message: error.message, code: error.code }));
+        return [];
+      }
+
+      return (data || []).map((row: { id: string; name: string; avatar: string; points: number; streak: number; rank: number }) => ({
+        id: row.id,
+        name: row.name || 'Student',
+        avatar: row.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${row.id}`,
+        points: Number(row.points) || 0,
+        streak: Number(row.streak) || 0,
+        rank: Number(row.rank) || 0,
+      })) as LeaderboardUser[];
+    },
+    staleTime: 60000,
+    gcTime: 300000,
+    retry: 1,
   });
 }
 

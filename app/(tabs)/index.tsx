@@ -214,8 +214,8 @@ export default function HomeScreen() {
                   <Crown color="#FFF" size={24} strokeWidth={2.5} />
                 </View>
                 <View style={styles.upgradeBannerText}>
-                  <Text style={styles.upgradeBannerTitle}>Upgrade la Premium</Text>
-                  <Text style={styles.upgradeBannerSubtitle}>Acces nelimitat la toate întrebările</Text>
+                  <Text style={styles.upgradeBannerTitle}>{t('profile.upgradeToPremium')}</Text>
+                  <Text style={styles.upgradeBannerSubtitle}>{t('profile.upgradeBannerSubtitleAll')}</Text>
                 </View>
                 <ChevronRight color="#FFF" size={22} />
               </LinearGradient>

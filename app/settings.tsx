@@ -588,8 +588,8 @@ export default function SettingsScreen() {
                 ) : (
                   <SettingsItem
                     icon={<Crown color={colors.warning} size={22} />}
-                    title="Upgrade la Premium"
-                    subtitle="Acces nelimitat la toate întrebările"
+                    title={t('profile.upgradeToPremium')}
+                    subtitle={t('profile.upgradeBannerSubtitleAll')}
                     onPress={() => router.push('/paywall' as any)}
                     showBorder={false}
                   />
