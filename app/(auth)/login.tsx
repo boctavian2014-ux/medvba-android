@@ -16,6 +16,7 @@ import { UIButton, UITextField } from '@/ui';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { SPACING } from '@/theme/paperTheme';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -47,6 +48,10 @@ export default function LoginScreen() {
   }, [email, password, t]);
 
   const handleLogin = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      Alert.alert(t('auth.loginFailed'), t('auth.supabaseNotConfigured'));
+      return;
+    }
     if (!validateForm()) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -68,8 +73,6 @@ export default function LoginScreen() {
         let errorMessage = t('auth.loginFailed');
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = t('auth.invalidCredentials');
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = t('auth.emailNotConfirmed');
         }
 
         Alert.alert(t('auth.loginFailed'), errorMessage);
@@ -86,13 +89,13 @@ export default function LoginScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, validateForm, t]);
+  }, [email, password, signIn, validateForm, t, isSupabaseConfigured]);
 
   const handleForgotPassword = useCallback(() => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push('/forgot-password' as const);
+    router.push('/(auth)/forgot-password');
   }, []);
 
   const handleSignUp = useCallback(() => {
@@ -191,11 +194,16 @@ export default function LoginScreen() {
                   </UIButton>
                 </View>
 
+                {!isSupabaseConfigured && (
+                  <Text variant="bodySmall" style={[styles.notConfiguredText, { color: theme.colors.error }]}>
+                    {t('auth.supabaseNotConfigured')}
+                  </Text>
+                )}
                 <View style={[styles.primaryButton, { marginTop: SPACING.x1 }]}>
                   <UIButton
                     variant="borderedProminent"
                     onPress={handleLogin}
-                    disabled={isLoading}
+                    disabled={isLoading || !isSupabaseConfigured}
                     color={theme.colors.primary}
                   >
                     {isLoading ? (t('auth.loading') ?? '...') : t('auth.signIn')}
@@ -212,6 +220,11 @@ export default function LoginScreen() {
                 {t('auth.signUp')}
               </UIButton>
             </View>
+            {__DEV__ && (
+              <Text variant="labelSmall" style={[styles.debugText, { color: theme.colors.onSurfaceVariant }]}>
+                [DEBUG] Supabase: {isSupabaseConfigured ? 'configured' : 'not configured'}
+              </Text>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -274,5 +287,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  notConfiguredText: {
+    marginTop: SPACING.x2,
+    marginBottom: SPACING.x1,
+    textAlign: 'center',
+  },
+  debugText: {
+    marginTop: SPACING.x4,
+    textAlign: 'center',
+    opacity: 0.7,
   },
 });

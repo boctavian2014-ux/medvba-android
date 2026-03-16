@@ -58,7 +58,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
   name: 'MEDVBA',
   slug: 'medvba',
-  version: '1.0.9',
+  version: '1.0.11',
   orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'rork-app',
@@ -79,9 +79,10 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     supportsTablet: false,
     bundleIdentifier: 'com.devaieood.medvba',
     icon: './assets/images/icon.png',
-    buildNumber: '16',
+    buildNumber: '19',
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
@@ -89,7 +90,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
-    versionCode: 16,
+    versionCode: 19,
     package: 'com.devaieood.medvba',
     blockedPermissions: [
       'android.permission.CAMERA',
@@ -98,6 +99,11 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     permissions: [
       'android.permission.VIBRATE',
     ],
+    // Android 15+ edge-to-edge; use system bars (status/nav) via insets instead of deprecated color APIs
+    edgeToEdgeEnabled: true,
+    androidNavigationBar: {
+      enforceContrast: true,
+    },
   },
   web: {
     favicon: './assets/images/favicon.png',
@@ -128,6 +134,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         },
       },
     ],
+    './plugins/withAndroidLintSuppress.js',
   ],
   experiments: {
     typedRoutes: true,

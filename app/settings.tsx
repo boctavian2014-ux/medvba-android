@@ -67,8 +67,8 @@ interface SettingsItemProps {
 function SettingsItem({ icon, title, subtitle, onPress, showBorder = true, showChevron = true }: SettingsItemProps) {
   const { colors } = useTheme();
   return (
-    <TouchableOpacity 
-      style={[styles.settingsItem, showBorder && styles.settingsItemBorder]} 
+    <TouchableOpacity
+      style={[styles.settingsItem, showBorder && styles.settingsItemBorder]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -103,7 +103,7 @@ export default function SettingsScreen() {
   const { colors, preference: themePreference } = useTheme();
   const { isPremium, isPaywallEnabled } = useSubscription();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
-  
+
   const { data: profile } = useUserProfile(user?.id);
   const updateProfileMutation = useUpdateUserProfile();
 
@@ -240,7 +240,7 @@ export default function SettingsScreen() {
           <Appbar.Content title={t('settings.title')} />
         </Appbar.Header>
 
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.scrollContent, { paddingHorizontal: SPACING.x3, paddingBottom: SPACING.x4 }]}
         >
@@ -477,20 +477,20 @@ export default function SettingsScreen() {
                 <View style={styles.blockedUsersInfo}>
                   <Text style={styles.settingsItemTitle}>{t('settings.blockedUsers')}</Text>
                   <Text style={styles.settingsItemSubtitle}>
-                    {blockedUsers.length === 0 
-                      ? t('settings.noBlockedUsers') 
+                    {blockedUsers.length === 0
+                      ? t('settings.noBlockedUsers')
                       : blockedUsers.length === 1
                         ? t('settings.blockedUsersCount').replace('{count}', String(blockedUsers.length))
                         : t('settings.blockedUsersCountPlural').replace('{count}', String(blockedUsers.length))}
                   </Text>
                 </View>
               </View>
-              
+
               {blockedUsers.length > 0 && (
                 <View style={[styles.blockedUsersList, { borderTopColor: colors.glassBorder }]}>
                   {blockedUsers.map((user, index) => (
-                    <View 
-                      key={user.id} 
+                    <View
+                      key={user.id}
                       style={[
                         styles.blockedUserItem,
                         index < blockedUsers.length - 1 && styles.blockedUserItemBorder
@@ -605,8 +605,8 @@ export default function SettingsScreen() {
                 colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
                 style={StyleSheet.absoluteFill}
               />
-              <TouchableOpacity 
-                style={[styles.deleteAccountItem, styles.settingsItemBorder, { borderBottomColor: colors.glassBorder }]} 
+              <TouchableOpacity
+                style={[styles.deleteAccountItem, styles.settingsItemBorder, { borderBottomColor: colors.glassBorder }]}
                 onPress={() => router.push('/delete-account')}
                 activeOpacity={0.7}
               >
@@ -619,7 +619,7 @@ export default function SettingsScreen() {
                 </View>
                 <ChevronRight color={colors.error} size={20} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.signOutItem}
                 onPress={() => {
                   Alert.alert(

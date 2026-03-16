@@ -134,7 +134,7 @@ export default function QuizScreen() {
                     onPress={() => router.push('/paywall')}
                   >
                     <Crown color={colors.warning} size={14} />
-                    <Text style={[styles.upgradeMiniText, { color: colors.warning }]}>Upgrade</Text>
+                    <Text style={[styles.upgradeMiniText, { color: colors.warning }]}>{t('tutor.upgrade')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -238,7 +238,7 @@ export default function QuizScreen() {
                       </View>
                       <Text style={[styles.categoryName, { color: colors.text }]}>{getModuleName(category.id)}</Text>
                       <Text style={[styles.categoryCount, { color: colors.textSecondary }]}>
-                        {category.questionCount.toLocaleString()} Q
+                        {category.questionCount.toLocaleString()} {t('quiz.questionsShort')}
                       </Text>
                       <View style={[styles.categoryProgressBar, { backgroundColor: colors.cardBgLight }]}>
                         <View 

@@ -32,7 +32,7 @@ export default function HomeScreen() {
   const { profile } = useAuth();
   const { isPremium, isPaywallEnabled } = useSubscription();
   const { dailyProgress, hasActiveSession, sessionState, lastSessionInfo, accuracy, formattedQuestionsCount, formattedStudyTime } = useQuizProgress();
-  
+
   const totalQuestions = categories.reduce((sum, cat) => sum + cat.questionCount, 0);
   const completedQuestions = categories.reduce((sum, cat) => sum + cat.completedCount, 0);
   const overallProgress = (completedQuestions / totalQuestions) * 100;
@@ -47,15 +47,15 @@ export default function HomeScreen() {
     console.log('[Home] Navigate to paywall');
     router.push('/paywall');
   }, [router, isPaywallEnabled]);
-  
+
   const handleContinueLearning = useCallback(() => {
     if (hasReachedDailyLimit) {
       Alert.alert(
-        '📚 Limită Zilnică Atinsă',
-        `Ai răspuns la ${FREE_DAILY_QUIZ_LIMIT} întrebări astăzi. Upgrade la Premium pentru acces nelimitat!`,
+        `📚 ${t('home.dailyLimitTitle')}`,
+        t('home.dailyLimitMessage').replace('{count}', String(FREE_DAILY_QUIZ_LIMIT)),
         [
-          { text: 'Mai Târziu', style: 'cancel' },
-          { text: '⭐ Upgrade Premium', onPress: handleUpgradePress, style: 'default' },
+          { text: t('home.later'), style: 'cancel' },
+          { text: `⭐ ${t('home.upgradePremiumShort')}`, onPress: handleUpgradePress, style: 'default' },
         ]
       );
       return;
@@ -65,7 +65,7 @@ export default function HomeScreen() {
       console.log('[Home] Resuming active session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
       router.push({
         pathname: '/quiz-session',
-        params: { 
+        params: {
           category: sessionState.category,
           mode: sessionState.mode,
           resume: 'true'
@@ -75,7 +75,7 @@ export default function HomeScreen() {
       console.log('[Home] Starting new session with last used settings:', lastSessionInfo.category, lastSessionInfo.mode);
       router.push({
         pathname: '/quiz-session',
-        params: { 
+        params: {
           category: lastSessionInfo.category,
           mode: lastSessionInfo.mode
         }
@@ -84,13 +84,13 @@ export default function HomeScreen() {
       console.log('[Home] Starting default session');
       router.push({
         pathname: '/quiz-session',
-        params: { 
+        params: {
           category: 'mixed',
           mode: 'practice'
         }
       });
     }
-  }, [hasActiveSession, sessionState, lastSessionInfo, router, hasReachedDailyLimit, handleUpgradePress]);
+  }, [hasActiveSession, sessionState, lastSessionInfo, router, hasReachedDailyLimit, handleUpgradePress, t]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -99,15 +99,15 @@ export default function HomeScreen() {
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Image 
+              <Image
                 source={require('@/assets/images/icon.png')}
-                style={styles.appIcon} 
+                style={styles.appIcon}
               />
               <View style={styles.headerTextWrap}>
                 <View style={styles.greetingRow}>
@@ -141,7 +141,7 @@ export default function HomeScreen() {
           </View>
 
           <Card
-            style={[styles.heroCard, { backgroundColor: colors.primary + '18' }]}
+            style={[styles.heroCard, { backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.glassBorder }]}
             mode="elevated"
             onPress={handleContinueLearning}
           >
@@ -158,13 +158,13 @@ export default function HomeScreen() {
               >
               <View style={styles.limitOverlay}>
                 <Lock size={32} color={colors.warning} strokeWidth={2} />
-                <Text style={[styles.limitTitle, { color: colors.text }]}>Limită Zilnică Atinsă</Text>
+                <Text style={[styles.limitTitle, { color: colors.text }]}>{t('home.dailyLimitTitle')}</Text>
                 <Text style={[styles.limitText, { color: colors.textSecondary }]}>
-                  Ai răspuns la {FREE_DAILY_QUIZ_LIMIT} întrebări astăzi
+                  {t('home.dailyLimitMessage').replace('{count}', String(FREE_DAILY_QUIZ_LIMIT))}
                 </Text>
                 <View style={styles.limitUpgradeButton}>
                   <UIButton variant="borderedProminent" onPress={handleUpgradePress} color={colors.warning}>
-                    Upgrade Premium
+                    {t('home.upgradePremiumShort')}
                   </UIButton>
                 </View>
               </View>
@@ -173,7 +173,9 @@ export default function HomeScreen() {
             <Card.Content style={styles.heroCardContent}>
               <View style={styles.heroContent}>
                 <View style={styles.heroLeft}>
-                  <Text style={[styles.heroTitle, { color: colors.text }]}>{t('home.continueLearning')}</Text>
+                  <Text style={[styles.heroTitle, { color: colors.text }]}>
+                    {t('home.continueLearning')}
+                  </Text>
                   <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
                     {t('home.questionsToday').replace('{current}', String(todayProgress)).replace('{goal}', String(todayGoal))}
                   </Text>
@@ -187,9 +189,9 @@ export default function HomeScreen() {
                     </UIButton>
                   </View>
                 </View>
-                <ProgressRing 
-                  progress={(todayProgress / todayGoal) * 100} 
-                  size={90} 
+                <ProgressRing
+                  progress={(todayProgress / todayGoal) * 100}
+                  size={90}
                   strokeWidth={10}
                   color={colors.accent}
                   label={t('home.today')}
@@ -224,29 +226,35 @@ export default function HomeScreen() {
 
           <View style={styles.statsRow}>
             <View style={styles.statCardWrapper}>
-              <Card style={styles.statCard} mode="elevated">
+              <Card style={[styles.statCard, { borderWidth: 1, borderColor: colors.glassBorder }]} mode="elevated">
                 <Card.Content style={styles.statCardContent}>
                   <TrendingUp color={colors.success} size={24} />
                   <Text style={[styles.statValue, { color: colors.text }]}>{accuracy.toFixed(1)}%</Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.accuracy')}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                    {t('home.accuracy')}
+                  </Text>
                 </Card.Content>
               </Card>
             </View>
             <View style={styles.statCardWrapper}>
-              <Card style={styles.statCard} mode="elevated">
+              <Card style={[styles.statCard, { borderWidth: 1, borderColor: colors.glassBorder }]} mode="elevated">
                 <Card.Content style={styles.statCardContent}>
                   <Target color={colors.accentPink} size={24} />
                   <Text style={[styles.statValue, { color: colors.text }]}>{formattedQuestionsCount}</Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.questions')}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                    {t('home.questions')}
+                  </Text>
                 </Card.Content>
               </Card>
             </View>
             <View style={styles.statCardWrapper}>
-              <Card style={styles.statCard} mode="elevated">
+              <Card style={[styles.statCard, { borderWidth: 1, borderColor: colors.glassBorder }]} mode="elevated">
                 <Card.Content style={styles.statCardContent}>
                   <Clock color={colors.warning} size={24} />
                   <Text style={[styles.statValue, { color: colors.text }]}>{formattedStudyTime}</Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('home.studyTime')}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                    {t('home.studyTime')}
+                  </Text>
                 </Card.Content>
               </Card>
             </View>
@@ -257,7 +265,7 @@ export default function HomeScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.yourProgress')}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.primary }]}>{overallProgress.toFixed(1)}% {t('home.complete')}</Text>
             </View>
-            <Card style={styles.progressCard} mode="elevated">
+            <Card style={[styles.progressCard, { borderWidth: 1, borderColor: colors.glassBorder }]} mode="elevated">
               <Card.Content>
                 <View style={[styles.progressBar, { backgroundColor: colors.cardBgLight }]}>
                   <LinearGradient
@@ -297,11 +305,11 @@ export default function HomeScreen() {
               const handleCategoryPress = () => {
                 if (isLocked) {
                   Alert.alert(
-                    '🔒 Premium Feature',
-                    `${getModuleName(category.id)} is a premium feature. Upgrade to unlock all anatomy modules!`,
+                    `🔒 ${t('home.premiumFeatureTitle')}`,
+                    t('home.premiumFeatureMessage').replace('{module}', getModuleName(category.id)),
                     [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: '⭐ Upgrade Premium', onPress: handleUpgradePress, style: 'default' },
+                      { text: t('common.cancel'), style: 'cancel' },
+                      { text: `⭐ ${t('home.upgradePremiumShort')}`, onPress: handleUpgradePress, style: 'default' },
                     ]
                   );
                   return;
@@ -326,7 +334,7 @@ export default function HomeScreen() {
                   onPress={handleCategoryPress}
                   style={[
                     styles.categoryCard,
-                    { backgroundColor: colors.cardBg ?? colors.backgroundLight },
+                    { backgroundColor: colors.cardBg ?? colors.backgroundLight, borderWidth: 1, borderColor: colors.glassBorder },
                     isLocked && { opacity: 0.7 },
                   ]}
                 >
@@ -350,7 +358,7 @@ export default function HomeScreen() {
                       )}
                     </View>
                     <Text style={[styles.categoryProgress, { color: colors.textSecondary }]} numberOfLines={1}>
-                      {isLocked 
+                      {isLocked
                         ? 'Unlock premium to access'
                         : t('home.categoryQuestions')
                             .replace('{current}', category.completedCount.toLocaleString())
@@ -526,10 +534,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700' as const,
     marginBottom: SPACING.x1,
+    textShadowColor: 'rgba(0, 0, 0, 0.12)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   heroSubtitle: {
     fontSize: 14,
     marginBottom: SPACING.x2,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   heroButton: {
     alignSelf: 'flex-start',
@@ -543,24 +557,26 @@ const styles = StyleSheet.create({
   },
   statCardWrapper: {
     flex: 1,
+    flexBasis: 0,
     minWidth: 0,
   },
   statCard: {
     flex: 1,
     width: '100%',
+    height: 100,
     borderRadius: 16,
-    minHeight: 100,
+    overflow: 'hidden',
   },
   statCardContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.x3,
+    paddingVertical: SPACING.x2,
     paddingHorizontal: SPACING.x1,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700' as const,
-    marginTop: 8,
+    marginTop: 6,
   },
   statLabel: {
     fontSize: 12,
@@ -613,11 +629,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.x2,
-    minHeight: 72,
+    height: 80,
     borderRadius: 16,
     width: '100%',
     paddingHorizontal: SPACING.x2,
-    paddingVertical: SPACING.x2,
   },
   categoryIcon: {
     width: 44,

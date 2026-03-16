@@ -31,8 +31,11 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files and secrets (never commit)
+.env
 .env*.local
+.env.production
+.env.*.local
 
 # typescript
 *.tsbuildinfo
@@ -40,5 +43,4 @@ yarn-error.*
 
 .rork
 
-.env
 rork-eslint.config.js

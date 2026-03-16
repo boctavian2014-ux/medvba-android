@@ -11,7 +11,12 @@
     "start-web": "bunx rork start -p jf700h5s63mnlvb27w3pp --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p jf700h5s63mnlvb27w3pp --web --tunnel",
     "start:backend": "tsx backend/server.ts",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "db:generate-sql": "tsx scripts/generate-questions-sql.ts",
+    "db:migrate": "tsx scripts/migrate-questions-to-supabase.ts",
+    "db:migrate:clear": "tsx scripts/migrate-questions-to-supabase.ts --clear"
   },
   "dependencies": {
     "@expo/ui": "^0.2.0-beta.9",
@@ -45,7 +50,6 @@
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
-    "expo-location": "~19.0.8",
     "expo-mail-composer": "^15.0.8",
     "expo-router": "~6.0.23",
     "expo-secure-store": "^15.0.8",
@@ -69,6 +73,7 @@
     "react-native-purchases-ui": "^9.10.5",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
+    "react-native-edge-to-edge": "^1.8.0",
     "react-native-svg": "15.12.1",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0",
@@ -88,6 +93,9 @@
     "typescript": "~5.9.2"
   },
   "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-test-renderer": "19.1.0",
     "expo-location": "~19.0.8"
   },
   "private": true

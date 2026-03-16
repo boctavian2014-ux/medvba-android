@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Settings, 
-  Crown, 
-  Award, 
-  Target, 
-  Clock, 
+import {
+  Settings,
+  Crown,
+  Award,
+  Target,
+  Clock,
   TrendingUp,
   ChevronRight,
   Star,
@@ -86,13 +86,13 @@ export default function ProfileScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>('weekly');
   const scaleAnims = useRef<{ [key: string]: Animated.Value }>({}).current;
-  
-  const { 
-    allTimeStats, 
-    streakData, 
-    weeklyHistory, 
-    accuracy, 
-    formattedQuestionsCount, 
+
+  const {
+    allTimeStats,
+    streakData,
+    weeklyHistory,
+    accuracy,
+    formattedQuestionsCount,
     formattedStudyTime,
     weeklyQuestionsTotal,
     weeklyStudyTimeSeconds,
@@ -105,10 +105,10 @@ export default function ProfileScreen() {
 
 
   const achievements: Achievement[] = useMemo(() => [
-    { 
-      id: 'question_master', 
-      name: t('achievement.questionMaster'), 
-      icon: Target, 
+    {
+      id: 'question_master',
+      name: t('achievement.questionMaster'),
+      icon: Target,
       description: t('achievement.questionMasterDesc'),
       requirement: 1000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
@@ -116,10 +116,10 @@ export default function ProfileScreen() {
       gradient: ['#FF6B6B', '#FF8E53'],
       iconColor: '#FF6B6B',
     },
-    { 
-      id: 'streak_champion', 
-      name: t('achievement.streakChampion'), 
-      icon: Flame, 
+    {
+      id: 'streak_champion',
+      name: t('achievement.streakChampion'),
+      icon: Flame,
       description: t('achievement.streakChampionDesc'),
       requirement: 30,
       currentProgress: streakData.currentStreak,
@@ -127,10 +127,10 @@ export default function ProfileScreen() {
       gradient: ['#F093FB', '#F5576C'],
       iconColor: '#F093FB',
     },
-    { 
-      id: 'accuracy_ace', 
-      name: t('achievement.accuracyAce'), 
-      icon: Zap, 
+    {
+      id: 'accuracy_ace',
+      name: t('achievement.accuracyAce'),
+      icon: Zap,
       description: t('achievement.accuracyAceDesc'),
       requirement: 80,
       currentProgress: Math.round(accuracy),
@@ -138,10 +138,10 @@ export default function ProfileScreen() {
       gradient: ['#4FACFE', '#00F2FE'],
       iconColor: '#4FACFE',
     },
-    { 
-      id: 'study_warrior', 
-      name: t('achievement.studyWarrior'), 
-      icon: Award, 
+    {
+      id: 'study_warrior',
+      name: t('achievement.studyWarrior'),
+      icon: Award,
       description: t('achievement.studyWarriorDesc'),
       requirement: 50,
       currentProgress: Math.floor(allTimeStats.totalStudyTimeSeconds / 3600),
@@ -149,10 +149,10 @@ export default function ProfileScreen() {
       gradient: ['#43E97B', '#38F9D7'],
       iconColor: '#43E97B',
     },
-    { 
-      id: 'anatomy_expert', 
-      name: t('achievement.anatomyExpert'), 
-      icon: Trophy, 
+    {
+      id: 'anatomy_expert',
+      name: t('achievement.anatomyExpert'),
+      icon: Trophy,
       description: t('achievement.anatomyExpertDesc'),
       requirement: 5000,
       currentProgress: allTimeStats.totalQuestionsAnswered,
@@ -160,10 +160,10 @@ export default function ProfileScreen() {
       gradient: ['#FA709A', '#FEE140'],
       iconColor: '#FA709A',
     },
-    { 
-      id: 'dedication', 
-      name: t('achievement.dedication'), 
-      icon: Crown, 
+    {
+      id: 'dedication',
+      name: t('achievement.dedication'),
+      icon: Crown,
       description: t('achievement.dedicationDesc'),
       requirement: 100,
       currentProgress: streakData.longestStreak,
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
         locations={[0, 0.5, 1]}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView 
+        <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
@@ -277,8 +277,8 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-            <TouchableOpacity 
-              style={styles.settingsButton} 
+            <TouchableOpacity
+              style={styles.settingsButton}
               activeOpacity={0.7}
               onPress={() => router.push('/settings' as any)}
             >
@@ -437,8 +437,8 @@ export default function ProfileScreen() {
                 <Text style={styles.achievementCounterText}>{unlockedCount}/{achievements.length}</Text>
               </View>
             </View>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.achievementsScroll}
             >
@@ -446,14 +446,14 @@ export default function ProfileScreen() {
                 const isUnlocked = achievement.currentProgress >= achievement.requirement;
                 const progress = getAchievementProgress(achievement);
                 const AchievementIcon = achievement.icon;
-                
+
                 return (
                   <TouchableOpacity
                     key={achievement.id}
                     activeOpacity={0.8}
                     onPress={() => handleAchievementPress(achievement.id)}
                   >
-                    <Animated.View 
+                    <Animated.View
                       style={[
                         styles.achievementCard,
                         { transform: [{ scale: getScaleAnim(achievement.id) }] },
@@ -472,8 +472,8 @@ export default function ProfileScreen() {
                         </View>
                       )}
                       <View style={[styles.achievementIconContainer, { backgroundColor: isUnlocked ? `${achievement.iconColor}30` : 'rgba(255,255,255,0.08)' }]}>
-                        <AchievementIcon 
-                          color={isUnlocked ? achievement.iconColor : colors.textMuted} 
+                        <AchievementIcon
+                          color={isUnlocked ? achievement.iconColor : colors.textMuted}
                           size={28}
                           fill={isUnlocked && achievement.id.includes('streak') ? achievement.iconColor : undefined}
                         />
@@ -510,7 +510,7 @@ export default function ProfileScreen() {
                 <ChevronRight color={colors.primary} size={16} />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.periodSelector}>
               {periods.map((period) => (
                 <TouchableOpacity
@@ -546,7 +546,7 @@ export default function ProfileScreen() {
                 style={[StyleSheet.absoluteFill, { borderRadius: 20 }]}
               />
               <View style={styles.glassOverlay} />
-              
+
               <View style={styles.podium}>
                 {[1, 0, 2].map((index) => {
                   const user = leaderboard[index];
@@ -592,8 +592,8 @@ export default function ProfileScreen() {
               </View>
 
               {leaderboard.slice(3, 7).map((user, index) => (
-                <View 
-                  key={user.id} 
+                <View
+                  key={user.id}
                   style={[
                     styles.leaderboardItem,
                     index < 3 && styles.leaderboardItemBorder,
@@ -636,7 +636,7 @@ export default function ProfileScreen() {
                   };
                   const statusConfig = statusColors[request.status];
                   const StatusIcon = statusConfig.icon;
-                  
+
                   return (
                     <View key={request.id} style={styles.zoomRequestCard}>
                       <LinearGradient
@@ -657,10 +657,10 @@ export default function ProfileScreen() {
                         <View style={styles.zoomRequestDetail}>
                           <Calendar color={colors.textSecondary} size={14} />
                           <Text style={styles.zoomRequestDetailText}>
-                            {new Date(request.preferredDate).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric', 
-                              year: 'numeric' 
+                            {new Date(request.preferredDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
                             })}
                           </Text>
                         </View>
@@ -691,11 +691,11 @@ export default function ProfileScreen() {
                 end={{ x: 1, y: 1 }}
               />
               <View style={styles.glassOverlay} />
-              
+
               <View style={styles.weeklyHeader}>
-                <ProgressRing 
-                  progress={weeklyGoalProgress} 
-                  size={100} 
+                <ProgressRing
+                  progress={weeklyGoalProgress}
+                  size={100}
                   strokeWidth={10}
                   color={colors.accent}
                   label="goal"
@@ -723,7 +723,7 @@ export default function ProfileScreen() {
                   {weeklyData.map((day, index) => {
                     const barHeight = day.questions > 0 ? (day.questions / maxQuestions) * 80 : 4;
                     const isToday = index === 6;
-                    
+
                     return (
                       <View key={day.date} style={styles.chartBarContainer}>
                         <View style={styles.chartBarWrapper}>
