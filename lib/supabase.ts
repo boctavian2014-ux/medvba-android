@@ -31,46 +31,35 @@ const effectiveKey = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.pl
 const storage = {
   getItem: async (key: string) => {
     try {
-      console.log(`[Storage] Getting item for key: ${key}`);
       if (Platform.OS === 'web') {
-        const item = localStorage.getItem(key);
-        console.log(`[Storage] Web localStorage result: ${item ? 'found' : 'not found'}`);
-        return item;
+        return localStorage.getItem(key);
       }
-      const result = await SecureStore.getItemAsync(key);
-      console.log(`[Storage] SecureStore result for ${key}: ${result ? 'found' : 'not found'}`);
-      return result;
+      return await SecureStore.getItemAsync(key);
     } catch (error) {
-      console.error(`[Storage] Error getting item for key ${key}:`, error);
+      console.error('Error getting item from storage:', error);
       return null;
     }
   },
   setItem: async (key: string, value: string) => {
     try {
-      console.log(`[Storage] Setting item for key: ${key} (${value.length} chars)`);
       if (Platform.OS === 'web') {
         localStorage.setItem(key, value);
-        console.log(`[Storage] Web localStorage: item set successfully`);
         return;
       }
       await SecureStore.setItemAsync(key, value);
-      console.log(`[Storage] SecureStore: item set successfully for ${key}`);
     } catch (error) {
-      console.error(`[Storage] Error setting item for key ${key}:`, error);
+      console.error('Error setting item in storage:', error);
     }
   },
   removeItem: async (key: string) => {
     try {
-      console.log(`[Storage] Removing item for key: ${key}`);
       if (Platform.OS === 'web') {
         localStorage.removeItem(key);
-        console.log(`[Storage] Web localStorage: item removed`);
         return;
       }
       await SecureStore.deleteItemAsync(key);
-      console.log(`[Storage] SecureStore: item removed for ${key}`);
     } catch (error) {
-      console.error(`[Storage] Error removing item for key ${key}:`, error);
+      console.error('Error removing item from storage:', error);
     }
   },
 };

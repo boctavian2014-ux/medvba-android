@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 import { useUserProfile } from '@/lib/supabase-hooks';
-import { AppState, Platform } from 'react-native';
+import { AppState } from 'react-native';
 
 import { monitoring } from '@/lib/monitoring';
 import type { UserProfile } from '@/types/user';
@@ -157,14 +157,10 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
     const initializeAuth = async () => {
       try {
-        console.log('[Auth] Initializing auth...');
-        console.log('[Auth] Platform:', Platform.OS);
-        
         await checkOnboardingStatus();
 
         if (!mountedRef.current) return;
 
-        console.log('[Auth] Getting session from Supabase...');
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
           setTimeout(() => resolve({ data: { session: null } }), AUTH_INIT_TIMEOUT_MS)
@@ -173,7 +169,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           sessionPromise,
           timeoutPromise,
         ]);
-        console.log('[Auth] Session result:', currentSession ? 'Session found' : 'No session found');
         if (!mountedRef.current) return;
         
         setSession(currentSession);
@@ -278,24 +273,13 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      console.log('[Auth] Signing in user:', email);
-      console.log('[Auth] Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL || 'not set');
-      console.log('[Auth] Is Supabase configured:', !!supabase);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('[Auth] Sign in response:', { hasData: !!data, hasSession: !!data?.session, hasUser: !!data?.user });
-
       if (error) {
-        console.error('[Auth] Sign in error:', {
-          message: error.message,
-          code: error.code,
-          status: error.status,
-          name: error.name,
-        });
+        console.error('[Auth] Sign in error:', error.message);
         monitoring.logError(new Error(error.message), { context: 'signin', errorCode: error.code });
       } else {
         monitoring.logEvent('user_signin', { email });
