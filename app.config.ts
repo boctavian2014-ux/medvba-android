@@ -58,7 +58,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
   name: 'MEDVBA',
   slug: 'medvba',
-  version: '1.0.11',
+  version: '1.0.16',
   orientation: 'default',
   icon: './assets/images/icon.png',
   scheme: 'rork-app',
@@ -79,7 +79,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     supportsTablet: false,
     bundleIdentifier: 'com.devaieood.medvba',
     icon: './assets/images/icon.png',
-    buildNumber: '19',
+    buildNumber: '24',
     infoPlist: {
       NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
       ITSAppUsesNonExemptEncryption: false,
@@ -90,8 +90,9 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
-    versionCode: 19,
+    versionCode: 24,
     package: 'com.devaieood.medvba',
+    // R8 mapping file for Google Play crash deobfuscation is produced at android/app/build/outputs/mapping/release/mapping.txt and collected in eas.json buildArtifactPaths; upload it in Play Console per version.
     blockedPermissions: [
       'android.permission.CAMERA',
       'android.permission.RECORD_AUDIO',
@@ -131,6 +132,15 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
           compileSdkVersion: 35,
           targetSdkVersion: 35,
           buildToolsVersion: '35.0.0',
+          // Required for Google Play deobfuscation: R8 produces mapping.txt at android/app/build/outputs/mapping/release/mapping.txt
+          enableMinifyInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+          // Keep classes that use deprecated Window status/nav bar APIs (RN, react-native-screens) so R8 doesn't break them; we use edgeToEdgeEnabled and lint DiscouragedApi is disabled.
+          extraProguardRules: [
+            '-keep class com.facebook.react.modules.statusbar.** { *; }',
+            '-keep class com.swmansion.rnscreens.** { *; }',
+            '-keepattributes SourceFile,LineNumberTable',
+          ].join('\n'),
         },
       },
     ],

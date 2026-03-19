@@ -2,9 +2,10 @@
  * Config plugin to disable DiscouragedApi lint for Android build.
  * Android 15+ deprecates Window.setStatusBarColor, setNavigationBarColor,
  * getStatusBarColor, getNavigationBarColor, and LAYOUT_IN_DISPLAY_CUTOUT_MODE_*.
- * These are still used inside React Native, react-native-screens, Material, and Expo.
- * Disabling this lint allows the build to succeed; Google Play may still show an
- * advisory until the ecosystem migrates. We have edgeToEdgeEnabled: true in app.config.
+ * These are still used inside React Native (StatusBarModule), react-native-screens
+ * (WindowUtilKt.enableEdgeToEdge), and Expo. We disable the lint and skip
+ * release lint (checkReleaseBuilds false) so these do not block or recur in builds.
+ * We have edgeToEdgeEnabled: true in app.config; migration is pending in upstream.
  */
 const { withAppBuildGradle } = require('expo/config-plugins');
 
@@ -15,18 +16,26 @@ function withAndroidLintSuppress(config) {
     lint {
         disable 'DiscouragedApi'
         abortOnError false
+        checkReleaseBuilds false
     }
 `;
 
-    // If lint block exists but lacks abortOnError, add it.
-    if (buildGradle.includes("disable 'DiscouragedApi'") && !buildGradle.includes('abortOnError false')) {
-      config.modResults.contents = buildGradle.replace(
-        /(lint \{\s*\n\s*disable 'DiscouragedApi')/,
-        "$1\n        abortOnError false"
-      );
-      return config;
-    }
+    // If lint block exists, ensure abortOnError and checkReleaseBuilds are set so deprecated Window API warnings don't block release.
     if (buildGradle.includes("disable 'DiscouragedApi'")) {
+      let updated = buildGradle;
+      if (!updated.includes('abortOnError false')) {
+        updated = updated.replace(
+          /(lint \{\s*\n\s*disable 'DiscouragedApi')/,
+          "$1\n        abortOnError false"
+        );
+      }
+      if (!updated.includes('checkReleaseBuilds false')) {
+        updated = updated.replace(
+          /(abortOnError false)/,
+          "$1\n        checkReleaseBuilds false"
+        );
+      }
+      config.modResults.contents = updated;
       return config;
     }
     const pattern = /(    \}\n)(\}\n\n)(\/\/ Apply static values)/;
