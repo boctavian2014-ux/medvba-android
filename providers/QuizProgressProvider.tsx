@@ -488,11 +488,12 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
       if (userId && newAllTime) {
         const streakSnapshot = streakData;
+        const allTime = newAllTime as AllTimeStats;
         const syncPayload = {
           userId,
-          totalQuestionsAnswered: newAllTime.totalQuestionsAnswered,
-          correctAnswers: newAllTime.totalCorrectAnswers,
-          studyTimeSeconds: newAllTime.totalStudyTimeSeconds,
+          totalQuestionsAnswered: allTime.totalQuestionsAnswered,
+          correctAnswers: allTime.totalCorrectAnswers,
+          studyTimeSeconds: allTime.totalStudyTimeSeconds,
           currentStreak: streakSnapshot.currentStreak,
           longestStreak: streakSnapshot.longestStreak,
           lastActivityDate: streakSnapshot.lastActiveDate || null,
