@@ -48,11 +48,16 @@ export default function LoginScreen() {
   }, [email, password, t]);
 
   const handleLogin = useCallback(async () => {
+    console.log('[Login] handleLogin called');
+    console.log('[Login] isSupabaseConfigured:', isSupabaseConfigured);
+    
     if (!isSupabaseConfigured) {
+      console.error('[Login] Supabase not configured!');
       Alert.alert(t('auth.loginFailed'), t('auth.supabaseNotConfigured'));
       return;
     }
     if (!validateForm()) {
+      console.log('[Login] Form validation failed:', errors);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
@@ -63,9 +68,13 @@ export default function LoginScreen() {
 
     try {
       console.log('[Login] Attempting login for:', email);
+      const startTime = Date.now();
       const { error } = await signIn(email.trim().toLowerCase(), password);
+      const duration = Date.now() - startTime;
+      console.log('[Login] Sign in completed in', duration, 'ms');
 
       if (error) {
+        console.error('[Login] Login error:', error);
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
@@ -77,16 +86,17 @@ export default function LoginScreen() {
 
         Alert.alert(t('auth.loginFailed'), errorMessage);
       } else {
+        console.log('[Login] Login successful, navigating to home');
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        console.log('[Login] Login successful, navigating to home');
         router.replace('/(tabs)');
       }
     } catch (error) {
       console.error('[Login] Unexpected error:', error);
       Alert.alert('Error', t('auth.unexpectedError'));
     } finally {
+      console.log('[Login] Login flow completed, isLoading set to false');
       setIsLoading(false);
     }
   }, [email, password, signIn, validateForm, t, isSupabaseConfigured]);

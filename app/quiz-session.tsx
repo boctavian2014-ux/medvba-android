@@ -7,7 +7,6 @@ import {
   Animated,
   ScrollView,
   Platform,
-  StatusBar as RNStatusBar,
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -446,9 +445,11 @@ export default function QuizSessionScreen() {
     chapterId?: string;
   }>();
   const insets = useSafeAreaInsets();
-  
-  const topPadding = Math.max(insets.top, Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 0);
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 16 : 0);
+   
+  // Use safeAreaInsets directly - react-native-safe-area-context handles edge-to-edge properly
+  // No need for StatusBar.currentHeight fallback as edgeToEdgeEnabled is set in app.config.ts
+  const topPadding = insets.top;
+  const bottomPadding = insets.bottom;
   
   const {
     updateDailyProgress,

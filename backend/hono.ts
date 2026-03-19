@@ -13,6 +13,9 @@ const defaultAllowedOrigins = new Set([
   "http://localhost:8081",
   "http://localhost:8082",
   "http://localhost:8083",
+  // Allow React Native apps (origin can be null or file://)
+  "null",
+  "file://",
 ]);
 const envAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
   .split(",")
@@ -27,10 +30,19 @@ app.use(
   "*",
   cors({
     origin: (origin) => {
-      if (!origin) return "";
-      return allowedOrigins.has(origin) ? origin : "";
+      // Allow requests with no origin (React Native apps, mobile)
+      if (!origin) return "*";
+      // Allow configured origins
+      if (allowedOrigins.has(origin)) return origin;
+      // Allow file:// origins (React Native)
+      if (origin.startsWith("file://")) return origin;
+      // Log rejected origins for debugging
+      console.log(`[CORS] Rejected origin: ${origin}`);
+      return "";
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
 
@@ -45,6 +57,24 @@ app.use(
 
 app.get("/", (c) => {
   return c.json({ status: "ok", message: "Anatomy Quiz API is running" });
+});
+
+// Health check endpoint for debugging
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    timestamp: new Date().toISOString(),
+    env: {
+      hasSupabaseUrl: !!process.env.SUPABASE_URL,
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    }
+  });
+});
+
+// Error handler
+app.onError((err, c) => {
+  console.error(`[API Error] ${err.message}`, err);
+  return c.json({ error: err.message }, 500);
 });
 
 export default app;

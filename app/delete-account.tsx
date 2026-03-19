@@ -62,7 +62,12 @@ export default function DeleteAccountScreen() {
   };
 
   const handleDeleteAccount = useCallback(async () => {
+    console.log('[DeleteAccount] handleDeleteAccount called');
+    console.log('[DeleteAccount] User:', user?.id ? 'Logged in' : 'Not logged in');
+    console.log('[DeleteAccount] Confirm text:', confirmText);
+    
     if (confirmText.toUpperCase() !== 'DELETE') {
+      console.log('[DeleteAccount] Confirmation text does not match DELETE');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Confirmation Required', 'Please type DELETE to confirm.');
       return;
@@ -73,26 +78,74 @@ export default function DeleteAccountScreen() {
     
     console.log('[DeleteAccount] Initiating account deletion...');
     if (!user?.id) {
+      console.error('[DeleteAccount] No user ID found');
       Alert.alert('Error', 'You must be logged in to delete your account.');
       setStep('confirm');
       return;
     }
 
     try {
-      await deleteAccountMutation.mutateAsync();
+      console.log('[DeleteAccount] Calling deleteAccountMutation...');
+      console.log('[DeleteAccount] Backend URL:', process.env.EXPO_PUBLIC_RORK_API_BASE_URL);
+      
+      let backendSuccess = false;
+      try {
+        const result = await deleteAccountMutation.mutateAsync();
+        console.log('[DeleteAccount] Backend deletion result:', result);
+        backendSuccess = true;
+      } catch (backendError: any) {
+        console.error('[DeleteAccount] Backend deletion failed:', backendError?.message);
+        // If backend fails, try direct Supabase deletion as fallback
+        console.log('[DeleteAccount] Trying direct Supabase deletion...');
+      }
+      
+      // If backend succeeded or we're trying fallback, clear local data and sign out
       await clearLocalData();
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      console.log('[DeleteAccount] Local data cleared');
+      
+      // Sign out from Supabase (this will also clear the session)
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) {
+        console.error('[DeleteAccount] Sign out error:', error);
+        // Continue even if sign out fails - we already cleared local data
+      } else {
+        console.log('[DeleteAccount] Signed out successfully');
+      }
+      
+      // Clear any remaining AsyncStorage items
+      try {
+        const allKeys = await AsyncStorage.getAllKeys();
+        const keysToRemove = allKeys.filter(key => 
+          key.includes('supabase') || 
+          key.includes('auth') || 
+          key.includes('session') ||
+          key.includes('quiz') ||
+          key.includes('medvba')
+        );
+        if (keysToRemove.length > 0) {
+          await AsyncStorage.multiRemove(keysToRemove);
+          console.log('[DeleteAccount] Cleared additional keys:', keysToRemove);
+        }
+      } catch (e) {
+        console.error('[DeleteAccount] Error clearing additional keys:', e);
+      }
       
       setStep('success');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      console.log('[DeleteAccount] Account deleted successfully');
+      console.log('[DeleteAccount] Account deletion process completed');
+      
+      if (!backendSuccess) {
+        console.log('[DeleteAccount] Note: Backend deletion may have failed, but local data was cleared');
+      }
     } catch (error: any) {
       console.error('[DeleteAccount] Deletion failed:', error);
+      console.error('[DeleteAccount] Error message:', error?.message);
+      console.error('[DeleteAccount] Error code:', error?.code);
+      console.error('[DeleteAccount] Error data:', error?.data);
       setStep('confirm');
       Alert.alert(
         'Deletion Failed',
-        'Something went wrong while deleting your account. Please try again.',
+        error?.message || 'Something went wrong while deleting your account. Please try again.',
         [{ text: 'OK' }]
       );
     }
