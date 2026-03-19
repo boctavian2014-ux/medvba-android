@@ -3,7 +3,6 @@ import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import type { Question } from '@/mocks/questions';
-import { monitoring } from '@/lib/monitoring';
 import { useAuth } from './AuthProvider';
 import { 
   useUserProgress, 
@@ -439,7 +438,6 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
   const updateDailyProgress = useCallback(async (correct: boolean, questionId: string) => {
     try {
-      monitoring.logEvent('question_answered', { correct, questionId });
 
       let newAllTime: AllTimeStats | null = null;
       let newStreak: StreakData | null = null;
@@ -517,7 +515,6 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       }
     } catch (error) {
       console.error('[QuizProgress] Error updating daily progress:', error);
-      monitoring.logError(error as Error, { context: 'update_daily_progress' });
     }
   }, [updateStreak, updateWeeklyHistory, userId, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
 
@@ -538,19 +535,12 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
   const saveSessionState = useCallback(async (state: SessionState) => {
     try {
-      monitoring.logEvent('quiz_session_saved', { 
-        category: state.category, 
-        mode: state.mode,
-        progress: state.currentIndex / state.questions.length 
-      });
-      console.log('[QuizProgress] Saving session state at index:', state.currentIndex);
       setSessionState(state);
       await AsyncStorage.setItem(SESSION_STATE_KEY, JSON.stringify(state));
       
       await saveLastSessionInfo(state.category, state.mode);
     } catch (error) {
       console.error('[QuizProgress] Error saving session state:', error);
-      monitoring.logError(error as Error, { context: 'save_session_state' });
     }
   }, [saveLastSessionInfo]);
 

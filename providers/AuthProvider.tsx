@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase';
 import { useUserProfile } from '@/lib/supabase-hooks';
 import { AppState } from 'react-native';
 
-import { monitoring } from '@/lib/monitoring';
 import type { UserProfile } from '@/types/user';
 
 const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
@@ -176,9 +175,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         
         if (currentSession?.user) {
           await fetchProfile(currentSession.user.id, currentSession.user.email, mountedRef);
-          if (mountedRef.current) {
-            monitoring.setUser(currentSession.user.id, currentSession.user.email);
-          }
         }
         
         if (mountedRef.current) {
@@ -214,9 +210,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       if (newSession?.user) {
         try {
           await fetchProfile(newSession.user.id, newSession.user.email, mountedRef);
-          if (mountedRef.current) {
-            monitoring.setUser(newSession.user.id, newSession.user.email);
-          }
         } catch (error) {
           if (!mountedRef.current) return;
           if (error instanceof Error && error.message.includes('signal is aborted')) {
@@ -226,7 +219,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         }
       } else {
         setProfile(null);
-        monitoring.clearUser();
       }
     });
 
@@ -251,18 +243,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       });
 
       if (error) {
-        console.error('[Auth] Sign up error:', {
-          message: error.message,
-          code: error.code,
-          status: error.status,
-          name: error.name,
-        });
-        monitoring.logError(new Error(error.message), { context: 'signup', errorCode: error.code });
+        console.error('[Auth] Sign up error:', error.message);
         return { error };
       }
 
-      monitoring.logEvent('user_signup', { email });
-      console.log('[Auth] User created successfully, database triggers will create profile automatically');
+      console.log('[Auth] User created successfully');
 
       return { error: null };
     } catch (error) {
@@ -280,9 +265,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (error) {
         console.error('[Auth] Sign in error:', error.message);
-        monitoring.logError(new Error(error.message), { context: 'signin', errorCode: error.code });
-      } else {
-        monitoring.logEvent('user_signin', { email });
       }
 
       return { error };
@@ -294,12 +276,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   const signOut = useCallback(async () => {
     try {
-      console.log('[Auth] Signing out...');
       await supabase.auth.signOut();
       setProfile(null);
-      monitoring.clearUser();
-      monitoring.logEvent('user_signout');
-      console.log('[Auth] Signed out successfully');
+      console.log('[Auth] Signed out');
     } catch (error) {
       console.error('[Auth] Sign out error:', error);
     }
