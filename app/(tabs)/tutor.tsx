@@ -141,13 +141,33 @@ export default function TutorScreen() {
     } catch (error) {
       const errStr = error instanceof Error ? error.message : String(error);
       log.debug('[Tutor] Failed to get AI response:', errStr);
+      console.error('[Tutor] Full error:', error);
 
       // protectedProcedure on the backend throws UNAUTHORIZED when the user is not logged in.
       if (
         errStr.toLowerCase().includes('unauthorized') ||
-        errStr.toLowerCase().includes('authentication required')
+        errStr.toLowerCase().includes('authentication required') ||
+        errStr.toLowerCase().includes('not authenticated')
       ) {
         router.push('/(auth)/login');
+        return;
+      }
+
+      // Network/connection errors
+      if (
+        errStr.toLowerCase().includes('fetch') ||
+        errStr.toLowerCase().includes('network') ||
+        errStr.toLowerCase().includes('connection') ||
+        errStr.toLowerCase().includes('failed to fetch')
+      ) {
+        const networkErrorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'Eroare de rețea. Verifică conexiunea la internet sau încearcă mai târziu.',
+          timestamp: new Date(),
+          isError: true,
+        };
+        setMessages(prev => [...prev, networkErrorMessage]);
         return;
       }
 
@@ -220,10 +240,11 @@ export default function TutorScreen() {
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          enabled={Platform.OS !== 'web'}
         >
           <View style={styles.header}>
             <View style={styles.headerIcon}>
@@ -358,9 +379,12 @@ export default function TutorScreen() {
           </ScrollView>
 
           <View style={styles.inputContainer}>
-            <GlassCard style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, {
+              backgroundColor: colors.cardBgLight,
+              borderColor: colors.glassBorder,
+            }]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder={t('tutor.inputPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={inputText}
@@ -375,7 +399,7 @@ export default function TutorScreen() {
               >
                 <Send color={inputText.trim() ? colors.text : colors.textMuted} size={20} />
               </TouchableOpacity>
-            </GlassCard>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -574,6 +598,8 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     alignItems: 'flex-end',
     paddingVertical: 8,
     paddingHorizontal: 12,
+    borderRadius: 24,
+    borderWidth: 1,
   },
   input: {
     flex: 1,
