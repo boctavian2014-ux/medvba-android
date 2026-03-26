@@ -4,9 +4,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 import { useUserProfile } from '@/lib/supabase-hooks';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+import { appleAuth } from '@/lib/appleAuth';
+
+let fbsdk: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    // @ts-ignore
+    const fb = require('react-native-fbsdk-next');
+    fbsdk = { LoginManager: fb.LoginManager, AccessToken: fb.AccessToken };
+  } catch {}
+}
+import Constants from 'expo-constants';
+import { log } from '@/lib/log';
 
 import type { UserProfile } from '@/types/user';
+
+const extraConfig = Constants.expoConfig?.extra ?? {};
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
+const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '';
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || googleIosClientId || '';
+const facebookAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || extraConfig.EXPO_PUBLIC_FACEBOOK_APP_ID || '';
+const appleClientId = process.env.EXPO_PUBLIC_APPLE_CLIENT_ID || extraConfig.EXPO_PUBLIC_APPLE_CLIENT_ID || '';
+const passwordResetRedirectUri = process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || extraConfig.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || 'medvba://reset-password';
 
 const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
@@ -26,6 +48,16 @@ interface AuthActions {
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   completeOnboarding: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signInWithFacebook: () => Promise<{ error: AuthError | null }>;
+  signInWithApple: () => Promise<{ error: AuthError | null }>;
+  // Social account linking
+  linkGoogleAccount: () => Promise<{ error: AuthError | null }>;
+  linkFacebookAccount: () => Promise<{ error: AuthError | null }>;
+  linkAppleAccount: () => Promise<{ error: AuthError | null }>;
+  unlinkGoogleAccount: () => Promise<{ error: AuthError | null }>;
+  unlinkFacebookAccount: () => Promise<{ error: AuthError | null }>;
+  unlinkAppleAccount: () => Promise<{ error: AuthError | null }>;
 }
 
 type AuthContextValue = AuthState & AuthActions;
@@ -40,34 +72,34 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
   const lastPresenceAtRef = useRef(0);
   const lastIsPublicRef = useRef<boolean | null>(null);
 
-  const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted: { current: boolean }) => {
+  const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted?: { current: boolean }) => {
     try {
-      if (!mounted.current) return;
-      console.log('[Auth] Checking if profile exists for user:', userId);
+      if (mounted && !mounted.current) return;
+      log.info('[Auth] Checking if profile exists for user:', userId);
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
         .single();
 
-      if (!mounted.current) return;
+      if (mounted && !mounted.current) return;
       if (!existingProfile) {
-        console.log('[Auth] Profile not found, creating...');
+        log.info('[Auth] Profile not found, creating...');
         await supabase.from('profiles').insert({
           id: userId,
           name: name || 'Student',
           avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
         });
-        if (mounted.current) {
-          console.log('[Auth] Profile created');
+        if (!mounted || mounted.current) {
+          log.info('[Auth] Profile created');
         }
       }
     } catch (error) {
-      if (!mounted.current) return;
+      if (mounted && !mounted.current) return;
       if (error instanceof Error && error.message.includes('signal is aborted')) {
         return;
       }
-      console.error('[Auth] Error ensuring profile exists:', error);
+      log.error('[Auth] Error ensuring profile exists:', error);
     }
   }, []);
 
@@ -76,7 +108,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
     try {
       if (!mounted.current) return;
-      console.log('[Auth] Fetching profile for user:', userId);
+      log.info('[Auth] Fetching profile for user:', userId);
       const { data: result, error } = await supabase
         .from('profiles')
         .select('*')
@@ -98,7 +130,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         const userProfile: UserProfile = {
           id: result.id,
           name: result.name || 'Student',
-          avatar: result.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
+          avatar: result.profile_photo_url || result.avatar || `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
           rank: 0,
           points: progressData?.total_questions_answered || 0,
           streak: progressData?.current_streak || 0,
@@ -114,14 +146,14 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           isPublic: result.is_public ?? true,
         };
         setProfile(userProfile);
-        console.log('[Auth] Profile fetched successfully:', userProfile.name);
+        log.info('[Auth] Profile fetched successfully:', userProfile.name);
       }
     } catch (error) {
       if (!mounted.current) return;
       if (error instanceof Error && error.message.includes('signal is aborted')) {
         return;
       }
-      console.log('[Auth] Using default profile for user:', userId);
+      log.info('[Auth] Using default profile for user:', userId);
       
       setProfile({
         id: userId,
@@ -144,9 +176,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     try {
       const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
       setHasCompletedOnboarding(completed === 'true');
-      console.log('[Auth] Onboarding status:', completed === 'true');
+      log.info('[Auth] Onboarding status:', completed === 'true');
     } catch (error) {
-      console.error('[Auth] Error checking onboarding status:', error);
+      log.error('[Auth] Error checking onboarding status:', error);
     }
   }, []);
 
@@ -179,7 +211,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         
         if (mountedRef.current) {
           setIsLoading(false);
-          console.log('[Auth] Auth initialized, session:', !!currentSession);
+          log.info('[Auth] Auth initialized, session:', !!currentSession);
         }
       } catch (error) {
         if (!mountedRef.current) return;
@@ -190,7 +222,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           if (mountedRef.current) setIsLoading(false);
           return;
         }
-        console.error('[Auth] Error initializing auth:', error);
+        log.error('[Auth] Error initializing auth:', error);
         if (mountedRef.current) {
           setIsLoading(false);
         }
@@ -200,7 +232,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('[Auth] Auth state changed:', event);
+      log.info('[Auth] Auth state changed:', event);
       
       if (!mountedRef.current) return;
       
@@ -215,7 +247,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           if (error instanceof Error && error.message.includes('signal is aborted')) {
             return;
           }
-          console.error('[Auth] Error fetching profile on auth state change:', error);
+          log.error('[Auth] Error fetching profile on auth state change:', error);
         }
       } else {
         setProfile(null);
@@ -230,7 +262,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     try {
-      console.log('[Auth] Signing up user:', email);
+      log.info('[Auth] Signing up user:', email);
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -243,15 +275,15 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       });
 
       if (error) {
-        console.error('[Auth] Sign up error:', error.message);
+        log.error('[Auth] Sign up error:', error.message);
         return { error };
       }
 
-      console.log('[Auth] User created successfully');
+      log.info('[Auth] User created successfully');
 
       return { error: null };
     } catch (error) {
-      console.error('[Auth] Unexpected sign up error:', error);
+      log.error('[Auth] Unexpected sign up error:', error);
       return { error: error as AuthError };
     }
   }, []);
@@ -264,12 +296,12 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       });
 
       if (error) {
-        console.error('[Auth] Sign in error:', error.message);
+        log.error('[Auth] Sign in error:', error.message);
       }
 
       return { error };
     } catch (error) {
-      console.error('[Auth] Unexpected sign in error:', error);
+      log.error('[Auth] Unexpected sign in error:', error);
       return { error: error as AuthError };
     }
   }, []);
@@ -278,25 +310,27 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     try {
       await supabase.auth.signOut();
       setProfile(null);
-      console.log('[Auth] Signed out');
+      log.info('[Auth] Signed out');
     } catch (error) {
-      console.error('[Auth] Sign out error:', error);
+      log.error('[Auth] Sign out error:', error);
     }
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
     try {
-      console.log('[Auth] Sending password reset to:', email);
+      log.info('[Auth] Sending password reset to:', email);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: passwordResetRedirectUri,
+      });
       
       if (error) {
-        console.error('[Auth] Password reset error:', error);
+        log.error('[Auth] Password reset error:', error);
       }
       
       return { error };
     } catch (error) {
-      console.error('[Auth] Unexpected password reset error:', error);
+      log.error('[Auth] Unexpected password reset error:', error);
       return { error: error as AuthError };
     }
   }, []);
@@ -305,9 +339,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     try {
       await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true');
       setHasCompletedOnboarding(true);
-      console.log('[Auth] Onboarding completed');
+      log.info('[Auth] Onboarding completed');
     } catch (error) {
-      console.error('[Auth] Error completing onboarding:', error);
+      log.error('[Auth] Error completing onboarding:', error);
     }
   }, []);
 
@@ -317,6 +351,432 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       await fetchProfile(user.id, user.email, mountedRef);
     }
   }, [user, fetchProfile]);
+
+    const signInWithGoogle = useCallback(async () => {
+      // Google Sign-In is not supported on web (sponsor-only feature)
+      if (Platform.OS === 'web') {
+        return { error: { message: 'Google Sign-In is not available on web. Please use email login.' } as AuthError };
+      }
+      
+      try {
+        GoogleSignin.configure({
+          webClientId: googleWebClientId,
+          ...(Platform.OS === 'android' && googleAndroidClientId ? { androidClientId: googleAndroidClientId } : {}),
+          ...(Platform.OS === 'ios' && googleIosClientId ? { iosClientId: googleIosClientId } : {}),
+        });
+        
+        // Check if play services are available (Android)
+        if (Platform.OS === 'android') {
+          const hasPlayServices = await GoogleSignin.hasPlayServices();
+          if (!hasPlayServices) {
+            return { error: { message: 'Google Play Services not available' } as AuthError };
+          }
+        }
+        
+        const result = await GoogleSignin.signIn();
+        
+        // In v16+, the result has data property
+        const userInfo = (result as any).data ?? result;
+        const idToken = userInfo.idToken ?? (result as any).idToken;
+        
+        if (!idToken) {
+          log.error('[Auth] Google Sign-In failed: no idToken returned');
+          return { error: { message: 'Google Sign-In failed: no idToken returned. Check your Google OAuth client IDs.' } as AuthError };
+        }
+        
+        const googleUser = userInfo.user ?? (result as any).user;
+        
+        const { data: { user: supabaseUser }, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: idToken,
+        });
+        if (error) {
+          log.error('[Auth] Supabase signInWithIdToken error:', error.message);
+          return { error };
+        }
+        
+        if (!supabaseUser) {
+          return { error: { message: 'Google Sign-In succeeded but Supabase did not return a user.' } as AuthError };
+        }
+        
+        // Ensure profile exists and update with Google ID
+        await ensureUserExists(
+          supabaseUser.id,
+          supabaseUser.email ?? googleUser?.email,
+          supabaseUser.user_metadata?.name ?? googleUser?.name ?? googleUser?.photo?.split('/').pop() ?? 'User'
+        );
+        
+        // Update profile with Google ID
+        await supabase
+          .from('profiles')
+          .update({ googleId: googleUser?.id })
+          .eq('id', supabaseUser.id);
+        
+        return { error: null };
+      } catch (error: any) {
+        log.error('[Auth] Google Sign-In error:', error?.message || error);
+        return { error: { message: error?.message || 'Google Sign-In failed' } as AuthError };
+      }
+    }, [ensureUserExists, googleWebClientId, googleAndroidClientId, googleIosClientId]);
+
+    const signInWithFacebook = useCallback(async () => {
+      try {
+        if (!fbsdk) {
+          return { error: { message: 'Facebook Sign-In is not available on this platform' } as AuthError };
+        }
+        const { LoginManager, AccessToken } = fbsdk;
+        const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+        if (result.isCancelled) return { error: null };
+        
+        const data = await AccessToken.getCurrentAccessToken();
+        const accessToken = data?.accessToken;
+        
+        if (!accessToken) {
+          return { error: null };
+        }
+        
+        // Get Facebook user info
+        const facebookResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
+        const facebookUser = await facebookResponse.json();
+        
+        const { data: { user: supabaseUser }, error } = await supabase.auth.signInWithIdToken({
+          provider: 'facebook',
+          token: accessToken,
+        });
+        if (error) {
+          return { error };
+        }
+        
+        if (!supabaseUser) {
+          return { error: { message: 'Facebook Sign-In succeeded but Supabase did not return a user.' } as AuthError };
+        }
+        
+        // Ensure profile exists and update with Facebook ID
+        await ensureUserExists(
+          supabaseUser.id,
+          supabaseUser.email ?? facebookUser.email,
+          supabaseUser.user_metadata?.name ?? facebookUser.name ?? 'User'
+        );
+        
+        // Update profile with Facebook ID
+        await supabase
+          .from('profiles')
+          .update({ facebookId: facebookUser.id })
+          .eq('id', supabaseUser.id);
+        
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Facebook sign in error:', error);
+        return { error: error as AuthError };
+      }
+    }, [ensureUserExists]);
+
+    const signInWithApple = useCallback(async () => {
+      try {
+        if (!appleAuth || !appleAuth.isSupported) {
+          return { error: { message: 'Apple Sign-In is not available on this device' } as AuthError };
+        }
+        
+        const requestOptions = {
+          requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+        };
+        
+        const response = await appleAuth.performRequest(requestOptions);
+        
+        if (response.identityToken) {
+          const { data: { user: supabaseUser }, error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: response.identityToken,
+            nonce: response.nonce,
+          });
+          if (error) {
+            return { error };
+          }
+          
+          if (!supabaseUser) {
+            return { error: { message: 'Apple Sign-In succeeded but Supabase did not return a user.' } as AuthError };
+          }
+          
+          // Ensure profile exists and update with Apple ID
+          const nameFromMetadata = supabaseUser.user_metadata?.name;
+          const nameFromResponse = `${response.fullName?.givenName ?? ''} ${response.fullName?.familyName ?? ''}`.trim();
+          const safeName = (nameFromMetadata ?? nameFromResponse) || 'User';
+          await ensureUserExists(
+            supabaseUser.id,
+            supabaseUser.email ?? response.email,
+            safeName
+          );
+          
+          // Update profile with Apple ID
+          await supabase
+            .from('profiles')
+            .update({ appleId: response.user })
+            .eq('id', supabaseUser.id);
+          
+          return { error: null };
+        }
+        
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Apple Sign-In error:', error);
+        return { error: error as AuthError };
+      }
+    }, [ensureUserExists]);
+
+    // Social account linking methods
+    const linkGoogleAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        // Initiate Google Sign-In to get the actual user ID
+        GoogleSignin.configure({
+          webClientId: googleWebClientId,
+          ...(Platform.OS === 'android' && googleAndroidClientId ? { androidClientId: googleAndroidClientId } : {}),
+          ...(Platform.OS === 'ios' && googleIosClientId ? { iosClientId: googleIosClientId } : {}),
+        });
+        
+        // Check if play services are available (Android)
+        if (Platform.OS === 'android') {
+          const hasPlayServices = await GoogleSignin.hasPlayServices();
+          if (!hasPlayServices) {
+            return { error: { message: 'Google Play Services not available' } as AuthError };
+          }
+        }
+        
+        const result = await GoogleSignin.signIn();
+        
+        // In v16+, the result has data property
+        const userInfo = (result as any).data ?? result;
+        const googleUser = userInfo.user ?? (result as any).user;
+        
+        if (!googleUser?.id) {
+          return { error: { message: 'Google Sign-In did not return a user ID' } as AuthError };
+        }
+        
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            googleId: googleUser.id
+          }
+        });
+        
+        if (error) return { error };
+        
+        // Update profile with Google ID
+        await supabase
+          .from('profiles')
+          .update({ googleId: googleUser.id })
+          .eq('id', user.id);
+        
+        // Refresh profile to update UI
+        await refreshProfile();
+          
+        return { error: null };
+      } catch (error: any) {
+        // Check if user cancelled the sign-in
+        if (error?.code === '12501' || error?.message?.includes('cancelled')) {
+          return { error: null }; // User cancelled, not an error
+        }
+        log.error('[Auth] Link Google account error:', error);
+        return { error: { message: error?.message || 'Failed to link Google account' } as AuthError };
+      }
+    }, [user, refreshProfile, googleWebClientId, googleAndroidClientId, googleIosClientId]);
+
+    const linkFacebookAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        if (!fbsdk) {
+          return { error: { message: 'Facebook Sign-In is not available on this platform' } as AuthError };
+        }
+        
+        const { LoginManager, AccessToken } = fbsdk;
+        const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+        
+        if (result.isCancelled) {
+          return { error: null }; // User cancelled
+        }
+        
+        const data = await AccessToken.getCurrentAccessToken();
+        const accessToken = data?.accessToken;
+        
+        if (!accessToken) {
+          return { error: { message: 'Failed to get Facebook access token' } as AuthError };
+        }
+        
+        // Get Facebook user info
+        const facebookResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
+        const facebookUser = await facebookResponse.json();
+        
+        if (facebookUser.error) {
+          return { error: { message: facebookUser.error.message || 'Failed to get Facebook user info' } as AuthError };
+        }
+        
+        if (!facebookUser.id) {
+          return { error: { message: 'Facebook Sign-In did not return a user ID' } as AuthError };
+        }
+        
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            facebookId: facebookUser.id
+          }
+        });
+        
+        if (error) return { error };
+        
+        // Update profile with Facebook ID
+        await supabase
+          .from('profiles')
+          .update({ facebookId: facebookUser.id })
+          .eq('id', user.id);
+        
+        // Refresh profile to update UI
+        await refreshProfile();
+          
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Link Facebook account error:', error);
+        return { error: error as AuthError };
+      }
+    }, [user, refreshProfile]);
+
+    const linkAppleAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        if (!appleAuth || !appleAuth.isSupported) {
+          return { error: { message: 'Apple Sign-In is not available on this device' } as AuthError };
+        }
+        
+        const requestOptions = {
+          requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+        };
+        
+        const response = await appleAuth.performRequest(requestOptions);
+        
+        if (response.identityToken) {
+          // Get the Apple user ID from the response
+          const appleUserId = response.user;
+          
+          if (!appleUserId) {
+            return { error: { message: 'Apple Sign-In did not return a user ID' } as AuthError };
+          }
+          
+          const { error } = await supabase.auth.updateUser({
+            data: {
+              appleId: appleUserId
+            }
+          });
+          
+          if (error) return { error };
+          
+          // Update profile with Apple ID
+          await supabase
+            .from('profiles')
+            .update({ appleId: appleUserId })
+            .eq('id', user.id);
+          
+          // Refresh profile to update UI
+          await refreshProfile();
+          
+          return { error: null };
+        }
+        
+        // User cancelled or no identity token returned
+        return { error: null };
+      } catch (error) {
+        // Check if user cancelled
+        if (error instanceof Error && (error.message.includes('cancel') || error.message.includes('cancelled'))) {
+          return { error: null };
+        }
+        log.error('[Auth] Link Apple account error:', error);
+        return { error: error as AuthError };
+      }
+    }, [user, refreshProfile]);
+
+    // Social account unlinking methods
+    const unlinkGoogleAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            googleId: null
+          }
+        });
+        
+        if (error) return { error };
+        
+        // Update profile to remove Google ID
+        await supabase
+          .from('profiles')
+          .update({ googleId: null })
+          .eq('id', user.id);
+        
+        // Refresh profile to update UI
+        await refreshProfile();
+          
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Unlink Google account error:', error);
+        return { error: error as AuthError };
+      }
+    }, [user, refreshProfile]);
+
+    const unlinkFacebookAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            facebookId: null
+          }
+        });
+        
+        if (error) return { error };
+        
+        // Update profile to remove Facebook ID
+        await supabase
+          .from('profiles')
+          .update({ facebookId: null })
+          .eq('id', user.id);
+        
+        // Refresh profile to update UI
+        await refreshProfile();
+          
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Unlink Facebook account error:', error);
+        return { error: error as AuthError };
+      }
+    }, [user, refreshProfile]);
+
+    const unlinkAppleAccount = useCallback(async () => {
+      try {
+        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+        
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            appleId: null
+          }
+        });
+        
+        if (error) return { error };
+        
+        // Update profile to remove Apple ID
+        await supabase
+          .from('profiles')
+          .update({ appleId: null })
+          .eq('id', user.id);
+        
+        // Refresh profile to update UI
+        await refreshProfile();
+          
+        return { error: null };
+      } catch (error) {
+        log.error('[Auth] Unlink Apple account error:', error);
+        return { error: error as AuthError };
+      }
+    }, [user, refreshProfile]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -340,9 +800,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
             last_seen: new Date().toISOString(),
           }, { onConflict: 'user_id' });
         lastPresenceAtRef.current = now;
-        console.log('[Auth] Presence updated');
+        log.info('[Auth] Presence updated');
       } catch (error) {
-        console.error('[Auth] Error updating presence:', error);
+        log.error('[Auth] Error updating presence:', error);
       }
     };
 
@@ -370,18 +830,29 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     };
   }, [user?.id, userProfile?.is_public]);
 
-  return {
-    session,
-    user,
-    profile,
-    isLoading,
-    isAuthenticated: !!session,
-    hasCompletedOnboarding,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    completeOnboarding,
-    refreshProfile,
-  };
+   return {
+     session,
+     user,
+     profile,
+     isLoading,
+     isAuthenticated: !!session,
+     hasCompletedOnboarding,
+     signUp,
+     signIn,
+     signOut,
+     resetPassword,
+     completeOnboarding,
+     refreshProfile,
+     signInWithGoogle,
+     signInWithFacebook,
+     signInWithApple,
+     // Social account linking
+     linkGoogleAccount,
+     linkFacebookAccount,
+     linkAppleAccount,
+     unlinkGoogleAccount,
+     unlinkFacebookAccount,
+     unlinkAppleAccount,
+   };
 });
+

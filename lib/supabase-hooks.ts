@@ -108,7 +108,7 @@ export function useCreateStudyRoom() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.studyRooms });
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyRoomsList() });
     },
   });
 }
@@ -142,7 +142,7 @@ export function useUpdateStudyRoom() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.studyRooms });
+      queryClient.invalidateQueries({ queryKey: queryKeys.studyRoomsList() });
     },
   });
 }

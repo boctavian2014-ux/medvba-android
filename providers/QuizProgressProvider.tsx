@@ -12,6 +12,7 @@ import {
   useCheckAchievements,
   useGrantAchievement
 } from '@/lib/supabase-hooks';
+import { log } from '@/lib/log';
 
 const DAILY_PROGRESS_KEY = 'quiz_daily_progress';
 const SESSION_STATE_KEY = 'quiz_session_state';
@@ -174,7 +175,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       const newAchievements = checkResult.data?.earned || [];
 
       if (newAchievements.length > 0) {
-        console.log('[QuizProgress] Granting', newAchievements.length, 'new achievements');
+        log.info('[QuizProgress] Granting', newAchievements.length, 'new achievements');
         
         for (const achievementType of newAchievements) {
           try {
@@ -188,9 +189,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
               continue;
             }
 
-            console.log('[QuizProgress] Granted achievement:', achievementType);
+            log.info('[QuizProgress] Granted achievement:', achievementType);
           } catch (error: any) {
-            console.error('[QuizProgress] Error granting achievement:', achievementType, JSON.stringify({
+            log.error('[QuizProgress] Error granting achievement:', achievementType, JSON.stringify({
               message: error?.message || String(error),
               code: error?.code,
               details: error?.details,
@@ -205,7 +206,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         }
       }
     } catch (error: any) {
-      console.error('[QuizProgress] Error checking achievements:', JSON.stringify({
+      log.error('[QuizProgress] Error checking achievements:', JSON.stringify({
         message: error?.message || String(error),
         code: error?.code,
         details: error?.details,
@@ -243,10 +244,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         longestStreak: newLongest,
       };
 
-      console.log('[QuizProgress] Updated streak:', updated.currentStreak, 'days');
+      log.info('[QuizProgress] Updated streak:', updated.currentStreak, 'days');
       
       AsyncStorage.setItem(STREAK_KEY, JSON.stringify(updated)).catch(err => {
-        console.error('[QuizProgress] Error saving streak:', err);
+        log.error('[QuizProgress] Error saving streak:', err);
       });
 
       return updated;
@@ -284,10 +285,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       const last7Days = getLast7Days();
       updated = updated.filter(entry => last7Days.includes(entry.date));
 
-      console.log('[QuizProgress] Updated weekly history:', updated.length, 'days tracked');
+      log.info('[QuizProgress] Updated weekly history:', updated.length, 'days tracked');
       
       AsyncStorage.setItem(WEEKLY_HISTORY_KEY, JSON.stringify(updated)).catch(err => {
-        console.error('[QuizProgress] Error saving weekly history:', err);
+        log.error('[QuizProgress] Error saving weekly history:', err);
       });
 
       return updated;
@@ -301,12 +302,12 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
     const loadProgress = async () => {
       try {
-        console.log('[QuizProgress] Loading progress from cloud and local...');
+        log.info('[QuizProgress] Loading progress from cloud and local...');
         
         if (!isMounted) return;
 
         if (userId && cloudProgressQuery.data) {
-          console.log('[QuizProgress] Loading from Supabase cloud');
+          log.info('[QuizProgress] Loading from Supabase cloud');
           if (isMounted) {
             setAllTimeStats({
               totalQuestionsAnswered: cloudProgressQuery.data.totalQuestionsAnswered,
@@ -320,11 +321,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             });
           }
         } else {
-          console.log('[QuizProgress] Loading from local AsyncStorage');
+          log.info('[QuizProgress] Loading from local AsyncStorage');
           const allTimeStored = await AsyncStorage.getItem(ALL_TIME_STATS_KEY);
           if (isMounted && allTimeStored) {
             const parsedAllTime = JSON.parse(allTimeStored) as AllTimeStats;
-            console.log('[QuizProgress] Loaded all-time stats from local:', parsedAllTime);
+            log.info('[QuizProgress] Loaded all-time stats from local:', parsedAllTime);
             setAllTimeStats(parsedAllTime);
           }
           
@@ -335,7 +336,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             const yesterday = getYesterdayDateString();
             
             if (parsedStreak.lastActiveDate !== today && parsedStreak.lastActiveDate !== yesterday) {
-              console.log('[QuizProgress] Streak broken, resetting to 0');
+              log.info('[QuizProgress] Streak broken, resetting to 0');
               const resetStreak: StreakData = {
                 currentStreak: 0,
                 lastActiveDate: parsedStreak.lastActiveDate,
@@ -344,7 +345,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
               setStreakData(resetStreak);
               await AsyncStorage.setItem(STREAK_KEY, JSON.stringify(resetStreak));
             } else {
-              console.log('[QuizProgress] Loaded streak from local:', parsedStreak.currentStreak, 'days');
+              log.info('[QuizProgress] Loaded streak from local:', parsedStreak.currentStreak, 'days');
               setStreakData(parsedStreak);
             }
           }
@@ -353,7 +354,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         if (!isMounted) return;
 
         if (userId && cloudWeeklyQuery.data && cloudWeeklyQuery.data.length > 0) {
-          console.log('[QuizProgress] Loading weekly history from Supabase');
+          log.info('[QuizProgress] Loading weekly history from Supabase');
           const weeklyData = cloudWeeklyQuery.data.map(day => ({
             date: day.date,
             questionsAnswered: day.questionsAnswered,
@@ -369,7 +370,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
             const parsedWeekly = JSON.parse(weeklyStored) as DailyHistoryEntry[];
             const last7Days = getLast7Days();
             const filtered = parsedWeekly.filter(entry => last7Days.includes(entry.date));
-            console.log('[QuizProgress] Loaded weekly history from local:', filtered.length, 'days');
+            log.info('[QuizProgress] Loaded weekly history from local:', filtered.length, 'days');
             setWeeklyHistory(filtered);
           }
         }
@@ -383,16 +384,16 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           const today = getTodayDateString();
           
           if (parsed.date === today) {
-            console.log('[QuizProgress] Found today\'s progress:', parsed.questionsAnswered, 'questions');
+            log.info('[QuizProgress] Found today\'s progress:', parsed.questionsAnswered, 'questions');
             setDailyProgress(parsed);
           } else {
-            console.log('[QuizProgress] Progress is from a different day, resetting');
+            log.info('[QuizProgress] Progress is from a different day, resetting');
             const newProgress = getDefaultDailyProgress();
             setDailyProgress(newProgress);
             await AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newProgress));
           }
         } else {
-          console.log('[QuizProgress] No stored progress, using default');
+          log.info('[QuizProgress] No stored progress, using default');
         }
 
         if (!isMounted) return;
@@ -404,10 +405,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           const today = getTodayDateString();
           
           if (sessionDate === today) {
-            console.log('[QuizProgress] Found active session at index:', parsedSession.currentIndex);
+            log.info('[QuizProgress] Found active session at index:', parsedSession.currentIndex);
             setSessionState(parsedSession);
           } else {
-            console.log('[QuizProgress] Session is from a different day, clearing');
+            log.info('[QuizProgress] Session is from a different day, clearing');
             await AsyncStorage.removeItem(SESSION_STATE_KEY);
           }
         }
@@ -417,11 +418,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         const lastSessionStored = await AsyncStorage.getItem(LAST_SESSION_KEY);
         if (isMounted && lastSessionStored) {
           const parsedLastSession = JSON.parse(lastSessionStored) as LastSessionInfo;
-          console.log('[QuizProgress] Loaded last session:', parsedLastSession.category, parsedLastSession.mode);
+          log.info('[QuizProgress] Loaded last session:', parsedLastSession.category, parsedLastSession.mode);
           setLastSessionInfo(parsedLastSession);
         }
       } catch (error) {
-        console.error('[QuizProgress] Error loading progress:', error);
+        log.error('[QuizProgress] Error loading progress:', error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -446,7 +447,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
 
       setDailyProgress(prev => {
         if (prev.answeredQuestionIds.includes(questionId)) {
-          console.log('[QuizProgress] Question already answered today:', questionId);
+          log.info('[QuizProgress] Question already answered today:', questionId);
           return prev;
         }
         newDaily = {
@@ -456,9 +457,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           correctAnswers: correct ? prev.correctAnswers + 1 : prev.correctAnswers,
           answeredQuestionIds: [...prev.answeredQuestionIds, questionId],
         };
-        console.log('[QuizProgress] Updated daily progress:', newDaily.questionsAnswered, '/', newDaily.goal);
+        log.info('[QuizProgress] Updated daily progress:', newDaily.questionsAnswered, '/', newDaily.goal);
         AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newDaily)).catch(err => {
-          console.error('[QuizProgress] Error saving daily progress:', err);
+          log.error('[QuizProgress] Error saving daily progress:', err);
         });
         return newDaily;
       });
@@ -469,9 +470,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           totalQuestionsAnswered: prev.totalQuestionsAnswered + 1,
           totalCorrectAnswers: correct ? prev.totalCorrectAnswers + 1 : prev.totalCorrectAnswers,
         };
-        console.log('[QuizProgress] Updated all-time stats:', newAllTime.totalQuestionsAnswered, 'questions,', newAllTime.totalCorrectAnswers, 'correct');
+        log.info('[QuizProgress] Updated all-time stats:', newAllTime.totalQuestionsAnswered, 'questions,', newAllTime.totalCorrectAnswers, 'correct');
         AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(newAllTime)).catch(err => {
-          console.error('[QuizProgress] Error saving all-time stats:', err);
+          log.error('[QuizProgress] Error saving all-time stats:', err);
         });
         return newAllTime;
       });
@@ -507,15 +508,15 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           upsertDailyProgressAsync(dailyPayload),
         ])
           .then(() => {
-            console.log('[QuizProgress] Synced to Supabase successfully');
+            log.info('[QuizProgress] Synced to Supabase successfully');
             checkAndGrantAchievements();
           })
           .catch(error => {
-            console.error('[QuizProgress] Error syncing to Supabase:', error);
+            log.error('[QuizProgress] Error syncing to Supabase:', error);
           });
       }
     } catch (error) {
-      console.error('[QuizProgress] Error updating daily progress:', error);
+      log.error('[QuizProgress] Error updating daily progress:', error);
     }
   }, [updateStreak, updateWeeklyHistory, userId, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
 
@@ -526,11 +527,11 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         mode,
         timestamp: new Date().toISOString(),
       };
-      console.log('[QuizProgress] Saving last session info:', category, mode);
+      log.info('[QuizProgress] Saving last session info:', category, mode);
       setLastSessionInfo(info);
       await AsyncStorage.setItem(LAST_SESSION_KEY, JSON.stringify(info));
     } catch (error) {
-      console.error('[QuizProgress] Error saving last session info:', error);
+      log.error('[QuizProgress] Error saving last session info:', error);
     }
   }, []);
 
@@ -541,17 +542,17 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       
       await saveLastSessionInfo(state.category, state.mode);
     } catch (error) {
-      console.error('[QuizProgress] Error saving session state:', error);
+      log.error('[QuizProgress] Error saving session state:', error);
     }
   }, [saveLastSessionInfo]);
 
   const clearSessionState = useCallback(async () => {
     try {
-      console.log('[QuizProgress] Clearing session state');
+      log.info('[QuizProgress] Clearing session state');
       setSessionState(null);
       await AsyncStorage.removeItem(SESSION_STATE_KEY);
     } catch (error) {
-      console.error('[QuizProgress] Error clearing session state:', error);
+      log.error('[QuizProgress] Error clearing session state:', error);
     }
   }, []);
 
@@ -569,7 +570,7 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       }
       return null;
     } catch (error) {
-      console.error('[QuizProgress] Error loading session state:', error);
+      log.error('[QuizProgress] Error loading session state:', error);
       return null;
     }
   }, []);
@@ -579,9 +580,9 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
       const newProgress = getDefaultDailyProgress();
       setDailyProgress(newProgress);
       await AsyncStorage.setItem(DAILY_PROGRESS_KEY, JSON.stringify(newProgress));
-      console.log('[QuizProgress] Daily progress reset');
+      log.info('[QuizProgress] Daily progress reset');
     } catch (error) {
-      console.error('[QuizProgress] Error resetting daily progress:', error);
+      log.error('[QuizProgress] Error resetting daily progress:', error);
     }
   }, []);
 
@@ -597,10 +598,10 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
           totalStudyTimeSeconds: prev.totalStudyTimeSeconds + seconds,
         };
 
-        console.log('[QuizProgress] Added', seconds, 'seconds. Total study time:', updated.totalStudyTimeSeconds, 'seconds');
+        log.info('[QuizProgress] Added', seconds, 'seconds. Total study time:', updated.totalStudyTimeSeconds, 'seconds');
         
         AsyncStorage.setItem(ALL_TIME_STATS_KEY, JSON.stringify(updated)).catch(err => {
-          console.error('[QuizProgress] Error saving study time:', err);
+          log.error('[QuizProgress] Error saving study time:', err);
         });
 
         return updated;
@@ -639,14 +640,14 @@ export const [QuizProgressProvider, useQuizProgress] = createContextHook<QuizPro
         }
 
         Promise.all(promises).then(() => {
-          console.log('[QuizProgress] Study time synced to Supabase');
+          log.info('[QuizProgress] Study time synced to Supabase');
           checkAndGrantAchievements();
         }).catch(error => {
-          console.error('[QuizProgress] Error syncing study time to Supabase:', error);
+          log.error('[QuizProgress] Error syncing study time to Supabase:', error);
         });
       }
     } catch (error) {
-      console.error('[QuizProgress] Error adding study time:', error);
+      log.error('[QuizProgress] Error adding study time:', error);
     }
   }, [updateWeeklyHistory, userId, allTimeStats, streakData, weeklyHistory, upsertUserProgressAsync, upsertDailyProgressAsync, checkAndGrantAchievements]);
 

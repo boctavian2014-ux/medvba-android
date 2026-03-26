@@ -17,7 +17,9 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { X, Search, MapPin, School, Users, Filter, MessageCircle } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import GlassCard from '@/components/GlassCard';
+import AvatarImage from '@/components/AvatarImage';
 import { useStudyPartners, useGetOrCreateDirectChat } from '@/lib/supabase-hooks';
 import type { UserAccount } from '@/types/user';
 import { useAuth } from '@/providers/AuthProvider';
@@ -26,6 +28,7 @@ export default function FindPartnersScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<string | undefined>();
   const [selectedUniversity, setSelectedUniversity] = useState<string | undefined>();
@@ -95,7 +98,7 @@ export default function FindPartnersScreen() {
   const renderPartnerCard = (partner: UserAccount) => (
     <GlassCard key={partner.id} style={styles.partnerCard}>
       <View style={styles.partnerHeader}>
-        <Image source={{ uri: partner.avatar }} style={styles.partnerAvatar} />
+        <AvatarImage uri={partner.avatar} size={56} seed={partner.id} style={styles.partnerAvatarStyle} />
         <View style={styles.partnerInfo}>
           <Text style={styles.partnerName}>{partner.name}</Text>
           {partner.city && (
@@ -114,7 +117,7 @@ export default function FindPartnersScreen() {
           </View>
           <Text style={styles.partnerDetailText}>
             {partner.university}
-            {partner.year_of_study && ` • Year ${partner.year_of_study}`}
+            {partner.year_of_study && ` • ${t('partners.yearOfStudy').replace('{year}', String(partner.year_of_study))}`}
           </Text>
         </View>
       )}
@@ -139,7 +142,7 @@ export default function FindPartnersScreen() {
           activeOpacity={0.7}
         >
           <Users color={colors.primary} size={16} />
-          <Text style={styles.viewProfileButtonText}>View Profile</Text>
+          <Text style={styles.viewProfileButtonText}>{t('partners.viewProfile')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -173,7 +176,7 @@ export default function FindPartnersScreen() {
           ) : (
             <>
               <MessageCircle color={colors.text} size={16} />
-              <Text style={styles.connectButtonText}>Message</Text>
+              <Text style={styles.connectButtonText}>{t('partners.message')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -192,7 +195,7 @@ export default function FindPartnersScreen() {
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()} activeOpacity={0.7}>
             <X color={colors.text} size={24} />
           </TouchableOpacity>
-          <Text style={styles.title}>Find Study Partners</Text>
+          <Text style={styles.title}>{t('partners.title')}</Text>
           <TouchableOpacity
             style={[styles.filterButton, activeFiltersCount > 0 && styles.filterButtonActive]}
             onPress={() => {
@@ -219,7 +222,7 @@ export default function FindPartnersScreen() {
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search by name, bio, location..."
+              placeholder={t('partners.searchPlaceholder')}
               placeholderTextColor={colors.textMuted}
             />
             {searchQuery.length > 0 && (
@@ -236,16 +239,16 @@ export default function FindPartnersScreen() {
               colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.04)']}
               style={StyleSheet.absoluteFill}
             />
-            <Text style={styles.filtersSectionTitle}>Filters</Text>
+            <Text style={styles.filtersSectionTitle}>{t('partners.filters')}</Text>
 
             <View style={styles.filterGroup}>
-              <Text style={styles.filterLabel}>City</Text>
+              <Text style={styles.filterLabel}>{t('partners.filterCity')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>
                 <TouchableOpacity
                   style={[styles.filterChip, !selectedCity && styles.filterChipActive]}
                   onPress={() => setSelectedCity(undefined)}
                 >
-                  <Text style={[styles.filterChipText, !selectedCity && styles.filterChipTextActive]}>All</Text>
+                  <Text style={[styles.filterChipText, !selectedCity && styles.filterChipTextActive]}>{t('partners.filterAll')}</Text>
                 </TouchableOpacity>
                 {availableCities.map((city) => (
                   <TouchableOpacity
@@ -262,13 +265,13 @@ export default function FindPartnersScreen() {
             </View>
 
             <View style={styles.filterGroup}>
-              <Text style={styles.filterLabel}>University</Text>
+              <Text style={styles.filterLabel}>{t('partners.filterUniversity')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChips}>
                 <TouchableOpacity
                   style={[styles.filterChip, !selectedUniversity && styles.filterChipActive]}
                   onPress={() => setSelectedUniversity(undefined)}
                 >
-                  <Text style={[styles.filterChipText, !selectedUniversity && styles.filterChipTextActive]}>All</Text>
+                  <Text style={[styles.filterChipText, !selectedUniversity && styles.filterChipTextActive]}>{t('partners.filterAll')}</Text>
                 </TouchableOpacity>
                 {availableUniversities.map((uni) => (
                   <TouchableOpacity
@@ -286,7 +289,7 @@ export default function FindPartnersScreen() {
 
             {activeFiltersCount > 0 && (
               <TouchableOpacity style={styles.clearFiltersButton} onPress={handleClearFilters}>
-                <Text style={styles.clearFiltersButtonText}>Clear Filters</Text>
+                <Text style={styles.clearFiltersButtonText}>{t('partners.clearFilters')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -299,23 +302,23 @@ export default function FindPartnersScreen() {
         >
           <View style={styles.resultsHeader}>
             <Text style={styles.resultsCount}>
-              {isLoading ? 'Loading...' : `${filteredPartners.length} student${filteredPartners.length !== 1 ? 's' : ''} found`}
+              {isLoading ? t('partners.loading') : t('partners.studentsFound').replace('{count}', String(filteredPartners.length))}
             </Text>
           </View>
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Finding study partners...</Text>
+              <Text style={styles.loadingText}>{t('partners.loading')}</Text>
             </View>
           ) : filteredPartners.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Users color={colors.textMuted} size={64} />
-              <Text style={styles.emptyTitle}>No study partners found</Text>
+              <Text style={styles.emptyTitle}>{t('partners.noFound')}</Text>
               <Text style={styles.emptySubtitle}>
                 {searchQuery || activeFiltersCount > 0
-                  ? 'Try adjusting your search or filters'
-                  : 'Be the first to set up your profile!'}
+                  ? t('partners.adjustSearch')
+                  : t('partners.beFirst')}
               </Text>
             </View>
           ) : (
@@ -515,6 +518,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  partnerAvatarStyle: {
     borderWidth: 2,
     borderColor: colors.primary,
   },

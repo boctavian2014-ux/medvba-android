@@ -157,7 +157,7 @@ export default function SettingsScreen() {
     if (!user?.id) return;
 
     if (!name.trim()) {
-      Alert.alert('Missing Information', 'Please enter your name.');
+      Alert.alert(t('settings.missingInfo'), t('settings.nameRequired'));
       return;
     }
 
@@ -176,7 +176,7 @@ export default function SettingsScreen() {
           photoUrl = await uploadProfilePhoto(user.id, photoUri);
         } catch (error) {
           console.error('Error uploading photo:', error);
-          Alert.alert('Upload Error', 'Failed to upload photo. Saving other changes...');
+          Alert.alert(t('settings.uploadErrorTitle'), t('settings.uploadErrorMsg'));
         } finally {
           setIsUploading(false);
         }
@@ -199,10 +199,10 @@ export default function SettingsScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
-      Alert.alert('Success', 'Your profile has been updated!');
+      Alert.alert(t('common.ok'), t('settings.profileUpdated'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      Alert.alert(t('common.ok'), t('settings.profileUpdateError'));
     } finally {
       setIsSaving(false);
     }
@@ -246,7 +246,7 @@ export default function SettingsScreen() {
         >
           <View style={[styles.section, { marginBottom: SPACING.x3 }]}>
             <View style={[styles.sectionHeader, { marginBottom: SPACING.x2 }]}>
-              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>My Profile</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.myProfile')}</Text>
               <Button
                 mode="outlined"
                 onPress={handleSaveProfile}
@@ -254,7 +254,7 @@ export default function SettingsScreen() {
                 disabled={isSaving || isUploading}
                 icon="content-save"
               >
-                Save
+                {t('settings.save')}
               </Button>
             </View>
             <View style={styles.sectionCard}>
@@ -274,13 +274,13 @@ export default function SettingsScreen() {
               <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
                   <User color={colors.primary} size={18} />
-                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>Name *</Text>
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>{t('settings.nameLabel')}</Text>
                 </View>
                 <TextInput
                   style={[styles.profileTextInput, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Your name"
+                  placeholder={t('settings.namePlaceholder')}
                   placeholderTextColor={colors.textMuted}
                   maxLength={100}
                 />
@@ -289,13 +289,13 @@ export default function SettingsScreen() {
               <View style={[styles.profileInputGroup, { borderBottomColor: colors.glassBorder }]}>
                 <View style={styles.inputLabel}>
                   <MapPin color={colors.accent} size={18} />
-                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>City</Text>
+                  <Text style={[styles.inputLabelText, { color: colors.textSecondary }]}>{t('settings.cityLabel')}</Text>
                 </View>
                 <TextInput
                   style={[styles.profileTextInput, { backgroundColor: 'rgba(255,255,255,0.06)', color: colors.text, borderColor: colors.glassBorder }]}
                   value={city}
                   onChangeText={setCity}
-                  placeholder="e.g., Bucharest, Cluj-Napoca"
+                  placeholder={t('settings.cityPlaceholder')}
                   placeholderTextColor={colors.textMuted}
                   maxLength={100}
                 />
@@ -590,7 +590,7 @@ export default function SettingsScreen() {
                     icon={<Crown color={colors.warning} size={22} />}
                     title={t('profile.upgradeToPremium')}
                     subtitle={t('profile.upgradeBannerSubtitleAll')}
-                    onPress={() => router.push('/paywall' as any)}
+                    onPress={() => router.push('/paywall')}
                     showBorder={false}
                   />
                 )}

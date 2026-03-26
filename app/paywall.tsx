@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { Stack, router } from 'expo-router';
@@ -21,6 +21,16 @@ export default function PaywallScreen() {
   const { isPaywallEnabled } = useSubscription();
   const { t } = useLanguage();
   const [status, setStatus] = useState<'loading' | 'presented' | 'fallback'>('loading');
+
+  // Memoize to prevent update loop - new object ref each render was causing Stack to re-update
+  const headerOptions = useMemo(
+    () => ({
+      title: t('paywall.title'),
+      headerStyle: { backgroundColor: colors.background },
+      headerTintColor: colors.text,
+    }),
+    [colors.background, colors.text, t('paywall.title')]
+  );
 
   useEffect(() => {
     if (!isPaywallEnabled) {
@@ -61,16 +71,6 @@ export default function PaywallScreen() {
     return null;
   }
 
-  // Memoize to prevent update loop - new object ref each render was causing Stack to re-update
-  const headerOptions = useMemo(
-    () => ({
-      title: t('paywall.title'),
-      headerStyle: { backgroundColor: colors.background },
-      headerTintColor: colors.text,
-    }),
-    [colors.background, colors.text, t('paywall.title')]
-  );
-
   if (status === 'fallback') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -84,6 +84,16 @@ export default function PaywallScreen() {
           <Text style={[styles.webSubtext, { color: colors.textSecondary }]}>
             {t('paywall.webSubtext') || 'Your subscription will sync across all your devices.'}
           </Text>
+          <TouchableOpacity
+            style={[styles.goBackButton, { backgroundColor: colors.primary }]}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel={t('paywall.goBack') || 'Go back'}
+          >
+            <Text style={[styles.goBackButtonText, { color: colors.background }]}>
+              {t('paywall.goBack') || 'Go Back'}
+            </Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </View>
     );
@@ -126,5 +136,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  goBackButton: {
+    marginTop: 28,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  goBackButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });

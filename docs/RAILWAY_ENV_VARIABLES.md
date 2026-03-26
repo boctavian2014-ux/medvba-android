@@ -38,11 +38,21 @@ railway variables
 | **SUPABASE_URL** | Da | URL proiect Supabase: `https://xxxxx.supabase.co` |
 | **SUPABASE_SERVICE_ROLE_KEY** | Da | Cheia **service_role** (secret) din Supabase → Settings → API. **Nu** folosi anon/publishable aici. |
 | **CORS_ALLOWED_ORIGINS** | Opțional | Origini extra permise (separate prin virgulă), ex: `https://medvba.app,https://expo.dev` |
+| **EXPO_PUBLIC_AI_PROVIDER** | Da | Provider AI: `openai` sau `rork` |
+| **EXPO_PUBLIC_AI_API_KEY** | Da (pentru openai) | API key OpenAI: `sk-...` |
+| **EXPO_PUBLIC_AI_BASE_URL** | Opțional | Base URL pentru OpenAI-compatibil API (ex: pentru proxies) |
+
+### Variabile pentru AI Tutor (Tutor Chat)
+
+Pentru ca funcționalitatea **Tutor AI** să funcționeze, trebuie să adaugi aceste variabile în Railway:
 
 **Exemplu în Railway Dashboard (Variables):**
 - `SUPABASE_URL` = `https://utbcxdtcznitejbhhquh.supabase.co`
 - `SUPABASE_SERVICE_ROLE_KEY` = cheia **service_role** din Supabase (Settings → API)
 - `CORS_ALLOWED_ORIGINS` = dacă app-ul sau un domeniu web trebuie să apeleze API-ul, ex: `https://tudomeniu.com`
+- `EXPO_PUBLIC_AI_PROVIDER` = `openai`
+- `EXPO_PUBLIC_AI_API_KEY` = `sk-proj-...` (din OpenAI API Keys)
+- `EXPO_PUBLIC_AI_BASE_URL` = `https://api.openai.com/v1` (opțional, implicit)
 
 ---
 

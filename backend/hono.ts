@@ -36,8 +36,7 @@ app.use(
       if (allowedOrigins.has(origin)) return origin;
       // Allow file:// origins (React Native)
       if (origin.startsWith("file://")) return origin;
-      // Log rejected origins for debugging
-      console.log(`[CORS] Rejected origin: ${origin}`);
+      // Reject unknown origins
       return "";
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -73,7 +72,6 @@ app.get("/health", (c) => {
 
 // Error handler
 app.onError((err, c) => {
-  console.error(`[API Error] ${err.message}`, err);
   return c.json({ error: err.message }, 500);
 });
 

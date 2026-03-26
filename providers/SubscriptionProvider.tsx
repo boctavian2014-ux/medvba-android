@@ -8,6 +8,7 @@ import type { CustomerInfo } from 'react-native-purchases';
 import { ENTITLEMENT_ID, FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUpdateSubscription } from '@/lib/supabase-hooks';
+import { log } from '@/lib/log';
 
 const FREE_AI_LIMIT = 1;
 
@@ -72,7 +73,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const loadDailyUsage = useCallback(async () => {
     try {
-      console.log('[Subscription] Loading daily usage for', todayKey);
+      log.debug('[Subscription] Loading daily usage for', todayKey);
 
       const [quizCount, questionsAnsweredCount, aiCount] = await Promise.all([
         AsyncStorage.getItem(`free_quiz_count_${todayKey}`),
@@ -88,9 +89,9 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         ...(prev.isLoading && !PAYWALL_ENABLED ? { isLoading: false } : {}),
       }));
 
-      console.log('[Subscription] Loaded usage - Quizzes:', quizCount || 0, 'Questions answered:', questionsAnsweredCount || 0, 'AI:', aiCount || 0);
+      log.debug('[Subscription] Loaded usage - Quizzes: ' + (quizCount || 0) + ' AI: ' + (aiCount || 0));
     } catch (error) {
-      console.error('[Subscription] Error loading daily usage:', error);
+      log.error('[Subscription] Error loading daily usage:', error);
       setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, [todayKey, PAYWALL_ENABLED]);
@@ -142,7 +143,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         };
         Purchases.addCustomerInfoUpdateListener(listener);
       } catch (error) {
-        console.error('[Subscription] RevenueCat init error:', error);
+        log.error('[Subscription] RevenueCat init error:', error);
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -170,16 +171,16 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const incrementQuizCount = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED) {
-      console.log('[Subscription] Paywall disabled - skipping quiz limit');
+      log.debug('[Subscription] Paywall disabled - skipping quiz limit');
       return true;
     }
     if (state.isPremium) {
-      console.log('[Subscription] Premium user - no quiz limit');
+      log.debug('[Subscription] Premium user - no quiz limit');
       return true;
     }
 
     if (state.freeQuizzesToday >= FREE_DAILY_QUIZ_LIMIT) {
-      console.log('[Subscription] Quiz limit reached');
+      log.debug('[Subscription] Quiz limit reached');
       return false;
     }
 
@@ -187,10 +188,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     try {
       await AsyncStorage.setItem(`free_quiz_count_${todayKey}`, String(newCount));
       setState((prev) => ({ ...prev, freeQuizzesToday: newCount }));
-      console.log('[Subscription] Quiz count incremented to', newCount);
+      log.debug('[Subscription] Quiz count incremented to', newCount);
       return true;
     } catch (error) {
-      console.error('[Subscription] Error incrementing quiz count:', error);
+      log.error('[Subscription] Error incrementing quiz count:', error);
       return false;
     }
   }, [PAYWALL_ENABLED, state.isPremium, state.freeQuizzesToday, todayKey]);
@@ -207,26 +208,26 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     try {
       await AsyncStorage.setItem(`free_questions_answered_${todayKey}`, String(newCount));
       setState((prev) => ({ ...prev, freeQuestionsAnsweredToday: newCount }));
-      console.log('[Subscription] Questions answered count incremented to', newCount);
+      log.debug('[Subscription] Questions answered count incremented to', newCount);
       return newCount <= FREE_DAILY_QUIZ_LIMIT;
     } catch (error) {
-      console.error('[Subscription] Error incrementing questions answered count:', error);
+      log.error('[Subscription] Error incrementing questions answered count:', error);
       return true;
     }
   }, [PAYWALL_ENABLED, state.isPremium, state.freeQuestionsAnsweredToday, todayKey]);
 
   const incrementAiQuestionCount = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED) {
-      console.log('[Subscription] Paywall disabled - skipping AI limit');
+      log.debug('[Subscription] Paywall disabled - skipping AI limit');
       return true;
     }
     if (state.isPremium) {
-      console.log('[Subscription] Premium user - no AI limit');
+      log.debug('[Subscription] Premium user - no AI limit');
       return true;
     }
 
     if (state.freeAiQuestionsToday >= FREE_AI_LIMIT) {
-      console.log('[Subscription] AI question limit reached');
+      log.debug('[Subscription] AI question limit reached');
       return false;
     }
 
@@ -234,10 +235,10 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     try {
       await AsyncStorage.setItem(`free_ai_questions_${todayKey}`, String(newCount));
       setState((prev) => ({ ...prev, freeAiQuestionsToday: newCount }));
-      console.log('[Subscription] AI question count incremented to', newCount);
+      log.debug('[Subscription] AI question count incremented to', newCount);
       return true;
     } catch (error) {
-      console.error('[Subscription] Error incrementing AI question count:', error);
+      log.error('[Subscription] Error incrementing AI question count:', error);
       return false;
     }
   }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday, todayKey]);
@@ -258,7 +259,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     (type: 'yearly' | 'monthly') => {
       if (user?.id) {
         updateSubscriptionMutation.mutateAsync({ userId: user.id, status: 'premium', type }).catch((err) => {
-          console.warn('[Subscription] Supabase sync failed:', err);
+          log.warn('[Subscription] Supabase sync failed:', err);
         });
       }
     },
@@ -268,19 +269,19 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const purchasePackage = useCallback(
     async (packageId: string): Promise<boolean> => {
       if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
-        console.log('[Subscription] Purchases disabled (paywall or API key missing).');
+        log.debug('[Subscription] Purchases disabled (paywall or API key missing).');
         return false;
       }
 
       const offering = currentOfferingRef.current;
       if (!offering?.availablePackages?.length) {
-        console.warn('[Subscription] No offerings available for purchase.');
+        log.warn('[Subscription] No offerings available for purchase.');
         return false;
       }
 
       const pkg = offering.availablePackages.find((p: any) => p.identifier === packageId);
       if (!pkg) {
-        console.warn('[Subscription] Package not found:', packageId);
+        log.warn('[Subscription] Package not found:', packageId);
         return false;
       }
 
@@ -295,7 +296,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       } catch (error: any) {
         const isCancel = error?.userCancelled === true;
         if (!isCancel) {
-          console.error('[Subscription] Purchase error:', error);
+          log.error('[Subscription] Purchase error:', error);
         }
         return false;
       }
@@ -305,7 +306,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
 
   const restorePurchases = useCallback(async (): Promise<boolean> => {
     if (!PAYWALL_ENABLED || !REVENUECAT_API_KEY) {
-      console.log('[Subscription] Restore disabled (paywall or API key missing).');
+      log.debug('[Subscription] Restore disabled (paywall or API key missing).');
       return false;
     }
 
@@ -317,7 +318,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       }
       return premium;
     } catch (error) {
-      console.error('[Subscription] Restore error:', error);
+      log.error('[Subscription] Restore error:', error);
       return false;
     }
   }, [PAYWALL_ENABLED, REVENUECAT_API_KEY, syncPremiumToSupabase]);

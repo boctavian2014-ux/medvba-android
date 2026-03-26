@@ -1,34 +1,34 @@
 import * as Sentry from '@sentry/react-native';
-import Constants from 'expo-constants';
+import { log } from '@/lib/log';
 
-const isProduction = Constants.expoConfig?.extra?.environment === 'production';
+// Use React Native's built-in production flag — reliable in all build types
+const isProduction = !__DEV__;
 
 export function initializeMonitoring() {
   if (!isProduction) {
-    console.log('[Monitoring] Sentry disabled in development');
+    log.debug('[Monitoring] Sentry disabled in development');
+    return;
+  }
+
+  const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+  if (!dsn) {
+    log.warn('[Monitoring] EXPO_PUBLIC_SENTRY_DSN not set — Sentry disabled');
     return;
   }
 
   Sentry.init({
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    dsn,
     debug: false,
-    tracesSampleRate: 1.0,
-    environment: isProduction ? 'production' : 'development',
-    beforeSend(event) {
-      if (!isProduction) {
-        console.log('[Monitoring] Event captured:', event);
-        return null;
-      }
-      return event;
-    },
+    tracesSampleRate: 0.2,
+    environment: 'production',
   });
 
-  console.log('[Monitoring] Sentry initialized');
+  log.info('[Monitoring] Sentry initialized');
 }
 
 export function logError(error: Error, context?: Record<string, any>) {
-  console.error('[Monitoring] Error:', error.message, context);
-  
+  log.error('[Monitoring] Error: ' + error.message, context);
+
   if (isProduction) {
     Sentry.captureException(error, {
       extra: context,
@@ -37,8 +37,8 @@ export function logError(error: Error, context?: Record<string, any>) {
 }
 
 export function logEvent(eventName: string, properties?: Record<string, any>) {
-  console.log('[Monitoring] Event:', eventName, properties);
-  
+  log.debug('[Monitoring] Event: ' + eventName, properties);
+
   if (isProduction) {
     Sentry.addBreadcrumb({
       message: eventName,
@@ -49,8 +49,8 @@ export function logEvent(eventName: string, properties?: Record<string, any>) {
 }
 
 export function setUserContext(userId: string, email?: string, name?: string) {
-  console.log('[Monitoring] Setting user context:', userId);
-  
+  log.debug('[Monitoring] Setting user context');
+
   if (isProduction) {
     Sentry.setUser({
       id: userId,
@@ -61,8 +61,8 @@ export function setUserContext(userId: string, email?: string, name?: string) {
 }
 
 export function clearUserContext() {
-  console.log('[Monitoring] Clearing user context');
-  
+  log.debug('[Monitoring] Clearing user context');
+
   if (isProduction) {
     Sentry.setUser(null);
   }

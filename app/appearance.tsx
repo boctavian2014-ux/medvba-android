@@ -51,7 +51,6 @@ export default function AppearanceScreen() {
     ]).start();
     
     setPreference(theme === 'auto' ? 'system' : theme);
-    console.log('Theme saved:', theme);
   };
 
   const themeOptions: ThemeOption[] = [

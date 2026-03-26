@@ -59,6 +59,7 @@ import {
   useActivityFeed,
 } from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/providers/LanguageProvider';
 
 const BLOCKED_USERS_KEY = '@medvba_blocked_users';
@@ -262,7 +263,17 @@ export default function SocialScreen() {
       const reports: UserReport[] = stored ? JSON.parse(stored) : [];
       reports.push(report);
       await AsyncStorage.setItem(USER_REPORTS_KEY, JSON.stringify(reports));
-      console.log('Report submitted:', report);
+
+      // Sync report to backend
+      await supabase.from('user_reports').insert({
+        id: report.id,
+        reporter_id: user?.id,
+        reported_user_id: report.reportedUserId,
+        reported_user_name: report.reportedUserName,
+        reason: report.reason,
+        details: report.details ?? null,
+        reported_at: report.reportedAt,
+      });
     } catch (error) {
       console.error('Failed to save report:', error);
     }
@@ -306,7 +317,6 @@ export default function SocialScreen() {
   const createSessionMutation = useCreateSession();
 
   const handleCreateSessionSuccess = useCallback(() => {
-    console.log('Session created successfully');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowScheduleModal(false);
     resetScheduleForm();
@@ -323,7 +333,6 @@ export default function SocialScreen() {
   const createRoomMutation = useCreateStudyRoom();
 
   const handleCreateRoomSuccess = useCallback(() => {
-    console.log('Study room created successfully');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowCreateRoomModal(false);
     resetCreateRoomForm();
@@ -544,7 +553,7 @@ export default function SocialScreen() {
                 style={styles.findPartnersButton}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/find-partners' as any);
+                  router.push('/find-partners');
                 }}
                 activeOpacity={0.8}
               >

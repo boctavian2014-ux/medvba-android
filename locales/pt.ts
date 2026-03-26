@@ -42,6 +42,10 @@ export const pt: Record<string, string> = {
   'auth.error': 'Erro',
   'auth.signIn': 'Entrar',
   'auth.signUp': 'Registar',
+  'auth.signInWithGoogle': 'Entrar com Google',
+  'auth.signInWithFacebook': 'Entrar com Facebook',
+  'auth.signInWithApple': 'Entrar com Apple',
+  'auth.orContinueWithEmail': 'ou continuar com email',
   'auth.dontHaveAccount': 'Não tem uma conta?',
   'auth.alreadyHaveAccount': 'Já tem uma conta?',
   'auth.agreeToTerms': 'Ao criar uma conta, concorda com os nossos',
@@ -140,6 +144,8 @@ export const pt: Record<string, string> = {
   'session.questionUnavailable': 'Questão não disponível',
   'session.resumeQuiz': 'Retomar teste?',
   'session.resumeQuizMessage': 'Tem um teste por terminar. Quer continuar de onde parou?',
+  'session.expiredTitle': 'Sessão expirada',
+  'session.expiredMessage': 'A sua sessão de teste anterior foi iniciada há mais de 24 horas e foi eliminada.',
   'session.continue': 'Continuar',
   'session.startNew': 'Começar novo',
 
@@ -163,9 +169,74 @@ export const pt: Record<string, string> = {
   'study.room': 'Sala de estudo',
   'study.mcq': 'Teste de múltipla escolha',
 
+  // Edit Profile
+  'editProfile.title': 'Editar Perfil',
+  'editProfile.loadingProfile': 'A carregar perfil...',
+  'editProfile.changePhoto': 'Alterar Foto',
+  'editProfile.basicInfo': 'Informação Básica',
+  'editProfile.studyInfo': 'Informação de Estudo',
+  'editProfile.privacy': 'Privacidade',
+  'editProfile.nameLabel': 'Nome *',
+  'editProfile.namePlaceholder': 'O seu nome',
+  'editProfile.bioLabel': 'Bio',
+  'editProfile.bioPlaceholder': 'Conte aos outros sobre si...',
+  'editProfile.cityLabel': 'Cidade',
+  'editProfile.cityPlaceholder': 'A sua cidade',
+  'editProfile.universityLabel': 'Universidade',
+  'editProfile.universityPlaceholder': 'A sua universidade',
+  'editProfile.yearLabel': 'Ano de Estudo',
+  'editProfile.yearPlaceholder': '1-6',
+  'editProfile.publicProfile': 'Perfil Público',
+  'editProfile.publicProfileOn': 'Outros podem encontrá-lo nos parceiros de estudo',
+  'editProfile.publicProfileOff': 'O seu perfil está oculto dos outros',
+  'editProfile.nameRequired': 'Por favor insira o seu nome',
+  'editProfile.uploadError': 'Não foi possível carregar a foto. Por favor tente novamente.',
+  'editProfile.updateError': 'Não foi possível atualizar o perfil. Por favor tente novamente.',
+
+  // Direct Chat
+  'chat.loadingChat': 'A carregar conversa...',
+  'chat.noMessages': 'Ainda não há mensagens',
+  'chat.startConversation': 'Inicie a conversa!',
+  'chat.messagePlaceholder': 'Escreva uma mensagem...',
+  'chat.sendErrorTitle': 'Falha ao enviar',
+  'chat.sendErrorMessage': 'A mensagem não pôde ser enviada. Por favor, tente novamente.',
+
+  // Find Partners
+  'partners.title': 'Encontrar Parceiros de Estudo',
+  'partners.viewProfile': 'Ver Perfil',
+  'partners.message': 'Mensagem',
+  'partners.filters': 'Filtros',
+  'partners.filterCity': 'Cidade',
+  'partners.filterUniversity': 'Universidade',
+  'partners.filterAll': 'Todos',
+  'partners.clearFilters': 'Limpar Filtros',
+  'partners.searchPlaceholder': 'Pesquisar por nome, bio, localização...',
+  'partners.loading': 'A encontrar parceiros de estudo...',
+  'partners.noFound': 'Nenhum parceiro de estudo encontrado',
+  'partners.adjustSearch': 'Tente ajustar a sua pesquisa ou filtros',
+  'partners.beFirst': 'Seja o primeiro a configurar o seu perfil!',
+  'partners.studentsFound': '{count} estudantes encontrados',
+  'partners.yearOfStudy': 'Ano {year}',
+
+  // Settings profile section
+  'settings.myProfile': 'O Meu Perfil',
+  'settings.save': 'Guardar',
+  'settings.nameLabel': 'Nome *',
+  'settings.namePlaceholder': 'O seu nome',
+  'settings.cityLabel': 'Cidade',
+  'settings.cityPlaceholder': 'ex. Lisboa, Porto',
+  'settings.missingInfo': 'Informação em Falta',
+  'settings.nameRequired': 'Por favor insira o seu nome.',
+  'settings.uploadErrorTitle': 'Erro de Carregamento',
+  'settings.uploadErrorMsg': 'Não foi possível carregar a foto. A guardar outras alterações...',
+  'settings.profileUpdated': 'O seu perfil foi atualizado!',
+  'settings.profileUpdateError': 'Não foi possível atualizar o perfil. Por favor tente novamente.',
+
   // Common
   'common.questions': 'perguntas',
   'common.of': 'de',
+  'common.cancel': 'Cancelar',
+  'common.ok': 'OK',
 
   // Profile
   'profile': 'Perfil',
@@ -238,6 +309,7 @@ export const pt: Record<string, string> = {
   'tutor.suggestion2': 'Quais são as causas da diabetes mellitus?',
   'tutor.suggestion3': 'Mecanismo de ação dos betabloqueadores',
   'tutor.errorMessage': 'Erro de conexão. Verifique a sua ligação à internet e tente novamente.',
+  'tutor.retry': 'Tentar novamente',
 
   // Social / Study Rooms
   'social.title': 'Salas de estudo',
@@ -726,6 +798,7 @@ export const pt: Record<string, string> = {
   'paywall.webMessage': 'As subscrições estão disponíveis na aplicação iOS e Android. Descarregue a aplicação para atualizar para Pro.',
   'paywall.expoGoMessage': 'As subscrições requerem um build de desenvolvimento. Construa com EAS para testar compras.',
   'paywall.webSubtext': 'A sua subscrição será sincronizada em todos os seus dispositivos.',
+  'paywall.goBack': 'Voltar',
 
   // Premium Features
   'premium.feature1': 'Todas as 10,000+ questões de anatomia',

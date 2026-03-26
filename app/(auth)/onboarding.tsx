@@ -79,7 +79,7 @@ const slidesData: SlideData[] = [
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<OnboardingSlide> | null>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { completeOnboarding, isAuthenticated } = useAuth();
   const { t } = useLanguage();
@@ -107,8 +107,13 @@ export default function OnboardingScreen() {
     }
 
     if (currentIndex < slides.length - 1) {
-      flatListRef.current?.scrollToIndex({
-        index: currentIndex + 1,
+      const nextIndex = currentIndex + 1;
+      // Update UI immediately; rely on scroll position for the actual slide.
+      setCurrentIndex(nextIndex);
+      // `scrollToIndex` can fail on some targets if layout isn't measurable yet.
+      // `scrollToOffset` works reliably with paging + fixed-width items.
+      flatListRef.current?.scrollToOffset({
+        offset: nextIndex * width,
         animated: true,
       });
     } else {
@@ -240,9 +245,14 @@ export default function OnboardingScreen() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           bounces={false}
+          getItemLayout={(_, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true }
+            { useNativeDriver: Platform.OS !== 'web' }
           )}
           scrollEventThrottle={16}
           onViewableItemsChanged={onViewableItemsChanged}

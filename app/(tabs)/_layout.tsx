@@ -35,35 +35,40 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} accessibilityLabel="Home tab" />,
+          tabBarAccessibilityLabel: "Home",
         }}
       />
       <Tabs.Screen
         name="quiz"
         options={{
           title: "Quiz",
-          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} accessibilityLabel="Quiz tab" />,
+          tabBarAccessibilityLabel: "Quiz",
         }}
       />
       <Tabs.Screen
         name="social"
         options={{
           title: "Social",
-          tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Users color={color} size={size} accessibilityLabel="Social tab" />,
+          tabBarAccessibilityLabel: "Social",
         }}
       />
       <Tabs.Screen
         name="tutor"
         options={{
           title: "AI Tutor",
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} strokeWidth={2} />,
+          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} strokeWidth={2} accessibilityLabel="AI Tutor tab" />,
+          tabBarAccessibilityLabel: "AI Tutor",
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <User color={color} size={size} accessibilityLabel="Profile tab" />,
+          tabBarAccessibilityLabel: "Profile",
         }}
       />
     </Tabs>

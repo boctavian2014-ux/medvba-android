@@ -23,7 +23,8 @@ import GlassCard from '@/components/GlassCard';
 import type { Question } from '@/mocks/questions';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { getAllQuestionsWithChapters } from '@/mocks/chapters';
-import { translateQuestions, translateAndShuffleQuestions } from '@/lib/translateQuestion';
+import { translateAndShuffleQuestions } from '@/lib/translateQuestion';
+import { log } from '@/lib/log';
 
 import {
   generalVertebraeQuestions,
@@ -298,7 +299,7 @@ async function getSeenQuestionIds(category: string): Promise<Set<string>> {
       return new Set(ids);
     }
   } catch (error) {
-    console.log('Error loading seen questions:', error);
+    log.warn('Error loading seen questions:', error);
   }
   return new Set();
 }
@@ -309,19 +310,9 @@ async function markQuestionsAsSeen(category: string, questionIds: string[]): Pro
     const existingIds = await getSeenQuestionIds(category);
     questionIds.forEach(id => existingIds.add(id));
     await AsyncStorage.setItem(key, JSON.stringify([...existingIds]));
-    console.log(`Marked ${questionIds.length} questions as seen for category: ${category}`);
+    log.info(`Marked ${questionIds.length} questions as seen for category: ${category}`);
   } catch (error) {
-    console.log('Error saving seen questions:', error);
-  }
-}
-
-async function resetSeenQuestions(category: string): Promise<void> {
-  try {
-    const key = `user_seen_questions_${category}`;
-    await AsyncStorage.removeItem(key);
-    console.log(`Reset seen questions for category: ${category}`);
-  } catch (error) {
-    console.log('Error resetting seen questions:', error);
+    log.warn('Error saving seen questions:', error);
   }
 }
 
@@ -355,10 +346,10 @@ async function selectQuestionsForQuiz(
   mode: string,
   count: number
 ): Promise<{ questions: Question[]; resetHistory: boolean }> {
-  console.log(`Selecting ${count} questions for category: ${category}, mode: ${mode}`);
+  log.info(`Selecting ${count} questions for category: ${category}, mode: ${mode}`);
   
   const seenIds = await getSeenQuestionIds(category);
-  console.log(`Previously seen questions: ${seenIds.size}`);
+  log.info(`Previously seen questions: ${seenIds.size}`);
   
   let availableQuestions: Question[];
   let selectedQuestions: Question[];
@@ -373,7 +364,7 @@ async function selectQuestionsForQuiz(
       totalUnseen += unseenSubcats[key].length;
     });
     
-    console.log(`Total unseen upper-lower-limbs questions: ${totalUnseen}`);
+      log.info(`Total unseen upper-lower-limbs questions: ${totalUnseen}`);
     
     if (totalUnseen < count) {
       const seenInLimbs = allUpperLowerLimbsQuestions.filter(q => seenIds.has(q.id));
@@ -430,7 +421,7 @@ async function selectQuestionsForQuiz(
     }
   }
   
-  console.log(`Selected ${selectedQuestions.length} questions`);
+  log.info(`Selected ${selectedQuestions.length} questions`);
   return { questions: selectedQuestions, resetHistory };
 }
 
@@ -458,7 +449,7 @@ export default function QuizSessionScreen() {
     sessionState: savedSession,
     addStudyTime
   } = useQuizProgress();
-  const { incrementQuestionAnsweredCount, isPaywallEnabled, isPremium, freeQuestionsAnsweredToday, FREE_QUIZ_LIMIT } = useSubscription();
+  const { incrementQuestionAnsweredCount, FREE_QUIZ_LIMIT } = useSubscription();
   const [limitReached, setLimitReached] = useState(false);
   
   const sessionStartTimeRef = useRef<number>(Date.now());
@@ -478,13 +469,37 @@ export default function QuizSessionScreen() {
   
   const fadeAnim = useState(new Animated.Value(1))[0];
 
+  const questionsRef = useRef(questions);
+  questionsRef.current = questions;
+  
+  const categoryRef = useRef(category);
+  categoryRef.current = category;
+  
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
+  
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+  
+  const answeredInSessionRef = useRef(answeredInSession);
+  answeredInSessionRef.current = answeredInSession;
+  
+  const sessionStartedAtRef = useRef(sessionStartedAt);
+  sessionStartedAtRef.current = sessionStartedAt;
+
+  const chapterIdRef = useRef(chapterId);
+  chapterIdRef.current = chapterId;
+
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadQuestions = async () => {
-      console.log(
+      log.info(
         '[QuizSession] Starting loadQuestions - category:',
         category,
         'mode:',
@@ -497,22 +512,22 @@ export default function QuizSessionScreen() {
 
       try {
         if (resume === 'true' && savedSession) {
-          console.log(
+          log.info(
             '[QuizSession] Resuming from saved session at index:',
             savedSession.currentIndex
           );
           if (isMounted) {
             if (!savedSession.questions || savedSession.questions.length === 0) {
-              console.error('[QuizSession] Invalid saved session: empty questions');
+              log.error('[QuizSession] Invalid saved session: empty questions');
               await clearSessionState();
-              router.replace('/' as any);
+              router.replace('/(tabs)');
               return;
             }
 
             if (savedSession.currentIndex >= savedSession.questions.length) {
-              console.error('[QuizSession] Invalid saved session: index out of bounds');
+              log.error('[QuizSession] Invalid saved session: index out of bounds');
               await clearSessionState();
-              router.replace('/' as any);
+              router.replace('/(tabs)');
               return;
             }
 
@@ -553,7 +568,7 @@ export default function QuizSessionScreen() {
           }
 
           const baseQuestions = orderedWithChapters.map((qc) => qc.question);
-          console.log(
+          log.info(
             `[QuizSession] Sequential mode: ${orderedWithChapters.length} questions (${unseenFirst.length} unseen first) for ${cat}, chapterId=${chapterId}`
           );
 
@@ -569,7 +584,7 @@ export default function QuizSessionScreen() {
         } else {
           const questionCount =
             QUESTION_COUNTS[mode as keyof typeof QUESTION_COUNTS] || 10;
-          console.log(
+          log.info(
             `[QuizSession] Selecting ${questionCount} questions for mode: ${mode}`
           );
 
@@ -594,13 +609,13 @@ export default function QuizSessionScreen() {
             selectedQuestions = shuffled.slice(0, questionCount);
           }
 
-          console.log(
+          log.info(
             `[QuizSession] Selected ${selectedQuestions.length} questions (after chapter filter)`
           );
 
           if (isMounted) {
             if (selectedQuestions.length === 0) {
-              console.error('[QuizSession] No questions selected');
+              log.error('[QuizSession] No questions selected');
               setIsLoading(false);
               return;
             }
@@ -610,7 +625,7 @@ export default function QuizSessionScreen() {
               currentLanguage
             );
             if (!translatedQuestions || translatedQuestions.length === 0) {
-              console.error('[QuizSession] Translation failed');
+              log.error('[QuizSession] Translation failed');
               setQuestions(selectedQuestions);
             } else {
               setQuestions(translatedQuestions);
@@ -619,7 +634,7 @@ export default function QuizSessionScreen() {
             if (selectedQuestions.length > 0) {
               const questionIds = selectedQuestions.map((q) => q.id);
               await markQuestionsAsSeen(category || 'mixed', questionIds);
-              console.log(
+              log.info(
                 `[QuizSession] Marked ${questionIds.length} questions as seen on load`
               );
 
@@ -639,7 +654,7 @@ export default function QuizSessionScreen() {
         }
       }
     } catch (error) {
-      console.error('[QuizSession] Error loading questions:', error);
+      log.error('[QuizSession] Error loading questions:', error);
       if (isMounted) {
         setIsLoading(false);
       }
@@ -657,6 +672,9 @@ export default function QuizSessionScreen() {
 
 
   const currentQuestion = questions[currentIndex] || null;
+
+  const currentQuestionRef = useRef<Question | null>(null);
+  currentQuestionRef.current = currentQuestion;
 
   useEffect(() => {
     if (mode === 'exam' && timeLeft > 0 && !quizComplete) {
@@ -678,16 +696,19 @@ export default function QuizSessionScreen() {
   };
 
   const handleAnswerSelect = useCallback(async (index: number) => {
-    if (showResult || !currentQuestion || !questions[currentIndex]) {
-      console.warn('[QuizSession] Invalid state for answer selection');
+    if (showResult || !currentQuestionRef.current || !questionsRef.current[currentIndexRef.current]) {
+      log.warn('[QuizSession] Invalid state for answer selection');
       return;
     }
+
+    const question = currentQuestionRef.current;
+    const currentIdx = currentIndexRef.current;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedAnswer(index);
     setShowResult(true);
 
-    const isCorrect = index === currentQuestion.correctAnswer;
+    const isCorrect = index === question.correctAnswer;
 
     if (isCorrect) {
       setScore(prev => prev + 1);
@@ -696,42 +717,41 @@ export default function QuizSessionScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
 
-    await updateDailyProgress(isCorrect, currentQuestion.id);
-    await markQuestionsAsSeen(category || 'mixed', [currentQuestion.id]);
+    await updateDailyProgress(isCorrect, question.id);
+    await markQuestionsAsSeen(categoryRef.current || 'mixed', [question.id]);
 
-    // Increment per-question count and check limit
     const withinLimit = await incrementQuestionAnsweredCount();
     if (!withinLimit) {
       setLimitReached(true);
     }
 
-    const newAnsweredInSession = [...answeredInSession, currentQuestion.id];
+    const newAnsweredInSession = [...answeredInSessionRef.current, question.id];
     setAnsweredInSession(newAnsweredInSession);
 
-    if (mode !== 'sequential') {
+    if (modeRef.current !== 'sequential') {
       const updatedSessionState: SessionState = {
-        category: category || 'mixed',
-        mode: mode || 'quick',
-        questions,
-        currentIndex: currentIndex + 1,
-        score: isCorrect ? score + 1 : score,
+        category: categoryRef.current || 'mixed',
+        mode: modeRef.current || 'quick',
+        questions: questionsRef.current,
+        currentIndex: currentIdx + 1,
+        score: isCorrect ? scoreRef.current + 1 : scoreRef.current,
         answeredInSession: newAnsweredInSession,
-        startedAt: sessionStartedAt,
+        startedAt: sessionStartedAtRef.current,
         sessionLanguage: sessionLanguageRef.current ?? currentLanguage,
       };
       await saveSessionState(updatedSessionState);
-      console.log('[QuizSession] Saved progress after question', currentIndex + 1);
+      log.info('[QuizSession] Saved progress after question', currentIdx + 1);
     }
-  }, [showResult, currentQuestion, updateDailyProgress, answeredInSession, mode, category, questions, currentIndex, score, sessionStartedAt, saveSessionState, incrementQuestionAnsweredCount]);
+  }, [showResult, updateDailyProgress, saveSessionState, incrementQuestionAnsweredCount, currentLanguage]);
 
   const handleNext = useCallback(async () => {
-    if (!questions || questions.length === 0) {
-      console.error('[QuizSession] No questions available');
-      router.replace('/' as any);
+    if (!questionsRef.current || questionsRef.current.length === 0) {
+      log.error('[QuizSession] No questions available');
+      router.replace('/(tabs)');
       return;
     }
     
-    if (currentIndex < questions.length - 1) {
+    if (currentIndexRef.current < questionsRef.current.length - 1) {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 150,
@@ -749,28 +769,28 @@ export default function QuizSessionScreen() {
     } else {
       const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
       await addStudyTime(elapsedSeconds);
-      console.log('[QuizSession] Session complete. Time spent:', elapsedSeconds, 'seconds');
+      log.info('[QuizSession] Session complete. Time spent:', elapsedSeconds, 'seconds');
       await clearSessionState();
-      console.log('[QuizSession] Quiz complete, cleared session state');
+      log.info('[QuizSession] Quiz complete, cleared session state');
       setQuizComplete(true);
     }
-  }, [currentIndex, questions, fadeAnim, clearSessionState, addStudyTime, router]);
+  }, [fadeAnim, clearSessionState, addStudyTime, router]);
 
   const handleClose = useCallback(async () => {
     const elapsedSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
     if (elapsedSeconds > 5) {
       await addStudyTime(elapsedSeconds);
-      console.log('[QuizSession] Session closed. Time spent:', elapsedSeconds, 'seconds');
+      log.info('[QuizSession] Session closed. Time spent:', elapsedSeconds, 'seconds');
     }
     
     await AsyncStorage.setItem('quiz_just_exited', Date.now().toString());
-    console.log('[QuizSession] Closing quiz, session state preserved for resume');
-    if (category === 'med-admission-barrons' && chapterId) {
+    log.info('[QuizSession] Closing quiz, session state preserved for resume');
+    if (categoryRef.current === 'med-admission-barrons' && chapterId) {
       router.back();
     } else {
-      router.replace('/' as any);
+      router.replace('/(tabs)');
     }
-  }, [addStudyTime, router, category, chapterId]);
+  }, [addStudyTime, router, chapterId]);
 
   const handleCopyExplanation = useCallback(async () => {
     if (!currentQuestion?.explanation) return;
@@ -874,7 +894,7 @@ export default function QuizSessionScreen() {
   }
 
   if (!currentQuestion || !questions[currentIndex]) {
-    console.warn('[QuizSession] Current question not available, going back');
+    log.warn('[QuizSession] Current question not available, going back');
     return (
       <View style={styles.container}>
         <LinearGradient
@@ -915,7 +935,7 @@ export default function QuizSessionScreen() {
             <TouchableOpacity
               style={styles.limitReachedUpgradeButton}
               activeOpacity={0.8}
-              onPress={() => router.push('/paywall' as any)}
+              onPress={() => router.push('/paywall')}
             >
               <LinearGradient
                 colors={[colors.warning, '#FF9500', '#FFB800']}

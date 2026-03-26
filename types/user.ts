@@ -11,6 +11,10 @@ export interface UserProfile {
   badges: string[];
   joinedAt: string;
   isPublic: boolean;
+  // Social account IDs for linking
+  googleId?: string;
+  facebookId?: string;
+  appleId?: string;
 }
 
 export interface UserAccount {

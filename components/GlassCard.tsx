@@ -11,7 +11,7 @@ interface GlassCardProps {
   noPadding?: boolean;
 }
 
-export default function GlassCard({ 
+function GlassCardComponent({ 
   children, 
   style, 
   variant = 'default',
@@ -76,3 +76,16 @@ const styles = StyleSheet.create({
     WebkitBackdropFilter: 'blur(4px)',
   } as ViewStyle,
 });
+
+const propsAreEqual = (prev: GlassCardProps, next: GlassCardProps) => {
+  return (
+    prev.variant === next.variant &&
+    prev.elevation === next.elevation &&
+    prev.noPadding === next.noPadding &&
+    prev.style === next.style
+    // Note: Children comparison intentionally omitted - React elements create new 
+    // references on each render, making comparison unreliable
+  );
+};
+
+export default React.memo(GlassCardComponent, propsAreEqual);

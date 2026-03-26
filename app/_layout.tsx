@@ -15,6 +15,7 @@ import { SubscriptionProvider } from "@/providers/SubscriptionProvider";
 import { ThemeProvider, useTheme } from "@/providers/ThemeProvider";
 import { getPaperTheme } from "@/theme/paperTheme";
 import { monitoring } from "@/lib/monitoring";
+import { log } from "@/lib/log";
 import { trpc, trpcClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -113,17 +114,17 @@ function useProtectedRoute(splashAvailable: boolean) {
 
     if (!hasCompletedOnboarding) {
       if (!isOnboarding) {
-        console.log('[Auth] Redirecting to onboarding');
+        log.info('[Auth] Redirecting to onboarding');
         router.replace('/(auth)/onboarding');
       }
       return;
     }
 
     if (!isAuthenticated && !inAuthGroup) {
-      console.log('[Auth] Redirecting to login');
+      log.info('[Auth] Redirecting to login');
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
-      console.log('[Auth] Redirecting to tabs');
+      log.info('[Auth] Redirecting to tabs');
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, hasCompletedOnboarding, segments, router, splashHidden, splashAvailable]);

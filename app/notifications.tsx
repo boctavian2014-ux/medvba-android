@@ -70,7 +70,6 @@ export default function NotificationsScreen() {
     try {
       await AsyncStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(newSettings));
       setSettings(newSettings);
-      console.log('Notification settings saved:', newSettings);
     } catch (error) {
       console.error('Failed to save notification settings:', error);
     }

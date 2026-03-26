@@ -4,10 +4,13 @@
  * Nu afișează valorile, doar dacă cheile există și nu sunt goale.
  */
 
-const path = require('path');
-const fs = require('fs');
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync, existsSync } from 'fs';
 
-const envPath = path.join(__dirname, '..', '.env');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envPath = join(__dirname, '..', '.env');
 
 const required = [
   'EXPO_PUBLIC_SUPABASE_URL',
@@ -39,12 +42,12 @@ function parseEnv(content) {
   return out;
 }
 
-if (!fs.existsSync(envPath)) {
+if (!existsSync(envPath)) {
   console.error('❌ Fișierul .env nu există. Copiază .env.example în .env și completează valorile.');
   process.exit(1);
 }
 
-const content = fs.readFileSync(envPath, 'utf8');
+const content = readFileSync(envPath, 'utf8');
 const env = parseEnv(content);
 
 let failed = false;

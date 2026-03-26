@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { ArrowLeft, Camera, Save, User, MapPin, School, BookOpen, Eye, EyeOff, X } from 'lucide-react-native';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 import GlassCard from '@/components/GlassCard';
 import { useUpdateUserProfile, useUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
 import PhotoPicker from '@/components/PhotoPicker';
@@ -26,6 +27,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { user, refreshProfile } = useAuth();
   const { colors } = useTheme();
+  const { t } = useLanguage();
 
   const { data: profile, isLoading: isLoadingProfile } = useUserProfile(user?.id);
   const updateProfileMutation = useUpdateUserProfile();
@@ -74,9 +76,9 @@ export default function EditProfileScreen() {
     } catch (error) {
       console.error('Error uploading photo:', error);
       if (Platform.OS === 'web') {
-        alert('Failed to upload photo. Please try again.');
+        alert(t('editProfile.uploadError'));
       } else {
-        Alert.alert('Error', 'Failed to upload photo. Please try again.');
+        Alert.alert(t('common.ok'), t('editProfile.uploadError'));
       }
       setLocalPhotoUri(null);
     } finally {
@@ -88,9 +90,9 @@ export default function EditProfileScreen() {
     if (!user?.id) return;
     if (!name.trim()) {
       if (Platform.OS === 'web') {
-        alert('Please enter your name');
+        alert(t('editProfile.nameRequired'));
       } else {
-        Alert.alert('Error', 'Please enter your name');
+        Alert.alert(t('common.ok'), t('editProfile.nameRequired'));
       }
       return;
     }
@@ -120,9 +122,9 @@ export default function EditProfileScreen() {
     } catch (error) {
       console.error('Error updating profile:', error);
       if (Platform.OS === 'web') {
-        alert('Failed to update profile. Please try again.');
+        alert(t('editProfile.updateError'));
       } else {
-        Alert.alert('Error', 'Failed to update profile. Please try again.');
+        Alert.alert(t('common.ok'), t('editProfile.updateError'));
       }
     }
   };
@@ -138,12 +140,12 @@ export default function EditProfileScreen() {
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
               <ArrowLeft color={colors.text} size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Edit Profile</Text>
+            <Text style={styles.headerTitle}>{t('editProfile.title')}</Text>
             <View style={styles.backButton} />
           </View>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Loading profile...</Text>
+            <Text style={styles.loadingText}>{t('editProfile.loadingProfile')}</Text>
           </View>
         </SafeAreaView>
       </View>
@@ -192,23 +194,23 @@ export default function EditProfileScreen() {
               activeOpacity={0.7}
             >
               <Camera color={colors.primary} size={18} />
-              <Text style={styles.changePhotoText}>Change Photo</Text>
+              <Text style={styles.changePhotoText}>{t('editProfile.changePhoto')}</Text>
             </TouchableOpacity>
           </GlassCard>
 
           <GlassCard style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <Text style={styles.sectionTitle}>{t('editProfile.basicInfo')}</Text>
 
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
                 <User color={colors.textSecondary} size={18} />
-                <Text style={styles.labelText}>Name *</Text>
+                <Text style={styles.labelText}>{t('editProfile.nameLabel')}</Text>
               </View>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="Your name"
+                placeholder={t('editProfile.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
               />
@@ -217,13 +219,13 @@ export default function EditProfileScreen() {
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
                 <BookOpen color={colors.textSecondary} size={18} />
-                <Text style={styles.labelText}>Bio</Text>
+                <Text style={styles.labelText}>{t('editProfile.bioLabel')}</Text>
               </View>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={bio}
                 onChangeText={setBio}
-                placeholder="Tell others about yourself..."
+                placeholder={t('editProfile.bioPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 multiline
                 numberOfLines={4}
@@ -233,18 +235,18 @@ export default function EditProfileScreen() {
           </GlassCard>
 
           <GlassCard style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Study Information</Text>
+            <Text style={styles.sectionTitle}>{t('editProfile.studyInfo')}</Text>
 
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
                 <MapPin color={colors.textSecondary} size={18} />
-                <Text style={styles.labelText}>City</Text>
+                <Text style={styles.labelText}>{t('editProfile.cityLabel')}</Text>
               </View>
               <TextInput
                 style={styles.input}
                 value={city}
                 onChangeText={setCity}
-                placeholder="Your city"
+                placeholder={t('editProfile.cityPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
               />
@@ -253,13 +255,13 @@ export default function EditProfileScreen() {
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
                 <School color={colors.textSecondary} size={18} />
-                <Text style={styles.labelText}>University</Text>
+                <Text style={styles.labelText}>{t('editProfile.universityLabel')}</Text>
               </View>
               <TextInput
                 style={styles.input}
                 value={university}
                 onChangeText={setUniversity}
-                placeholder="Your university"
+                placeholder={t('editProfile.universityPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
               />
@@ -268,7 +270,7 @@ export default function EditProfileScreen() {
             <View style={styles.inputGroup}>
               <View style={styles.inputLabel}>
                 <BookOpen color={colors.textSecondary} size={18} />
-                <Text style={styles.labelText}>Year of Study</Text>
+                <Text style={styles.labelText}>{t('editProfile.yearLabel')}</Text>
               </View>
               <TextInput
                 style={styles.input}
@@ -283,7 +285,7 @@ export default function EditProfileScreen() {
           </GlassCard>
 
           <GlassCard style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Privacy</Text>
+            <Text style={styles.sectionTitle}>{t('editProfile.privacy')}</Text>
 
             <TouchableOpacity
               style={styles.toggleRow}
@@ -298,9 +300,9 @@ export default function EditProfileScreen() {
               <View style={styles.toggleLabel}>
                 {isPublic ? <Eye color={colors.success} size={20} /> : <EyeOff color={colors.textMuted} size={20} />}
                 <View style={styles.toggleTextContainer}>
-                  <Text style={styles.toggleTitle}>Public Profile</Text>
+                  <Text style={styles.toggleTitle}>{t('editProfile.publicProfile')}</Text>
                   <Text style={styles.toggleDescription}>
-                    {isPublic ? 'Others can find you in study partners' : 'Your profile is hidden from others'}
+                    {isPublic ? t('editProfile.publicProfileOn') : t('editProfile.publicProfileOff')}
                   </Text>
                 </View>
               </View>

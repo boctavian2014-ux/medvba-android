@@ -11,30 +11,33 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Send, 
-  Bot, 
-  User, 
+import {
+  Send,
+  Bot,
+  User,
   Sparkles,
   BookOpen,
   Lightbulb,
   HelpCircle,
   Crown,
-  Lock
+  Lock,
+  RotateCcw,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/providers/ThemeProvider';
 import GlassCard from '@/components/GlassCard';
-import { generateText } from '@rork-ai/toolkit-sdk';
+import { log } from '@/lib/log';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { trpc } from '@/lib/trpc';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  isError?: boolean;
 }
 
 const getSuggestedQuestions = (t: (key: string) => string) => [
@@ -50,6 +53,7 @@ export default function TutorScreen() {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const lastUserMessageRef = useRef<string>('');
   const router = useRouter();
   const {
     isPremium,
@@ -76,46 +80,18 @@ export default function TutorScreen() {
     setMessages((prev) => (prev.length === 0 ? [getInitialMessage()] : prev));
   }, [getInitialMessage]);
 
+  const chatMutation = trpc.tutor.chat.useMutation();
+
   const generateAIResponse = useCallback(async (conversationHistory: Message[]): Promise<string> => {
-    const systemPrompt = `You are an expert AI tutor helping students prepare for exams (USMLE, MBBS, anatomy exams, etc.).
+    const historyForBackend = conversationHistory
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-Your role:
-- Explain complex medical concepts clearly and accurately
-- Use clinical correlations and mnemonics when helpful
-- Structure answers with clear headings and bullet points
-- Provide mechanism-based explanations
-- Reference relevant anatomy, physiology, pathology, and pharmacology
-- Be encouraging and supportive
-
-Formatting guidelines:
-- Use **bold** for important terms and headings
-- Use bullet points (•) for lists
-- Keep explanations concise but comprehensive
-- End with a follow-up question or offer to explain more
-
-Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Microbiology, Immunology, Histology, Embryology, and clinical medicine.`;
-
-    const messages: { role: 'user' | 'assistant'; content: string }[] = [
-      { role: 'user', content: systemPrompt },
-      { role: 'assistant', content: 'I understand. I am ready to help medical students with accurate, detailed explanations.' },
-    ];
-
-    conversationHistory.forEach((msg) => {
-      if (msg.role === 'user' || msg.role === 'assistant') {
-        messages.push({ role: msg.role, content: msg.content });
-      }
-    });
-
-    try {
-      console.log('[Tutor] Sending request to AI with', messages.length, 'messages');
-      const response = await generateText({ messages });
-      console.log('[Tutor] Received AI response:', response.substring(0, 100) + '...');
-      return response;
-    } catch (error) {
-      console.error('[Tutor] AI generation error:', error);
-      throw error;
-    }
-  }, []);
+    log.debug('[Tutor] Sending request to backend with ' + historyForBackend.length + ' messages');
+    const result = await chatMutation.mutateAsync({ messages: historyForBackend });
+    log.debug('[Tutor] Received AI response from backend');
+    return result.response;
+  }, [chatMutation]);
 
   const handleSend = async () => {
     if (!inputText.trim() || isTyping) return;
@@ -124,7 +100,6 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
 
     // Check if free user can ask AI question
     if (isPaywallEnabled && !canAskAiQuestion()) {
-      console.log('[Tutor] Free AI question limit reached');
       router.push('/paywall');
       return;
     }
@@ -132,7 +107,6 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
     // Increment AI question count for free users
     const success = await incrementAiQuestionCount();
     if (isPaywallEnabled && !success && !isPremium) {
-      console.log('[Tutor] Failed to increment AI question count');
       router.push('/paywall');
       return;
     }
@@ -143,7 +117,8 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
       content: inputText.trim(),
       timestamp: new Date(),
     };
-    
+
+    lastUserMessageRef.current = userMessage.content;
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputText('');
@@ -164,12 +139,24 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
       };
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
-      console.error('[Tutor] Failed to get AI response:', error);
+      const errStr = error instanceof Error ? error.message : String(error);
+      log.debug('[Tutor] Failed to get AI response:', errStr);
+
+      // protectedProcedure on the backend throws UNAUTHORIZED when the user is not logged in.
+      if (
+        errStr.toLowerCase().includes('unauthorized') ||
+        errStr.toLowerCase().includes('authentication required')
+      ) {
+        router.push('/(auth)/login');
+        return;
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: t('tutor.errorMessage'),
         timestamp: new Date(),
+        isError: true,
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -179,6 +166,47 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
       }, 100);
     }
   };
+
+  const handleRetry = useCallback(async () => {
+    const lastContent = lastUserMessageRef.current;
+    if (!lastContent || isTyping) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Remove the last error message
+    setMessages(prev => {
+      const last = prev[prev.length - 1];
+      return last?.isError ? prev.slice(0, -1) : prev;
+    });
+    setIsTyping(true);
+
+    try {
+      const messagesForRetry = messages.filter(m => !m.isError);
+      const aiResponseText = await generateAIResponse(messagesForRetry);
+      const aiResponse: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: aiResponseText,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      log.debug('[Tutor] Retry failed:', String(error));
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: t('tutor.errorMessage'),
+        timestamp: new Date(),
+        isError: true,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [isTyping, messages, generateAIResponse, t]);
 
   const handleSuggestion = (text: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -266,35 +294,49 @@ Topics you cover: Anatomy, Physiology, Pathology, Pharmacology, Biochemistry, Mi
             )}
 
             {messages.map((message) => (
-              <View
-                key={message.id}
-                style={[
-                  styles.messageRow,
-                  message.role === 'user' && styles.messageRowUser
-                ]}
-              >
-                {message.role === 'assistant' && (
-                  <View style={styles.avatarContainer}>
-                    <Bot color={colors.primary} size={18} />
-                  </View>
-                )}
+              <View key={message.id}>
                 <View
                   style={[
-                    styles.messageBubble,
-                    message.role === 'user' ? styles.userBubble : styles.assistantBubble
+                    styles.messageRow,
+                    message.role === 'user' && styles.messageRowUser
                   ]}
                 >
-                  <Text style={[
-                    styles.messageText,
-                    message.role === 'user' && styles.userMessageText
-                  ]}>
-                    {message.content}
-                  </Text>
-                </View>
-                {message.role === 'user' && (
-                  <View style={[styles.avatarContainer, styles.userAvatar]}>
-                    <User color={colors.text} size={18} />
+                  {message.role === 'assistant' && (
+                    <View style={styles.avatarContainer}>
+                      <Bot color={message.isError ? colors.error : colors.primary} size={18} />
+                    </View>
+                  )}
+                  <View
+                    style={[
+                      styles.messageBubble,
+                      message.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                      message.isError && styles.errorBubble,
+                    ]}
+                  >
+                    <Text style={[
+                      styles.messageText,
+                      message.role === 'user' && styles.userMessageText
+                    ]}>
+                      {message.content}
+                    </Text>
                   </View>
+                  {message.role === 'user' && (
+                    <View style={[styles.avatarContainer, styles.userAvatar]}>
+                      <User color={colors.text} size={18} />
+                    </View>
+                  )}
+                </View>
+                {message.isError && (
+                  <TouchableOpacity
+                    style={styles.retryButton}
+                    onPress={handleRetry}
+                    disabled={isTyping}
+                  >
+                    <RotateCcw color={colors.primary} size={14} />
+                    <Text style={[styles.retryButtonText, { color: colors.primary }]}>
+                      {t('tutor.retry')}
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </View>
             ))}
@@ -481,6 +523,23 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
   },
   userMessageText: {
     color: colors.text,
+  },
+  errorBubble: {
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 46,
+    marginTop: 4,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
   },
   typingBubble: {
     paddingVertical: 16,

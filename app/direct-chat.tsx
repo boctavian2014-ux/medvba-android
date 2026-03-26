@@ -10,13 +10,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Send, Loader2, ArrowLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/providers/ThemeProvider';
+import AvatarImage from '@/components/AvatarImage';
 import { useDirectChatMessages, useSendDirectMessage, DirectChatMessage } from '@/lib/supabase-hooks';
 import { useAuth } from '@/providers/AuthProvider';
+import { useLanguage } from '@/providers/LanguageProvider';
 
 const formatTime = (dateString: string): string => {
   const date = new Date(dateString);
@@ -35,6 +38,7 @@ const formatTime = (dateString: string): string => {
 
 export default function DirectChat() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const { chatId, chatTitle } = useLocalSearchParams<{ chatId: string; chatTitle?: string }>();
   const { user } = useAuth();
   const { messages, isLoading } = useDirectChatMessages(chatId);
@@ -63,8 +67,8 @@ export default function DirectChat() {
       onSuccess: () => {
         setMessageText('');
       },
-      onError: (error) => {
-        console.error('Failed to send message:', error);
+      onError: () => {
+        Alert.alert(t('chat.sendErrorTitle'), t('chat.sendErrorMessage'));
       },
     });
   };
@@ -82,7 +86,7 @@ export default function DirectChat() {
         ]}
       >
         {!isOwnMessage && showAvatar ? (
-          <Image source={{ uri: item.userAvatar }} style={styles.messageAvatar} />
+          <AvatarImage uri={item.userAvatar} size={32} seed={item.userId} style={styles.messageAvatarStyle} />
         ) : (
           !isOwnMessage && <View style={styles.messageAvatarPlaceholder} />
         )}
@@ -132,7 +136,7 @@ export default function DirectChat() {
         />
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading chat...
+          {t('chat.loadingChat')}
         </Text>
       </View>
     );
@@ -173,10 +177,10 @@ export default function DirectChat() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No messages yet
+                {t('chat.noMessages')}
               </Text>
               <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
-                Start the conversation! 👋
+                {t('chat.startConversation')}
               </Text>
             </View>
           }
@@ -193,7 +197,7 @@ export default function DirectChat() {
             }]}
             value={messageText}
             onChangeText={setMessageText}
-            placeholder="Type a message..."
+            placeholder={t('chat.messagePlaceholder')}
             placeholderTextColor={colors.textMuted}
             multiline
             maxLength={500}
@@ -272,6 +276,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    marginRight: 8,
+  },
+  messageAvatarStyle: {
     marginRight: 8,
   },
   messageAvatarPlaceholder: {

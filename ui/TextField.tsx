@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
-import { TextInput as PaperTextInput } from 'react-native-paper';
+import { TextInput as PaperTextInput, IconButton } from 'react-native-paper';
 
 export type UITextFieldProps = {
   value?: string;
@@ -14,6 +14,7 @@ export type UITextFieldProps = {
   autocorrection?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  right?: React.ReactNode;
 };
 
 /**
@@ -31,6 +32,7 @@ export function UITextField({
   autocorrection = true,
   disabled,
   style,
+  right,
 }: UITextFieldProps) {
   const initialValue = value ?? defaultValue ?? '';
   return (
@@ -46,6 +48,7 @@ export function UITextField({
       autoCorrect={autocorrection}
       disabled={disabled}
       style={style}
+      right={right}
     />
   );
 }

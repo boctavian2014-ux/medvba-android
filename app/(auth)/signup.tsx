@@ -15,6 +15,7 @@ import { Appbar, Text, Card, useTheme } from 'react-native-paper';
 import { UIButton, UITextField } from '@/ui';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { SPACING } from '@/theme/paperTheme';
 
 export default function SignUpScreen() {
@@ -72,6 +73,10 @@ export default function SignUpScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      Alert.alert(t('auth.signUpFailed'), t('auth.supabaseNotConfigured'));
       return;
     }
 

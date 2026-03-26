@@ -24,6 +24,7 @@ import { categories } from '@/mocks/questions';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
 import { FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription';
 import { SPACING } from '@/theme/paperTheme';
+import { log } from '@/lib/log';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function HomeScreen() {
 
   const handleUpgradePress = useCallback(() => {
     if (!isPaywallEnabled) return;
-    console.log('[Home] Navigate to paywall');
+    log.info('[Home] Navigate to paywall');
     router.push('/paywall');
   }, [router, isPaywallEnabled]);
 
@@ -62,7 +63,7 @@ export default function HomeScreen() {
     }
 
     if (hasActiveSession && sessionState) {
-      console.log('[Home] Resuming active session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
+      log.info('[Home] Resuming active session at question', sessionState.currentIndex + 1, 'of', sessionState.questions.length);
       router.push({
         pathname: '/quiz-session',
         params: {
@@ -72,7 +73,7 @@ export default function HomeScreen() {
         }
       });
     } else if (lastSessionInfo) {
-      console.log('[Home] Starting new session with last used settings:', lastSessionInfo.category, lastSessionInfo.mode);
+      log.info('[Home] Starting new session with last used settings:', lastSessionInfo.category, lastSessionInfo.mode);
       router.push({
         pathname: '/quiz-session',
         params: {
@@ -81,7 +82,7 @@ export default function HomeScreen() {
         }
       });
     } else {
-      console.log('[Home] Starting default session');
+      log.info('[Home] Starting default session');
       router.push({
         pathname: '/quiz-session',
         params: {

@@ -7,16 +7,23 @@ import {
   ScrollView,
   Alert,
   Image,
+  TouchableOpacity,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Appbar, Text, Card, useTheme } from 'react-native-paper';
+import { Appbar, Text, Card, useTheme, IconButton } from 'react-native-paper';
 import { UIButton, UITextField } from '@/ui';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { SPACING } from '@/theme/paperTheme';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { log } from '@/lib/log';
+import { Ionicons } from '@expo/vector-icons';
+import { AuthError } from '@supabase/supabase-js';
+
+const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -25,7 +32,15 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const { signIn } = useAuth();
+   const { 
+     signIn, 
+     signInWithGoogle, 
+     signInWithFacebook, 
+     signInWithApple,
+     // Note: Account linking/unlinking methods reserved for future settings page
+     // hasCompletedOnboarding, linkGoogleAccount, linkFacebookAccount, linkAppleAccount,
+     // unlinkGoogleAccount, unlinkFacebookAccount, unlinkAppleAccount
+   } = useAuth();
   const { t } = useLanguage();
 
   const validateForm = useCallback(() => {
@@ -79,15 +94,18 @@ export default function LoginScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        router.replace('/(tabs)');
+        // Use AsyncStorage directly to avoid stale `hasCompletedOnboarding` on web.
+        const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+        const isOnboardingCompleted = completed === 'true';
+        router.replace(isOnboardingCompleted ? '/(tabs)' : '/(auth)/onboarding');
       }
     } catch (error) {
-      console.error('[Login] Unexpected error:', error);
+      log.error('[Login] Unexpected error:', error);
       Alert.alert('Error', t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, signIn, validateForm, t, isSupabaseConfigured]);
+  }, [email, password, signIn, validateForm, t]);
 
   const handleForgotPassword = useCallback(() => {
     if (Platform.OS !== 'web') {
@@ -102,6 +120,49 @@ export default function LoginScreen() {
     }
     router.push('/(auth)/signup');
   }, []);
+
+  const handleSocialLogin = useCallback(async (provider: 'google' | 'facebook' | 'apple') => {
+    if (!isSupabaseConfigured) {
+      Alert.alert(t('auth.loginFailed'), t('auth.supabaseNotConfigured'));
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let result: { error: AuthError | null };
+      switch (provider) {
+        case 'google':
+          result = await signInWithGoogle();
+          break;
+        case 'facebook':
+          result = await signInWithFacebook();
+          break;
+        case 'apple':
+          result = await signInWithApple();
+          break;
+      }
+
+      if (result.error) {
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        Alert.alert(t('auth.loginFailed'), result.error.message);
+      } else {
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+        const isOnboardingCompleted = completed === 'true';
+        router.replace(isOnboardingCompleted ? '/(tabs)' : '/(auth)/onboarding');
+      }
+    } catch (error) {
+      log.error('[Login] Social login error:', error);
+      Alert.alert('Error', t('auth.unexpectedError'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signInWithGoogle, signInWithFacebook, signInWithApple, t]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -144,6 +205,44 @@ export default function LoginScreen() {
 
             <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
               <Card.Content style={styles.cardContent}>
+                <View style={styles.socialButtonsRow}>
+                  <TouchableOpacity
+                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                    onPress={() => handleSocialLogin('google')}
+                    disabled={isLoading}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.signInWithGoogle')}
+                  >
+                    <Ionicons name="logo-google" size={24} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                    onPress={() => handleSocialLogin('facebook')}
+                    disabled={isLoading}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.signInWithFacebook')}
+                  >
+                    <Ionicons name="logo-facebook" size={24} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                    onPress={() => handleSocialLogin('apple')}
+                    disabled={isLoading}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.signInWithApple')}
+                  >
+                    <Ionicons name="logo-apple" size={24} color={theme.colors.onSurface} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.dividerRow}>
+                  <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                  <Text variant="bodySmall" style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>
+                    {t('auth.orContinueWithEmail')}
+                  </Text>
+                  <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                </View>
+
                 <View style={[styles.inputWrap, { marginBottom: SPACING.x2 }]}>
                   <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: SPACING.x1 }}>
                     {t('auth.email')}
@@ -178,6 +277,13 @@ export default function LoginScreen() {
                     placeholder={t('auth.passwordPlaceholder')}
                     secureTextEntry={!showPassword}
                     style={styles.input}
+                    right={
+                      <IconButton
+                        icon={showPassword ? 'eye-off' : 'eye'}
+                        onPress={() => setShowPassword(!showPassword)}
+                        accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                      />
+                    }
                   />
                 </View>
                 {errors.password ? (
@@ -269,6 +375,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.x2,
     paddingTop: SPACING.x2,
     paddingBottom: SPACING.x3,
+  },
+  socialButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: SPACING.x3,
+    marginBottom: SPACING.x3,
+  },
+  socialButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.x3,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    paddingHorizontal: SPACING.x2,
   },
   inputWrap: {},
   input: {

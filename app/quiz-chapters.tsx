@@ -29,21 +29,21 @@ export default function QuizChaptersScreen() {
 
   const startQuiz = async (chapterId: string) => {
     if (isPaywallEnabled && !isPremium) {
-      router.push('/paywall' as any);
+      router.push('/paywall');
       return;
     }
     if (isPaywallEnabled && !canStartQuiz()) {
-      router.push('/paywall' as any);
+      router.push('/paywall');
       return;
     }
     const success = await incrementQuizCount();
     if (isPaywallEnabled && !success && !isPremium) {
-      router.push('/paywall' as any);
+      router.push('/paywall');
       return;
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/quiz-session' as any,
+      pathname: '/quiz-session',
       params: { category: category || 'med-admission-barrons', mode: 'quick', chapterId },
     });
   };

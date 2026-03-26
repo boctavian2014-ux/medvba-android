@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +30,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
+import { log } from '@/lib/log';
 
 const categoryIcons: Record<string, React.ComponentType<{ color: string; size: number }>> = {
   'upper-lower-limbs': Bone,
@@ -64,7 +66,12 @@ export default function QuizScreen() {
         const hoursDiff = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
         
         if (hoursDiff > 24) {
-          console.log('[Quiz] Session older than 24 hours, clearing');
+          log.info('[Quiz] Session older than 24 hours, clearing');
+          Alert.alert(
+            t('session.expiredTitle'),
+            t('session.expiredMessage'),
+            [{ text: t('common.ok') }]
+          );
           clearSessionState();
         }
       }
@@ -80,11 +87,11 @@ export default function QuizScreen() {
 
   const startQuizSession = async (category: string, mode: QuizMode) => {
     if (isPaywallEnabled && !canStartQuiz()) {
-      router.push('/paywall' as any);
+      router.push('/paywall');
       return;
     }
     router.push({
-      pathname: '/quiz-session' as any,
+      pathname: '/quiz-session',
       params: { category, mode },
     });
   };
@@ -97,7 +104,7 @@ export default function QuizScreen() {
   const handleCategoryPress = (categoryId: string) => {
     if (categoryId === 'med-admission-barrons') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      router.push('/quiz-chapters?category=med-admission-barrons' as any);
+      router.push('/quiz-chapters?category=med-admission-barrons');
       return;
     }
     handleCategorySelect(categoryId);
@@ -129,9 +136,11 @@ export default function QuizScreen() {
                     : t('quiz.dailyLimitReached')}
                 </Text>
                 {remainingQuizzes === 0 && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.upgradeMiniButton}
                     onPress={() => router.push('/paywall')}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('tutor.upgrade')}
                   >
                     <Crown color={colors.warning} size={14} />
                     <Text style={[styles.upgradeMiniText, { color: colors.warning }]}>{t('tutor.upgrade')}</Text>
@@ -144,9 +153,12 @@ export default function QuizScreen() {
           <View style={styles.modesSection}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('quiz.quizModes')}</Text>
             <View style={styles.modesGrid}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modeCard}
                 onPress={() => handleStartQuiz('quick')}
+                accessibilityRole="button"
+                accessibilityLabel={t('quiz.quickQuiz')}
+                accessibilityHint={t('quiz.quickQuizCount')}
               >
                 <LinearGradient
                   colors={[colors.primary, colors.primaryDark]}
@@ -160,9 +172,12 @@ export default function QuizScreen() {
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modeCard}
                 onPress={() => handleStartQuiz('practice')}
+                accessibilityRole="button"
+                accessibilityLabel={t('quiz.practice')}
+                accessibilityHint={t('quiz.practiceCount')}
               >
                 <LinearGradient
                   colors={['#FF6B9D', '#FF4757']}
@@ -181,9 +196,12 @@ export default function QuizScreen() {
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modeCard, styles.examCard]}
                 onPress={() => handleStartQuiz('exam')}
+                accessibilityRole="button"
+                accessibilityLabel={t('quiz.examSimulation')}
+                accessibilityHint={t('quiz.examDetails')}
               >
                 <LinearGradient
                   colors={[colors.secondary, '#012A5E']}
@@ -224,6 +242,9 @@ export default function QuizScreen() {
                   <TouchableOpacity
                     key={category.id}
                     onPress={() => handleCategoryPress(category.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={getModuleName(category.id)}
+                    accessibilityState={{ selected: isSelected }}
                   >
                     <GlassCard 
                       style={[

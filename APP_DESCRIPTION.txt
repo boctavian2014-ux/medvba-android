@@ -1,0 +1,99 @@
+================================================================================
+  MEDVBA — Application description
+================================================================================
+
+OVERVIEW
+--------
+MEDVBA is a cross-platform mobile learning app (iOS, Android, and web) aimed at
+students preparing for medical exams. It focuses on anatomy and related subjects
+through quizzes, progress tracking, an AI tutor, and social study features.
+
+The app name appears in the product as "MEDVBA". Package identifiers:
+  • Android: com.devaieood.medvba
+  • iOS:     com.devaieood.medvba
+
+
+PRIMARY PURPOSE
+---------------
+• Help users master anatomy, physiology, and exam-style content via multiple-
+  choice quizzes and structured modules.
+• Support daily study habits with goals, streaks, accuracy stats, and optional
+  premium (unlimited) access.
+• Offer an AI-powered tutor for explanations and questions.
+• Enable community-oriented features: social tab, finding study partners,
+  notifications, and direct chat-style flows (as implemented in the app).
+
+
+MAIN USER FLOWS
+---------------
+1. Onboarding — Short intro slides (welcome, AI tutor, study together, progress).
+2. Authentication — Email/password sign up and sign in via Supabase Auth;
+   forgot password; optional onboarding after login.
+3. Home — Greeting, daily question progress, quick start into anatomy/quiz,
+   upgrade prompts when daily limits or premium-only modules apply.
+4. Quiz — Choose anatomy regions / chapters; modes such as quick quiz,
+   practice session, and exam-style simulation; timed sessions where applicable.
+5. AI Tutor — Tab for conversational / Q&A style help (integrated with app
+   services as configured).
+6. Social — Community / social features (e.g. study rooms, peers — per UI).
+7. Profile — User profile, settings, appearance (light/dark), edit profile,
+   legal pages (terms, privacy, code of conduct), support (help center, contact),
+   account deletion, paywall / subscriptions when enabled.
+
+
+MONETIZATION
+------------
+• RevenueCat integration for in-app purchases / subscriptions (Android & iOS).
+• Paywall screen and feature gating controlled by EXPO_PUBLIC_PAYWALL_ENABLED
+  and related RevenueCat API keys in environment configuration.
+
+
+TECH STACK (HIGH LEVEL)
+-----------------------
+• Framework: Expo SDK ~54, React Native 0.81, React 19, TypeScript.
+• Navigation: expo-router (file-based routes), React Navigation under the hood.
+• UI: React Native Paper, custom UI components, Lucide icons, safe area handling,
+  light/dark themes.
+• Backend / data:
+  - Supabase (PostgreSQL + Auth) for users and app data.
+  - tRPC + Hono Node server in-repo for API routes (e.g. account, integrations).
+• State & data fetching: TanStack React Query, Zustand where used.
+• Updates: EAS Update (Expo) with runtime version tied to app version.
+• Monitoring: Sentry (optional, via EXPO_PUBLIC_SENTRY_DSN).
+• Other: expo-secure-store / AsyncStorage for session persistence, expo-image,
+  haptics, mail composer, image picker, etc.
+
+
+INTERNATIONALIZATION
+--------------------
+The app includes locale files for multiple languages (e.g. English, Romanian,
+Spanish, Portuguese). User-facing strings are keyed for translation.
+
+
+BUILD & DEPLOYMENT
+------------------
+• EAS Build for store binaries (Android App Bundle, iOS).
+• Environment variables for production should be set in Expo (EAS) for
+  EXPO_PUBLIC_* keys (Supabase URL/anon key, API base URL, RevenueCat, etc.).
+• Local development typically uses a .env file (not committed to git).
+• Android: edge-to-edge UI, ProGuard/R8 minification for release, mapping file
+  for Play Console deobfuscation (see project docs / eas.json).
+
+
+SECURITY & PRIVACY
+------------------
+• Auth tokens stored via secure storage on native platforms.
+• Legal screens: Terms of Service, Privacy Policy, Code of Conduct.
+• Users can request account deletion through the dedicated flow in the app.
+
+
+DOCUMENT PURPOSE
+----------------
+This file is a plain-text overview for stores, collaborators, or support teams.
+It is not a legal document and does not replace Privacy Policy or Terms of
+Service. For exact behavior and data handling, refer to the source code and
+the in-app legal pages.
+
+Last updated: 2026-03-19 (project state at time of writing).
+
+================================================================================

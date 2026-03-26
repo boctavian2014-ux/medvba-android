@@ -58,10 +58,10 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
   name: 'MEDVBA',
   slug: 'medvba',
-  version: '1.0.16',
+  version: '1.0.17',
   orientation: 'default',
   icon: './assets/images/icon.png',
-  scheme: 'rork-app',
+  scheme: 'medvba',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
   splash: {
@@ -90,7 +90,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#000000',
     },
-    versionCode: 24,
+    versionCode: 25,
     package: 'com.devaieood.medvba',
     // R8 mapping file for Google Play crash deobfuscation is produced at android/app/build/outputs/mapping/release/mapping.txt and collected in eas.json buildArtifactPaths; upload it in Play Console per version.
     blockedPermissions: [
@@ -102,9 +102,6 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ],
     // Android 15+ edge-to-edge; use system bars (status/nav) via insets instead of deprecated color APIs
     edgeToEdgeEnabled: true,
-    androidNavigationBar: {
-      enforceContrast: true,
-    },
   },
   web: {
     favicon: './assets/images/favicon.png',
@@ -125,6 +122,8 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
           'The app accesses your photos to let you share them with your friends.',
       },
     ],
+    // react-native-edge-to-edge: prevents react-native-screens from using deprecated setStatusBarColor/setNavigationBarColor APIs
+    'react-native-edge-to-edge',
     [
       'expo-build-properties',
       {
@@ -168,6 +167,18 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         envFromFile.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID,
       EXPO_PUBLIC_PAYWALL_ENABLED:
         envFromFile.EXPO_PUBLIC_PAYWALL_ENABLED ?? process.env.EXPO_PUBLIC_PAYWALL_ENABLED ?? 'false',
+      EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID:
+        envFromFile.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID:
+        envFromFile.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+      EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:
+        envFromFile.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      EXPO_PUBLIC_FACEBOOK_APP_ID:
+        envFromFile.EXPO_PUBLIC_FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID,
+      EXPO_PUBLIC_APPLE_CLIENT_ID:
+        envFromFile.EXPO_PUBLIC_APPLE_CLIENT_ID || process.env.EXPO_PUBLIC_APPLE_CLIENT_ID,
+      EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI:
+        envFromFile.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || 'medvba://reset-password',
     },
     owner: 'devaieood79',
   };

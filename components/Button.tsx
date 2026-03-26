@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, memo, useCallback } from 'react';
 import { 
   Text, 
   StyleSheet, 
@@ -26,7 +26,7 @@ interface ButtonProps {
   textStyle?: TextStyle;
 }
 
-export default function Button({
+function ButtonComponent({
   title,
   onPress,
   variant = 'primary',
@@ -42,23 +42,23 @@ export default function Button({
   const { colors, colorScheme } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 0.96,
       useNativeDriver: true,
       speed: 50,
       bounciness: 0,
     }).start();
-  };
+  }, [scaleAnim]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
       speed: 50,
       bounciness: 4,
     }).start();
-  };
+  }, [scaleAnim]);
 
   const getSizeConfig = () => {
     switch (size) {
@@ -230,3 +230,20 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 });
+
+const propsAreEqual = (prev: ButtonProps, next: ButtonProps) => {
+  return (
+    prev.title === next.title &&
+    prev.variant === next.variant &&
+    prev.size === next.size &&
+    prev.disabled === next.disabled &&
+    prev.loading === next.loading &&
+    prev.fullWidth === next.fullWidth &&
+    prev.icon === next.icon &&
+    prev.iconPosition === next.iconPosition &&
+    prev.style === next.style &&
+    prev.textStyle === next.textStyle
+  );
+};
+
+export default memo(ButtonComponent, propsAreEqual);
