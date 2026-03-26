@@ -61,24 +61,30 @@ export default function EditProfileScreen() {
     setIsUploadingPhoto(true);
 
     try {
+      console.log('[EditProfile] Starting photo upload for user:', user.id);
       const photoUrl = await uploadProfilePhoto(user.id, uri);
-      
+      console.log('[EditProfile] Photo uploaded, URL:', photoUrl);
+
+      console.log('[EditProfile] Updating profile with new photo URL');
       await updateProfileMutation.mutateAsync({
         userId: user.id,
         profile_photo_url: photoUrl,
       });
+      console.log('[EditProfile] Profile updated successfully');
 
       await refreshProfile();
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-    } catch (error) {
-      console.error('Error uploading photo:', error);
+    } catch (error: any) {
+      console.error('[EditProfile] Error in handlePhotoSelected:', error);
+      console.error('[EditProfile] Error details:', error?.message, error?.code, error?.details);
+      const errorMsg = error?.message || 'Unknown error';
       if (Platform.OS === 'web') {
-        alert(t('editProfile.uploadError'));
+        alert(`${t('editProfile.uploadError')} (${errorMsg})`);
       } else {
-        Alert.alert(t('common.ok'), t('editProfile.uploadError'));
+        Alert.alert(t('common.ok'), `${t('editProfile.uploadError')} (${errorMsg})`);
       }
       setLocalPhotoUri(null);
     } finally {
