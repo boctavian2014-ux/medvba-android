@@ -334,7 +334,7 @@ export function useRoomMessages(roomId: string) {
 
       const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
       const { data: profilesData } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -376,7 +376,7 @@ export function useRoomMessages(roomId: string) {
           console.log('[Supabase] New message received:', payload);
           
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('users')
             .select('name, avatar')
             .eq('id', payload.new.user_id)
             .single();
@@ -523,7 +523,7 @@ export function useStudyPartners(filters?: {
       console.log('[Supabase] Fetching study partners with filters:', filters);
       
       let query = supabase
-        .from('profiles')
+        .from('users')
         .select('*');
 
       if (filters?.city) {
@@ -579,7 +579,7 @@ export function useUserProfile(userId: string | undefined) {
 
       console.log('[Supabase] Fetching user profile:', userId);
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', userId)
         .single();
@@ -633,7 +633,7 @@ export function useUpdateUserProfile() {
       if (input.profile_photo_url !== undefined) updateData.profile_photo_url = input.profile_photo_url;
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .update(updateData)
         .eq('id', input.userId)
         .select()
@@ -1072,7 +1072,7 @@ export function useAllRecentAchievements(limit: number = 20) {
       const userIds = [...new Set(achievementsData.map((a: any) => a.user_id))];
       
       const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -1643,7 +1643,7 @@ export function useActivityFeed(userId?: string, limit = 20) {
       const actorIds = [...new Set(data.map(item => item.actor_id))];
 
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, avatar')
         .in('id', actorIds);
 
@@ -1914,7 +1914,7 @@ export function useOnlineFriends(userId?: string) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -1992,7 +1992,7 @@ export function useFriendActivity(userId?: string, limit = 20) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, avatar')
         .in('id', userIds);
 
