@@ -89,6 +89,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           id: userId,
           name: name || 'Student',
           avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
+          profile_photo_url: `https://api.dicebear.com/7.x/avataaars/png?seed=${userId}`,
         });
         if (!mounted || mounted.current) {
           log.info('[Auth] Profile created');
@@ -100,6 +101,10 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         return;
       }
       log.error('[Auth] Error ensuring profile exists:', error);
+      // Log more details for debugging
+      if (error && typeof error === 'object' && 'code' in error) {
+        log.error('[Auth] Profile error code:', (error as any).code);
+      }
     }
   }, []);
 
@@ -118,7 +123,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       if (!mounted.current) return;
       if (error) throw error;
 
-      if (result) {
+        if (result) {
         const { data: progressData } = await supabase
           .from('user_progress')
           .select('*')
@@ -264,7 +269,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     try {
       log.info('[Auth] Signing up user:', email);
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -276,11 +281,54 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
       if (error) {
         log.error('[Auth] Sign up error:', error.message);
+        log.error('[Auth] Sign up error code:', error.code);
+        log.error('[Auth] Sign up error status:', error.status);
         return { error };
       }
 
-      log.info('[Auth] User created successfully');
+      log.info('[Auth] User created in auth.users:', data?.user?.id);
 
+      // Fallback: If user was created but trigger failed, create profile manually
+      // This handles cases where the trigger fails due to RLS or other issues
+      if (data?.user) {
+        try {
+          log.info('[Auth] Checking if profile was created by trigger...');
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .single();
+
+          if (!existingProfile) {
+            log.info('[Auth] Profile not found, creating manually as fallback...');
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                name: name || 'Student',
+                avatar: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
+                profile_photo_url: `https://api.dicebear.com/7.x/avataaars/png?seed=${data.user.id}`,
+              });
+
+            if (profileError) {
+              // Log the error but don't fail signup - the profile will be created on next login
+              log.error('[Auth] Fallback profile creation failed:', profileError.message);
+              log.error('[Auth] Profile error code:', profileError.code);
+              // Note: The error is logged but we return success since auth.user was created
+              // The profile will be created on next auth state change
+            } else {
+              log.info('[Auth] Fallback profile created successfully');
+            }
+          } else {
+            log.info('[Auth] Profile already exists from trigger');
+          }
+        } catch (profileCheckError) {
+          // Log but don't fail - this is just a fallback
+          log.error('[Auth] Error checking/creating profile:', profileCheckError);
+        }
+      }
+
+      log.info('[Auth] Sign up completed successfully');
       return { error: null };
     } catch (error) {
       log.error('[Auth] Unexpected sign up error:', error);
