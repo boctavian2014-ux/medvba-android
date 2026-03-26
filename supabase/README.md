@@ -8,7 +8,20 @@ This folder contains the Supabase schema for the MEDVBA medical education app.
 
 ## Setup Instructions
 
-### Option 1: Manual Setup (Recommended for development)
+### Option 1: Automatic Push Script (Easiest!)
+Run the PowerShell script to automatically push the schema:
+
+```powershell
+cd medvba-android/supabase
+.\push-schema.ps1
+```
+
+If you have your Project Ref, run:
+```powershell
+.\push-schema.ps1 -ProjectRef "your-project-ref"
+```
+
+### Option 2: Manual Setup (Recommended for development)
 1. Go to your Supabase project dashboard at https://supabase.com/dashboard
 2. Navigate to **SQL Editor**
 3. Copy the contents of `schema.sql`
