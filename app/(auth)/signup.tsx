@@ -91,11 +91,18 @@ export default function SignUpScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
 
+        console.error('[SignUp] Supabase error:', error);
+        console.error('[SignUp] Error message:', error.message);
+        console.error('[SignUp] Error code:', error.code);
+        console.error('[SignUp] Error status:', error.status);
+
         let errorMessage = t('auth.signUpFailed');
-        if (error.message.includes('already registered')) {
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
           errorMessage = t('auth.emailAlreadyRegistered');
         } else if (error.message.includes('Password')) {
           errorMessage = error.message;
+        } else if (error.message) {
+          errorMessage = `${t('auth.signUpFailed')}\n\n${error.message}`;
         }
 
         Alert.alert(t('auth.signUpFailed'), errorMessage);
