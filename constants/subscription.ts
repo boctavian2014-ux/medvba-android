@@ -35,9 +35,11 @@ export const PRICING = {
   },
 };
 
+// TODO: Replace hardcoded English strings with i18n keys (e.g. t('subscription.free.questions'))
+// and resolve via the i18n system before this array is rendered in localised UI.
 export const FREE_FEATURES = [
-  '10 întrebări gratuite pe zi',
-  'Acces la 1.000+ întrebări de bază',
-  'Statistici de bază',
-  'Comunitate de învățare',
+  '10 free questions per day',
+  'Access to all 30,000+ questions',
+  'Basic statistics',
+  'Learning community',
 ];

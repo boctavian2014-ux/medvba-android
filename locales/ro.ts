@@ -836,8 +836,8 @@ export const ro: Record<string, string> = {
   'paywall.goBack': 'Înapoi',
 
   // Premium Features
-  'premium.feature1': 'Toate cele 10.000+ întrebări de anatomie',
-  'premium.feature2': 'Quiz nelimitat (fără limita de 5 întrebări/zi)',
+  'premium.feature1': 'Toate cele 30.000+ întrebări de anatomie',
+  'premium.feature2': 'Quiz nelimitat (fără limita de 10 întrebări/zi)',
   'premium.feature3': 'Tutore AI personalizat',
   'premium.feature4': 'Statistici avansate și rapoarte detaliate',
   'premium.feature5': 'Sesiuni de studiu colaborative',

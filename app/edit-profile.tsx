@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { getDefaultAvatarUrl } from '@/lib/avatar';
 import {
   View,
   Text,
@@ -52,6 +53,30 @@ export default function EditProfileScreen() {
       setIsPublic(profile.is_public);
     }
   }, [profile]);
+
+  const handlePhotoRemoved = useCallback(async () => {
+    if (!user?.id) return;
+    setIsUploadingPhoto(true);
+    try {
+      // Resets the profile photo to a deterministic DiceBear-generated avatar.
+      // There is no "null photo" state — the default is always the generated avatar.
+      const dicebearUrl = getDefaultAvatarUrl(user.id);
+      setLocalPhotoUri(null); // clear immediately for instant feedback
+      await updateProfileMutation.mutateAsync({
+        userId: user.id,
+        profile_photo_url: dicebearUrl,
+      });
+      await refreshProfile();
+      if (Platform.OS !== 'web') {
+        Alert.alert('Photo Reset', 'Your profile photo has been reset to the default avatar.');
+      }
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error) || 'Unknown error';
+      Alert.alert('Error', `Failed to reset photo (${errorMsg})`);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  }, [user?.id, updateProfileMutation, refreshProfile]);
 
   const handlePhotoSelected = useCallback(async (uri: string) => {
     if (!user?.id) return;
@@ -325,8 +350,9 @@ export default function EditProfileScreen() {
           <PhotoPicker
             currentPhotoUrl={displayAvatar}
             onPhotoSelected={handlePhotoSelected}
+            onPhotoRemoved={handlePhotoRemoved}
             size={120}
-            showRemoveButton={false}
+            showRemoveButton={true}
           />
           <TouchableOpacity
             style={styles.photoPickerClose}

@@ -838,8 +838,8 @@ export const en: Record<string, string> = {
   'paywall.goBack': 'Go Back',
 
   // Premium Features
-  'premium.feature1': 'All 10,000+ anatomy questions',
-  'premium.feature2': 'Unlimited quizzes (no 5 questions/day limit)',
+  'premium.feature1': 'All 30,000+ anatomy questions',
+  'premium.feature2': 'Unlimited quizzes (no 10 questions/day limit)',
   'premium.feature3': 'Personalized AI Tutor',
   'premium.feature4': 'Advanced statistics and detailed reports',
   'premium.feature5': 'Collaborative study sessions',

@@ -80,7 +80,7 @@ Your ultimate companion for medical exam preparation. Master anatomy, physiology
 ### 🆓 Free vs Premium
 
 #### Free Plan Includes:
-- 3 quizzes per day
+- 10 questions per day
 - 1 AI tutor question per day
 - Full access to all 30,000+ questions
 - Progress tracking and achievements

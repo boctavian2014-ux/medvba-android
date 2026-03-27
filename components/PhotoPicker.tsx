@@ -67,8 +67,12 @@ export default function PhotoPicker({
   };
 
   const handlePhotoOptions = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    const canRemove = !!(currentPhotoUrl && showRemoveButton && onPhotoRemoved);
+
     Alert.alert(
       'Change Profile Photo',
       'Choose an option',
@@ -77,13 +81,15 @@ export default function PhotoPicker({
           text: 'Choose from Library',
           onPress: () => pickImage(),
         },
-        ...(currentPhotoUrl && showRemoveButton && onPhotoRemoved
+        ...(canRemove
           ? [
               {
-                text: 'Remove Photo',
+                text: 'Reset to Default Avatar',
                 style: 'destructive' as const,
                 onPress: () => {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                  if (Platform.OS !== 'web') {
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                  }
                   onPhotoRemoved();
                 },
               },

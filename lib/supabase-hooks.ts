@@ -4,6 +4,12 @@ import { queryKeys } from './query-keys';
 import { supabase } from './supabase';
 import type { UserAccount } from '@/types/user';
 
+/** Maps file extensions to MIME types for profile photo uploads. Module-level to avoid per-call allocation. */
+const EXT_MIME_MAP: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+  webp: 'image/webp', gif: 'image/gif', heic: 'image/jpeg', heif: 'image/jpeg',
+};
+
 export interface StudyRoom {
   id: string;
   name: string;
@@ -334,7 +340,7 @@ export function useRoomMessages(roomId: string) {
 
       const userIds = [...new Set(messagesData.map(msg => msg.user_id))];
       const { data: profilesData } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -376,7 +382,7 @@ export function useRoomMessages(roomId: string) {
           console.log('[Supabase] New message received:', payload);
           
           const { data: profile } = await supabase
-            .from('users')
+            .from('profiles')
             .select('name, avatar')
             .eq('id', payload.new.user_id)
             .single();
@@ -523,7 +529,7 @@ export function useStudyPartners(filters?: {
       console.log('[Supabase] Fetching study partners with filters:', filters);
       
       let query = supabase
-        .from('users')
+        .from('profiles')
         .select('*');
 
       if (filters?.city) {
@@ -579,7 +585,7 @@ export function useUserProfile(userId: string | undefined) {
 
       console.log('[Supabase] Fetching user profile:', userId);
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -633,7 +639,7 @@ export function useUpdateUserProfile() {
       if (input.profile_photo_url !== undefined) updateData.profile_photo_url = input.profile_photo_url;
 
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .update(updateData)
         .eq('id', input.userId)
         .select()
@@ -661,15 +667,23 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
     const response = await fetch(uri);
     const blob = await response.blob();
     const arrayBuffer = await blob.arrayBuffer();
-    const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+
+    // Detect MIME type from blob first (works for blob: and data: URIs on web),
+    // then fall back to extension parsing from the URI.
+    let mimeType = blob.type && blob.type !== 'application/octet-stream' ? blob.type : '';
+    if (!mimeType) {
+      const extFromUri = uri.split('?')[0].split('.').pop()?.toLowerCase();
+      mimeType = (extFromUri && EXT_MIME_MAP[extFromUri]) ? EXT_MIME_MAP[extFromUri] : 'image/jpeg';
+    }
+    const extFromMime = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+    const fileName = `${userId}-${Date.now()}.${extFromMime}`;
     const filePath = `${userId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('profile-photos')
       .upload(filePath, arrayBuffer, {
-        contentType: `image/${fileExt}`,
-        upsert: false,
+        contentType: mimeType,
+        upsert: true, // allows retry without unique-constraint error; filename includes Date.now() to avoid collisions
       });
 
     if (uploadError) {
@@ -1072,7 +1086,7 @@ export function useAllRecentAchievements(limit: number = 20) {
       const userIds = [...new Set(achievementsData.map((a: any) => a.user_id))];
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -1643,7 +1657,7 @@ export function useActivityFeed(userId?: string, limit = 20) {
       const actorIds = [...new Set(data.map(item => item.actor_id))];
 
       const { data: profilesData, error: profilesError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, name, avatar')
         .in('id', actorIds);
 
@@ -1914,7 +1928,7 @@ export function useOnlineFriends(userId?: string) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, name, avatar')
         .in('id', userIds);
 
@@ -1992,7 +2006,7 @@ export function useFriendActivity(userId?: string, limit = 20) {
       const userIds = presenceData.map((p: any) => p.user_id);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id, name, avatar')
         .in('id', userIds);
 

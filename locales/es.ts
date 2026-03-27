@@ -801,8 +801,8 @@ export const es: Record<string, string> = {
   'paywall.goBack': 'Volver',
 
   // Premium Features
-  'premium.feature1': 'Todas las 10,000+ preguntas de anatomía',
-  'premium.feature2': 'Cuestionarios ilimitados (sin límite de 5 preguntas/día)',
+  'premium.feature1': 'Todas las 30,000+ preguntas de anatomía',
+  'premium.feature2': 'Cuestionarios ilimitados (sin límite de 10 preguntas/día)',
   'premium.feature3': 'Tutor IA personalizado',
   'premium.feature4': 'Estadísticas avanzadas e informes detallados',
   'premium.feature5': 'Sesiones de estudio colaborativas',
