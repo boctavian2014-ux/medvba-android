@@ -64,12 +64,17 @@ app.get("/", (c) => {
 
 // Health check endpoint for debugging
 app.get("/health", (c) => {
-  return c.json({ 
-    status: "ok", 
+  return c.json({
+    status: "ok",
     timestamp: new Date().toISOString(),
     env: {
       hasSupabaseUrl: !!process.env.SUPABASE_URL,
       hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasAiApiKey: !!process.env.EXPO_PUBLIC_AI_API_KEY,
+      aiProvider: process.env.EXPO_PUBLIC_AI_PROVIDER || '(not set, defaults to openai)',
+      hasAiBaseUrl: !!process.env.EXPO_PUBLIC_AI_BASE_URL,
+      aiModel: process.env.EXPO_PUBLIC_AI_MODEL || '(not set, defaults to gpt-4o-mini)',
+      hasCorsOrigins: !!process.env.CORS_ALLOWED_ORIGINS,
     }
   });
 });
