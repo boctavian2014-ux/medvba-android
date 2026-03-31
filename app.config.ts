@@ -132,7 +132,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
     ...config,
     name: 'MEDVBA',
     slug: 'medvba',
-    version: '1.0.18',
+    version: '1.0.19',
     orientation: 'default',
     icon: './assets/images/icon.png',
     scheme: 'medvba',
@@ -153,7 +153,7 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       supportsTablet: false,
       bundleIdentifier: 'com.devaieood.medvba',
       icon: './assets/images/icon.png',
-      buildNumber: '26',
+      buildNumber: '27',
       // Required for @invertase/react-native-apple-authentication (EAS / prebuild).
       entitlements: {
         'com.apple.developer.applesignin': ['Default'],
@@ -168,12 +168,15 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#000000',
       },
-      versionCode: 26,
+      versionCode: 27,
       package: 'com.devaieood.medvba',
       // R8 mapping file for Google Play crash deobfuscation is produced at android/app/build/outputs/mapping/release/mapping.txt and collected in eas.json buildArtifactPaths; upload it in Play Console per version.
       blockedPermissions: [
         'android.permission.CAMERA',
         'android.permission.RECORD_AUDIO',
+        // Strip AAID permission so Play Console „Advertising ID” can match „not used for ads”
+        // (Facebook plugin already has advertiserIDCollectionEnabled: false).
+        'com.google.android.gms.permission.AD_ID',
       ],
       permissions: [
         'android.permission.VIBRATE',
