@@ -2,6 +2,8 @@
 
 # dependencies
 node_modules/
+# Bun is the only lockfile for this repo (EAS + expo-doctor). Do not commit npm's lockfile.
+package-lock.json
 
 # Expo
 .expo/

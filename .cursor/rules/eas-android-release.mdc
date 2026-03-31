@@ -1,0 +1,39 @@
+---
+description: EAS Android builds, versioning, expo-doctor, Play Store artifacts (MEDVBA)
+alwaysApply: true
+---
+
+# EAS Android production builds (MEDVBA)
+
+## Package manager (obligatoriu)
+
+- Folosește **doar Bun** pentru dependențe: `bun install`. Comite **`bun.lock`**.
+- **Nu** comite `package-lock.json` (e în `.gitignore`). Două lockfile-uri fac **`npx expo-doctor`** și uneori EAS să eșueze.
+- După ce modifici `package.json`: rulează `bun install`, apoi verifică `bun install --frozen-lockfile` (trebuie să treacă înainte de push/build).
+
+## Înainte de fiecare release Android
+
+1. **`npx expo-doctor`** — trebuie **0 failed** (rulează din `medvba-android`).
+2. **`app.config.ts`**: crește **`version`** (semver), **`android.versionCode`** (+1 față de ultimul din Play), **`ios.buildNumber`** (aliniat sau +1).
+3. **`eas.json`**: păstrează `buildType: app-bundle` și `buildArtifactPaths` cu `android/app/build/outputs/mapping/release/mapping.txt` pentru **mapping / deobfuscare R8**.
+4. **`app.config.ts`**: `expo-build-properties` → `enableMinifyInReleaseBuilds: true` (necesar pentru `mapping.txt`).
+5. Variabile **EAS** (environment **production**): `EXPO_PUBLIC_*` complete (Supabase, RevenueCat, Google/Facebook dacă le folosești).
+
+## Comandă build
+
+```bash
+cd medvba-android
+bun install --frozen-lockfile
+npx expo-doctor
+npx eas-cli build --platform android --profile production --non-interactive --no-wait
+```
+
+## După build (Play Console)
+
+- Descarcă **`.aab`** din pagina build pe expo.dev.
+- Descarcă **`mapping.txt`** din **Artifacts** (același build) și încarcă-l în Play pentru **același versionCode**.
+- Declarații **Advertising ID** / **Data safety** aliniate cu manifestul (`AD_ID` blocat în `app.config` dacă nu folosești reclame cu AAID).
+
+## Dacă `expo-doctor` pică la „lock file”
+
+- Asigură-te că există un singur lockfile relevant: **`bun.lock`**, fără `package-lock.json` în repo.
