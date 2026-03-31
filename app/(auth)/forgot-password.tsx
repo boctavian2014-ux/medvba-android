@@ -21,6 +21,8 @@ import {
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { SPACING } from '@/theme/paperTheme';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { log } from '@/lib/log';
 
 export default function ForgotPasswordScreen() {
   const theme = useTheme();
@@ -45,6 +47,10 @@ export default function ForgotPasswordScreen() {
   }, [email, t]);
 
   const handleResetPassword = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      Alert.alert(t('auth.error'), t('auth.supabaseNotConfigured'));
+      return;
+    }
     if (!validateEmail()) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -55,14 +61,17 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
 
     try {
-      console.log('[ForgotPassword] Sending reset email to:', email);
       const { error: resetError } = await resetPassword(email.trim().toLowerCase());
 
       if (resetError) {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        Alert.alert(t('auth.error'), t('auth.resetFailed'));
+        const detail = resetError.message?.trim();
+        Alert.alert(
+          t('auth.error'),
+          detail ? `${t('auth.resetFailed')}\n\n${detail}` : t('auth.resetFailed')
+        );
       } else {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -70,7 +79,7 @@ export default function ForgotPasswordScreen() {
         setIsSuccess(true);
       }
     } catch (err) {
-      console.error('[ForgotPassword] Unexpected error:', err);
+      log.error('[ForgotPassword] Unexpected error:', err);
       Alert.alert(t('auth.error'), t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
@@ -195,7 +204,7 @@ export default function ForgotPasswordScreen() {
                   mode="contained"
                   onPress={handleResetPassword}
                   loading={isLoading}
-                  disabled={isLoading}
+                  disabled={isLoading || !isSupabaseConfigured}
                   style={{ marginTop: SPACING.x3 }}
                 >
                   {t('auth.sendResetLink')}

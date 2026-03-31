@@ -13,6 +13,7 @@ export type UIButtonProps = {
   style?: StyleProp<ViewStyle>;
   /** Material icon name (leadingIcon). */
   icon?: string;
+  testID?: string;
 };
 
 /**
@@ -27,6 +28,7 @@ export function UIButton({
   color,
   style,
   icon,
+  testID,
 }: UIButtonProps) {
   const mode = variant === 'borderless' || variant === 'plain' ? 'text' : variant === 'bordered' || variant === 'outlined' ? 'outlined' : 'contained';
   const isContained = mode === 'contained';
@@ -41,6 +43,7 @@ export function UIButton({
       buttonColor={buttonColor}
       textColor={textColor}
       style={style}
+      testID={testID}
     >
       {children}
     </PaperButton>

@@ -41,7 +41,7 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, AUTH_SIGN_IN_CANCELLED } from '@/providers/AuthProvider';
 import { useLeaderboard, useZoomRequests } from '@/lib/supabase-hooks';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { log } from '@/lib/log';
@@ -246,6 +246,7 @@ export default function ProfileScreen() {
   const handleConnectGoogle = useCallback(async () => {
     try {
       const { error } = await signInWithGoogle();
+      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
       if (error) throw error;
     } catch (error) {
       log.error('Error linking Google account:', error);
@@ -256,6 +257,7 @@ export default function ProfileScreen() {
   const handleConnectFacebook = useCallback(async () => {
     try {
       const { error } = await signInWithFacebook();
+      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
       if (error) throw error;
     } catch (error) {
       log.error('Error linking Facebook account:', error);
@@ -266,6 +268,7 @@ export default function ProfileScreen() {
   const handleConnectApple = useCallback(async () => {
     try {
       const { error } = await signInWithApple();
+      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
       if (error) throw error;
     } catch (error) {
       log.error('Error linking Apple account:', error);
@@ -331,7 +334,11 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <View style={styles.titleRow}>
+            <TouchableOpacity 
+              style={styles.titleRow}
+              onPress={() => router.push('/settings')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.title}>{t('profile')}</Text>
               {profile?.isPublic === false && (
                 <View style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}>
@@ -339,11 +346,13 @@ export default function ProfileScreen() {
                   <Text style={[styles.privacyBadgeText, { color: colors.textMuted }]}>Private</Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.settingsButton}
               activeOpacity={0.7}
               onPress={() => router.push('/settings')}
+              testID="profileOpenSettings"
+              accessibilityLabel="Open settings"
             >
               <LinearGradient
                 colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.05)']}
@@ -371,7 +380,13 @@ export default function ProfileScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
+                  <Image
+                    key={profile?.profile_photo_url || profile?.avatar || profile?.id}
+                    source={{
+                      uri: profile?.profile_photo_url || profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default',
+                    }}
+                    style={styles.avatar}
+                  />
                 </LinearGradient>
                 <View style={styles.rankBadge}>
                   <LinearGradient
@@ -671,7 +686,11 @@ export default function ProfileScreen() {
             <View style={styles.sectionHeader}>
               <Trophy color={colors.warning} size={22} />
               <Text style={styles.sectionTitleInline}>{t('profile.leaderboard')}</Text>
-              <TouchableOpacity style={styles.seeAllButton} activeOpacity={0.7}>
+              <TouchableOpacity 
+                style={styles.seeAllButton} 
+                onPress={() => router.push('/leaderboard')}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.seeAllText}>{t('profile.seeAll')}</Text>
                 <ChevronRight color={colors.primary} size={16} />
               </TouchableOpacity>
@@ -943,6 +962,7 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
   },
   privacyBadge: {
     flexDirection: 'row',

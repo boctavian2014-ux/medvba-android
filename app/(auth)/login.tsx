@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Appbar, Text, Card, useTheme, IconButton } from 'react-native-paper';
 import { UIButton, UITextField } from '@/ui';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, AUTH_SIGN_IN_CANCELLED } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { SPACING } from '@/theme/paperTheme';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -25,7 +25,7 @@ import { AuthError } from '@supabase/supabase-js';
 
 const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
-export default function LoginScreen() {
+function LoginScreen() {
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,9 +37,6 @@ export default function LoginScreen() {
      signInWithGoogle, 
      signInWithFacebook, 
      signInWithApple,
-     // Note: Account linking/unlinking methods reserved for future settings page
-     // hasCompletedOnboarding, linkGoogleAccount, linkFacebookAccount, linkAppleAccount,
-     // unlinkGoogleAccount, unlinkFacebookAccount, unlinkAppleAccount
    } = useAuth();
   const { t } = useLanguage();
 
@@ -85,8 +82,16 @@ export default function LoginScreen() {
         }
 
         let errorMessage = t('auth.loginFailed');
-        if (error.message.includes('Invalid login credentials')) {
+        const code = (error as { code?: string }).code;
+        if (code === 'email_not_confirmed') {
+          errorMessage = t('auth.emailNotConfirmed');
+        } else if (
+          error.message.includes('Invalid login credentials') ||
+          code === 'invalid_credentials'
+        ) {
           errorMessage = t('auth.invalidCredentials');
+        } else if (error.message) {
+          errorMessage = error.message;
         }
 
         Alert.alert(t('auth.loginFailed'), errorMessage);
@@ -94,7 +99,6 @@ export default function LoginScreen() {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        // Use AsyncStorage directly to avoid stale `hasCompletedOnboarding` on web.
         const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
         const isOnboardingCompleted = completed === 'true';
         router.replace(isOnboardingCompleted ? '/(tabs)' : '/(auth)/onboarding');
@@ -144,6 +148,9 @@ export default function LoginScreen() {
       }
 
       if (result.error) {
+        if (result.error.message === AUTH_SIGN_IN_CANCELLED) {
+          return;
+        }
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
@@ -205,43 +212,49 @@ export default function LoginScreen() {
 
             <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
               <Card.Content style={styles.cardContent}>
-                <View style={styles.socialButtonsRow}>
-                  <TouchableOpacity
-                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                    onPress={() => handleSocialLogin('google')}
-                    disabled={isLoading}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.signInWithGoogle')}
-                  >
-                    <Ionicons name="logo-google" size={24} color={theme.colors.onSurface} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                    onPress={() => handleSocialLogin('facebook')}
-                    disabled={isLoading}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.signInWithFacebook')}
-                  >
-                    <Ionicons name="logo-facebook" size={24} color={theme.colors.onSurface} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
-                    onPress={() => handleSocialLogin('apple')}
-                    disabled={isLoading}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.signInWithApple')}
-                  >
-                    <Ionicons name="logo-apple" size={24} color={theme.colors.onSurface} />
-                  </TouchableOpacity>
-                </View>
+                {Platform.OS !== 'web' ? (
+                  <>
+                    <View style={styles.socialButtonsRow}>
+                      <TouchableOpacity
+                        style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                        onPress={() => handleSocialLogin('google')}
+                        disabled={isLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithGoogle')}
+                      >
+                        <Ionicons name="logo-google" size={24} color={theme.colors.onSurface} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                        onPress={() => handleSocialLogin('facebook')}
+                        disabled={isLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithFacebook')}
+                      >
+                        <Ionicons name="logo-facebook" size={24} color={theme.colors.onSurface} />
+                      </TouchableOpacity>
+                      {Platform.OS === 'ios' ? (
+                        <TouchableOpacity
+                          style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                          onPress={() => handleSocialLogin('apple')}
+                          disabled={isLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('auth.signInWithApple')}
+                        >
+                          <Ionicons name="logo-apple" size={24} color={theme.colors.onSurface} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
 
-                <View style={styles.dividerRow}>
-                  <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
-                  <Text variant="bodySmall" style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>
-                    {t('auth.orContinueWithEmail')}
-                  </Text>
-                  <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
-                </View>
+                    <View style={styles.dividerRow}>
+                      <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                      <Text variant="bodySmall" style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>
+                        {t('auth.orContinueWithEmail')}
+                      </Text>
+                      <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                    </View>
+                  </>
+                ) : null}
 
                 <View style={[styles.inputWrap, { marginBottom: SPACING.x2 }]}>
                   <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: SPACING.x1 }}>
@@ -256,6 +269,7 @@ export default function LoginScreen() {
                     placeholder={t('auth.emailPlaceholder')}
                     keyboardType="email-address"
                     style={styles.input}
+                    testID="loginEmail"
                   />
                 </View>
                 {errors.email ? (
@@ -277,6 +291,7 @@ export default function LoginScreen() {
                     placeholder={t('auth.passwordPlaceholder')}
                     secureTextEntry={!showPassword}
                     style={styles.input}
+                    testID="loginPassword"
                     right={
                       <IconButton
                         icon={showPassword ? 'eye-off' : 'eye'}
@@ -309,6 +324,7 @@ export default function LoginScreen() {
                     onPress={handleLogin}
                     disabled={isLoading || !isSupabaseConfigured}
                     color={theme.colors.primary}
+                    testID="loginSubmit"
                   >
                     {isLoading ? (t('auth.loading') ?? '...') : t('auth.signIn')}
                   </UIButton>
@@ -428,3 +444,5 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+export default LoginScreen;

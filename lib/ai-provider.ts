@@ -26,12 +26,12 @@ export interface GenerateTextOptions {
 
 // Get provider from environment
 function getProviderConfig(): AIProviderConfig {
-  const provider = (process.env.EXPO_PUBLIC_AI_PROVIDER || 'openai') as AIProvider;
+  const provider = (process.env.AI_PROVIDER || process.env.EXPO_PUBLIC_AI_PROVIDER || 'openai') as AIProvider;
   return {
     provider,
-    apiKey: process.env.EXPO_PUBLIC_AI_API_KEY,
-    baseUrl: process.env.EXPO_PUBLIC_AI_BASE_URL,
-    model: process.env.EXPO_PUBLIC_AI_MODEL || 'gpt-4o-mini',
+    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
+    baseUrl: process.env.AI_BASE_URL || process.env.EXPO_PUBLIC_AI_BASE_URL,
+    model: process.env.AI_MODEL || process.env.EXPO_PUBLIC_AI_MODEL || 'gpt-4o-mini',
   };
 }
 
@@ -39,11 +39,11 @@ function getProviderConfig(): AIProviderConfig {
 async function callOpenAI(options: GenerateTextOptions, config: AIProviderConfig): Promise<string> {
   const { messages, model, temperature = 0.7, maxTokens = 2000 } = options;
   
-  const apiKey = config.apiKey || process.env.OPENAI_API_KEY;
+  const apiKey = config.apiKey || process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   
   if (!apiKey) {
-    throw new Error('OpenAI API key not configured. Set EXPO_PUBLIC_AI_API_KEY in .env');
+    throw new Error('OpenAI API key not configured. Set AI_API_KEY (or OPENAI_API_KEY) on the backend.');
   }
   
   const response = await fetch(`${baseUrl}/chat/completions`, {

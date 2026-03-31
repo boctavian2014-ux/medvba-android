@@ -54,59 +54,14 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
   loadEnvFile(path.join(root, '.env'), envFromFile);
   loadEnvFile(path.join(root, '.env.local'), envFromFile);
 
-  return {
-    ...config,
-  name: 'MEDVBA',
-  slug: 'medvba',
-  version: '1.0.17',
-  orientation: 'default',
-  icon: './assets/images/icon.png',
-  scheme: 'medvba',
-  userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
-  splash: {
-    image: './assets/images/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#ffffff',
-  },
-  updates: {
-    url: 'https://u.expo.dev/667a66db-a3be-4c1e-b7da-8ad212c92bb4',
-  },
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
-  ios: {
-    supportsTablet: false,
-    bundleIdentifier: 'com.devaieood.medvba',
-    icon: './assets/images/icon.png',
-    buildNumber: '24',
-    infoPlist: {
-      NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
-      ITSAppUsesNonExemptEncryption: false,
-    },
-  },
-  android: {
-    adaptiveIcon: {
-      foregroundImage: './assets/images/adaptive-icon.png',
-      backgroundColor: '#000000',
-    },
-    versionCode: 25,
-    package: 'com.devaieood.medvba',
-    // R8 mapping file for Google Play crash deobfuscation is produced at android/app/build/outputs/mapping/release/mapping.txt and collected in eas.json buildArtifactPaths; upload it in Play Console per version.
-    blockedPermissions: [
-      'android.permission.CAMERA',
-      'android.permission.RECORD_AUDIO',
-    ],
-    permissions: [
-      'android.permission.VIBRATE',
-    ],
-    // Android 15+ edge-to-edge; use system bars (status/nav) via insets instead of deprecated color APIs
-    edgeToEdgeEnabled: true,
-  },
-  web: {
-    favicon: './assets/images/favicon.png',
-  },
-  plugins: [
+  const facebookAppId =
+    envFromFile.EXPO_PUBLIC_FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || '';
+  const facebookClientToken =
+    envFromFile.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN || process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN || '';
+  const googleIosClientId =
+    envFromFile.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
+
+  const plugins: NonNullable<ExpoConfig['plugins']> = [
     [
       'expo-router',
       {
@@ -128,6 +83,8 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       'expo-build-properties',
       {
         android: {
+          // Play / Expo default floor: API 24 — wide device coverage; raise to 26+ if you drop older devices.
+          minSdkVersion: 24,
           compileSdkVersion: 35,
           targetSdkVersion: 35,
           buildToolsVersion: '35.0.0',
@@ -144,17 +101,100 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
       },
     ],
     './plugins/withAndroidLintSuppress.js',
-  ],
-  experiments: {
-    typedRoutes: true,
-  },
+  ];
+
+  if (facebookAppId && facebookClientToken) {
+    plugins.push([
+      'react-native-fbsdk-next',
+      {
+        appID: facebookAppId,
+        clientToken: facebookClientToken,
+        displayName: 'MEDVBA',
+        scheme: `fb${facebookAppId}`,
+        isAutoInitEnabled: true,
+        advertiserIDCollectionEnabled: false,
+        autoLogAppEventsEnabled: false,
+      },
+    ]);
+  }
+
+  const googleIosClientIdMatch = googleIosClientId.match(/^(.+)\.apps\.googleusercontent\.com$/);
+  if (googleIosClientIdMatch) {
+    plugins.push([
+      '@react-native-google-signin/google-signin',
+      {
+        iosUrlScheme: `com.googleusercontent.apps.${googleIosClientIdMatch[1]}`,
+      },
+    ]);
+  }
+
+  return {
+    ...config,
+    name: 'MEDVBA',
+    slug: 'medvba',
+    version: '1.0.17',
+    orientation: 'default',
+    icon: './assets/images/icon.png',
+    scheme: 'medvba',
+    userInterfaceStyle: 'automatic',
+    newArchEnabled: true,
+    splash: {
+      image: './assets/images/splash-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
+    },
+    updates: {
+      url: 'https://u.expo.dev/667a66db-a3be-4c1e-b7da-8ad212c92bb4',
+    },
+    runtimeVersion: {
+      policy: 'appVersion',
+    },
+    ios: {
+      supportsTablet: false,
+      bundleIdentifier: 'com.devaieood.medvba',
+      icon: './assets/images/icon.png',
+      buildNumber: '24',
+      // Required for @invertase/react-native-apple-authentication (EAS / prebuild).
+      entitlements: {
+        'com.apple.developer.applesignin': ['Default'],
+      },
+      infoPlist: {
+        NSPhotoLibraryUsageDescription: 'Allow $(PRODUCT_NAME) to access your photos',
+        ITSAppUsesNonExemptEncryption: false,
+      },
+    },
+    android: {
+      adaptiveIcon: {
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#000000',
+      },
+      versionCode: 25,
+      package: 'com.devaieood.medvba',
+      // R8 mapping file for Google Play crash deobfuscation is produced at android/app/build/outputs/mapping/release/mapping.txt and collected in eas.json buildArtifactPaths; upload it in Play Console per version.
+      blockedPermissions: [
+        'android.permission.CAMERA',
+        'android.permission.RECORD_AUDIO',
+      ],
+      permissions: [
+        'android.permission.VIBRATE',
+      ],
+      // Android 15+ edge-to-edge; use system bars (status/nav) via insets instead of deprecated color APIs
+      edgeToEdgeEnabled: true,
+    },
+    web: {
+      favicon: './assets/images/favicon.png',
+    },
+    plugins,
+    experiments: {
+      typedRoutes: true,
+    },
     extra: {
-    router: {
-      origin: 'https://rork.com/',
-    },
-    eas: {
-      projectId: '667a66db-a3be-4c1e-b7da-8ad212c92bb4',
-    },
+      router: {
+        origin: 'https://rork.com/',
+      },
+      eas: {
+        projectId: '667a66db-a3be-4c1e-b7da-8ad212c92bb4',
+      },
       EXPO_PUBLIC_SUPABASE_URL:
         envFromFile.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL,
       EXPO_PUBLIC_SUPABASE_ANON_KEY:
@@ -175,8 +215,12 @@ export default ({ config, projectRoot }: ConfigContext): ExpoConfig => {
         envFromFile.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
       EXPO_PUBLIC_FACEBOOK_APP_ID:
         envFromFile.EXPO_PUBLIC_FACEBOOK_APP_ID || process.env.EXPO_PUBLIC_FACEBOOK_APP_ID,
+      EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN:
+        envFromFile.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN || process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN,
       EXPO_PUBLIC_APPLE_CLIENT_ID:
-        envFromFile.EXPO_PUBLIC_APPLE_CLIENT_ID || process.env.EXPO_PUBLIC_APPLE_CLIENT_ID,
+        envFromFile.EXPO_PUBLIC_APPLE_CLIENT_ID ||
+        process.env.EXPO_PUBLIC_APPLE_CLIENT_ID ||
+        'com.devaieood.medvba.auth',
       EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI:
         envFromFile.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || 'medvba://reset-password',
     },

@@ -16,7 +16,11 @@ import { UIButton, UITextField } from '@/ui';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SPACING } from '@/theme/paperTheme';
+import { log } from '@/lib/log';
+
+const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
 export default function SignUpScreen() {
   const theme = useTheme();
@@ -83,34 +87,40 @@ export default function SignUpScreen() {
     setIsLoading(true);
 
     try {
-      console.log('[SignUp] Attempting sign up for:', email);
-      const { error } = await signUp(email.trim().toLowerCase(), password, name.trim());
+      const { error, session } = await signUp(email.trim().toLowerCase(), password, name.trim());
 
       if (error) {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
 
-        console.error('[SignUp] Supabase error:', error);
-        console.error('[SignUp] Error message:', error.message);
-        console.error('[SignUp] Error code:', error.code);
-        console.error('[SignUp] Error status:', error.status);
-
         let errorMessage = t('auth.signUpFailed');
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        const msg = error.message || '';
+        const errCode = (error as { code?: string }).code;
+        if (
+          msg.includes('already registered') ||
+          msg.includes('already exists') ||
+          errCode === 'user_already_exists'
+        ) {
           errorMessage = t('auth.emailAlreadyRegistered');
-        } else if (error.message.includes('Password')) {
-          errorMessage = error.message;
-        } else if (error.message) {
-          errorMessage = `${t('auth.signUpFailed')}\n\n${error.message}`;
+        } else if (msg.includes('Password')) {
+          errorMessage = msg;
+        } else if (msg) {
+          errorMessage = `${t('auth.signUpFailed')}\n\n${msg}`;
         }
 
         Alert.alert(t('auth.signUpFailed'), errorMessage);
+      } else if (session) {
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+        const isOnboardingCompleted = completed === 'true';
+        router.replace(isOnboardingCompleted ? '/(tabs)' : '/(auth)/onboarding');
       } else {
         if (Platform.OS !== 'web') {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        console.log('[SignUp] Sign up successful');
         Alert.alert(
           t('auth.accountCreated'),
           t('auth.verifyEmailMessage'),
@@ -118,7 +128,7 @@ export default function SignUpScreen() {
         );
       }
     } catch (error) {
-      console.error('[SignUp] Unexpected error:', error);
+      log.error('[SignUp] Unexpected error:', error);
       Alert.alert('Error', t('auth.unexpectedError'));
     } finally {
       setIsLoading(false);
@@ -262,11 +272,16 @@ export default function SignUpScreen() {
                   </Text>
                 ) : null}
 
+                {!isSupabaseConfigured && (
+                  <Text variant="bodySmall" style={[styles.notConfiguredText, { color: theme.colors.error }]}>
+                    {t('auth.supabaseNotConfigured')}
+                  </Text>
+                )}
                 <View style={[styles.primaryButton, { marginTop: SPACING.x2 }]}>
                   <UIButton
                     variant="borderedProminent"
                     onPress={handleSignUp}
-                    disabled={isLoading}
+                    disabled={isLoading || !isSupabaseConfigured}
                     color={theme.colors.primary}
                   >
                     {isLoading ? (t('auth.loading') ?? '...') : t('auth.createAccount')}
@@ -364,5 +379,9 @@ const styles = StyleSheet.create({
   termsText: {
     textAlign: 'center',
     lineHeight: 18,
+  },
+  notConfiguredText: {
+    marginBottom: SPACING.x2,
+    textAlign: 'center',
   },
 });

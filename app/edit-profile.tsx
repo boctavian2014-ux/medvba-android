@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { getDefaultAvatarUrl } from '@/lib/avatar';
 import {
   View,
@@ -23,12 +23,14 @@ import { useLanguage } from '@/providers/LanguageProvider';
 import GlassCard from '@/components/GlassCard';
 import { useUpdateUserProfile, useUserProfile, uploadProfilePhoto } from '@/lib/supabase-hooks';
 import PhotoPicker from '@/components/PhotoPicker';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, applyServerProfilePatch } = useAuth();
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { data: profile, isLoading: isLoadingProfile } = useUserProfile(user?.id);
   const updateProfileMutation = useUpdateUserProfile();
@@ -42,6 +44,18 @@ export default function EditProfileScreen() {
   const [isPickingPhoto, setIsPickingPhoto] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  const lastProcessedUri = useRef<string | null>(null);
+  const uploadInProgress = useRef(false);
+  const isPickerActive = useRef(false);
+
+  // Reset picker state on mount/unmount
+  React.useEffect(() => {
+    return () => {
+      isPickerActive.current = false;
+      lastProcessedUri.current = null;
+      uploadInProgress.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (profile) {
@@ -56,17 +70,23 @@ export default function EditProfileScreen() {
 
   const handlePhotoRemoved = useCallback(async () => {
     if (!user?.id) return;
+    if (uploadInProgress.current) return;
+    
     setIsUploadingPhoto(true);
     try {
-      // Resets the profile photo to a deterministic DiceBear-generated avatar.
-      // There is no "null photo" state — the default is always the generated avatar.
       const dicebearUrl = getDefaultAvatarUrl(user.id);
-      setLocalPhotoUri(null); // clear immediately for instant feedback
-      await updateProfileMutation.mutateAsync({
+      setLocalPhotoUri(null);
+      const updated = await updateProfileMutation.mutateAsync({
         userId: user.id,
         profile_photo_url: dicebearUrl,
       });
       await refreshProfile();
+      applyServerProfilePatch({
+        profile_photo_url: updated?.profile_photo_url,
+        avatar: updated?.avatar,
+        name: updated?.name,
+      });
+      await queryClient.refetchQueries({ queryKey: ['userProfile', user.id] });
       if (Platform.OS !== 'web') {
         Alert.alert('Photo Reset', 'Your profile photo has been reset to the default avatar.');
       }
@@ -76,35 +96,72 @@ export default function EditProfileScreen() {
     } finally {
       setIsUploadingPhoto(false);
     }
-  }, [user?.id, updateProfileMutation, refreshProfile]);
+  }, [user?.id, updateProfileMutation, refreshProfile, queryClient, applyServerProfilePatch]);
 
   const handlePhotoSelected = useCallback(async (uri: string) => {
-    if (!user?.id) return;
+    // Ultimate guard - if picker isn't active, ignore
+    if (!isPickerActive.current) {
+      console.log('[EditProfile] Picker not active, ignoring callback');
+      return;
+    }
+    
+    if (!user?.id) {
+      isPickerActive.current = false;
+      return;
+    }
+    
+    if (lastProcessedUri.current === uri) {
+      console.log('[EditProfile] Same URI already processed, ignoring');
+      isPickerActive.current = false;
+      return;
+    }
+    
+    if (uploadInProgress.current) {
+      console.log('[EditProfile] Upload already in progress, ignoring');
+      isPickerActive.current = false;
+      return;
+    }
 
+    console.log('[EditProfile] Photo selected, URI:', uri.substring(0, 50));
+    
+    // Immediately disable picker to prevent any re-triggers
+    isPickerActive.current = false;
+    uploadInProgress.current = true;
+    lastProcessedUri.current = uri;
     setIsPickingPhoto(false);
-    setLocalPhotoUri(uri);
     setIsUploadingPhoto(true);
 
+    const userId = user.id;
+    const localUri = uri;
+    setLocalPhotoUri(localUri);
+
     try {
-      console.log('[EditProfile] Starting photo upload for user:', user.id);
-      const photoUrl = await uploadProfilePhoto(user.id, uri);
+      console.log('[EditProfile] Uploading photo for user:', userId);
+      const photoUrl = await uploadProfilePhoto(userId, localUri);
       console.log('[EditProfile] Photo uploaded, URL:', photoUrl);
 
       console.log('[EditProfile] Updating profile with new photo URL');
-      await updateProfileMutation.mutateAsync({
-        userId: user.id,
+      const updated = await updateProfileMutation.mutateAsync({
+        userId: userId,
         profile_photo_url: photoUrl,
       });
       console.log('[EditProfile] Profile updated successfully');
 
       await refreshProfile();
+      applyServerProfilePatch({
+        profile_photo_url: updated?.profile_photo_url,
+        avatar: updated?.avatar,
+        name: updated?.name,
+      });
+      await queryClient.refetchQueries({ queryKey: ['userProfile', userId] });
+
+      setLocalPhotoUri(null);
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error: any) {
-      console.error('[EditProfile] Error in handlePhotoSelected:', error);
-      console.error('[EditProfile] Error details:', error?.message, error?.code, error?.details);
+      console.error('[EditProfile] Error:', error?.message || error);
       const errorMsg = error?.message || 'Unknown error';
       if (Platform.OS === 'web') {
         alert(`${t('editProfile.uploadError')} (${errorMsg})`);
@@ -113,9 +170,18 @@ export default function EditProfileScreen() {
       }
       setLocalPhotoUri(null);
     } finally {
+      uploadInProgress.current = false;
       setIsUploadingPhoto(false);
     }
-  }, [user?.id, updateProfileMutation, refreshProfile]);
+  }, [user?.id, updateProfileMutation, refreshProfile, queryClient, applyServerProfilePatch, t]);
+
+  const openPhotoPicker = useCallback(() => {
+    // Reset all states before opening
+    isPickerActive.current = true;
+    lastProcessedUri.current = null;
+    uploadInProgress.current = false;
+    setIsPickingPhoto(true);
+  }, []);
 
   const handleSave = async () => {
     if (!user?.id) return;
@@ -133,7 +199,7 @@ export default function EditProfileScreen() {
     }
 
     try {
-      await updateProfileMutation.mutateAsync({
+      const updated = await updateProfileMutation.mutateAsync({
         userId: user.id,
         name: name.trim(),
         bio: bio.trim() || undefined,
@@ -144,6 +210,12 @@ export default function EditProfileScreen() {
       });
 
       await refreshProfile();
+      applyServerProfilePatch({
+        profile_photo_url: updated?.profile_photo_url,
+        avatar: updated?.avatar,
+        name: updated?.name,
+      });
+      await queryClient.refetchQueries({ queryKey: ['userProfile', user.id] });
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -220,7 +292,7 @@ export default function EditProfileScreen() {
             </View>
             <TouchableOpacity
               style={styles.changePhotoButton}
-              onPress={() => setIsPickingPhoto(true)}
+              onPress={openPhotoPicker}
               disabled={isUploadingPhoto}
               activeOpacity={0.7}
             >
@@ -345,7 +417,7 @@ export default function EditProfileScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {isPickingPhoto && (
+      {isPickingPhoto && !isUploadingPhoto && (
         <View style={StyleSheet.absoluteFill}>
           <PhotoPicker
             currentPhotoUrl={displayAvatar}
@@ -356,7 +428,10 @@ export default function EditProfileScreen() {
           />
           <TouchableOpacity
             style={styles.photoPickerClose}
-            onPress={() => setIsPickingPhoto(false)}
+            onPress={() => {
+              isPickerActive.current = false;
+              setIsPickingPhoto(false);
+            }}
             activeOpacity={0.7}
           >
             <X color={colors.text} size={24} />

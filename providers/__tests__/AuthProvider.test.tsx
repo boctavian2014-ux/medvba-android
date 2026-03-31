@@ -1,12 +1,15 @@
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook, waitFor, act } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthProvider, useAuth } from '../AuthProvider';
 import { supabase } from '@/lib/supabase';
 
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
+  <QueryClientProvider client={new QueryClient()}>
+    <AuthProvider>{children}</AuthProvider>
+  </QueryClientProvider>
 );
 
 describe('AuthProvider', () => {
@@ -89,7 +92,7 @@ describe('AuthProvider', () => {
       };
 
       (supabase.auth.signUp as jest.Mock).mockResolvedValue({
-        data: { user: mockUser },
+        data: { user: mockUser, session: null },
         error: null,
       });
 
@@ -110,6 +113,7 @@ describe('AuthProvider', () => {
       );
 
       expect(response.error).toBeNull();
+      expect(response.session).toBeNull();
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
         email: 'newuser@example.com',
         password: 'password123',
@@ -142,6 +146,7 @@ describe('AuthProvider', () => {
       );
 
       expect(response.error).toEqual(mockError);
+      expect(response.session).toBeNull();
     });
   });
 
@@ -235,7 +240,9 @@ describe('AuthProvider', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      await result.current.completeOnboarding();
+      await act(async () => {
+        await result.current.completeOnboarding();
+      });
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         '@medvba_onboarding_complete',
@@ -261,7 +268,10 @@ describe('AuthProvider', () => {
 
       expect(response.error).toBeNull();
       expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
-        'user@example.com'
+        'user@example.com',
+        expect.objectContaining({
+          redirectTo: expect.any(String),
+        })
       );
     });
   });

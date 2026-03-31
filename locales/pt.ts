@@ -62,11 +62,13 @@ export const pt: Record<string, string> = {
   'auth.passwordsDontMatch': 'As senhas não coincidem',
   'auth.loginFailed': 'Erro ao fazer login. Por favor tente novamente.',
   'auth.invalidCredentials': 'E-mail ou senha incorretos. Por favor tente novamente.',
-  'auth.emailNotConfirmed': 'Credenciais inválidas. Verifique o seu e-mail e senha.',
+  'auth.emailNotConfirmed':
+    'Confirme o seu e-mail antes de iniciar sessão. Abra a ligação que enviámos ao registar-se e tente novamente.',
   'auth.signUpFailed': 'Erro ao registar. Por favor tente novamente.',
   'auth.emailAlreadyRegistered': 'Este e-mail já está registado. Por favor faça login.',
   'auth.accountCreated': 'Conta criada',
-  'auth.verifyEmailMessage': 'Já pode iniciar sessão com o seu e-mail e senha.',
+  'auth.verifyEmailMessage':
+    'Enviámos uma ligação de confirmação para o seu e-mail. Abra-a para ativar a conta e depois inicie sessão aqui.',
   'auth.ok': 'OK',
   'auth.unexpectedError': 'Ocorreu um erro inesperado. Por favor tente novamente.',
   'auth.supabaseNotConfigured': 'Login não disponível: Supabase não está configurado. Defina EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY no .env',

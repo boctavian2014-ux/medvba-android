@@ -28,49 +28,80 @@ try {
 }
 monitoring.init();
 
-if (!__DEV__) {
-  // Silence noisy production logs while keeping warnings/errors.
-  console.log = () => {};
+const extraConfig = Constants.expoConfig?.extra ?? {};
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
+const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '';
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || googleIosClientId || '';
+const facebookAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || extraConfig.EXPO_PUBLIC_FACEBOOK_APP_ID || '';
+const appleClientId = process.env.EXPO_PUBLIC_APPLE_CLIENT_ID || extraConfig.EXPO_PUBLIC_APPLE_CLIENT_ID || '';
+const passwordResetRedirectUri = process.env.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || extraConfig.EXPO_PUBLIC_PASSWORD_RESET_REDIRECT_URI || 'medvba://reset-password';
 
-  const sanitizeValue = (value: unknown): unknown => {
-    if (typeof value === "string") {
-      return value
-        .replace(
-          /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,
-          "[redacted-email]"
-        )
-        .replace(/(eyJ[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?)/g, "[redacted-jwt]")
-        .replace(/(sb_publishable_[a-zA-Z0-9._-]+)/g, "[redacted-supabase-key]");
+const isAbortSignalError = (args: unknown[]): boolean => {
+  return args.some(arg => {
+    if (typeof arg === 'string') {
+      return arg.includes('signal is aborted') || arg.includes('abort');
     }
-    if (value && typeof value === "object") {
-      try {
-        const serialized = JSON.stringify(value);
-        if (serialized) {
-          return sanitizeValue(serialized);
-        }
-      } catch {
-        return "[redacted-object]";
+    if (arg instanceof Error) {
+      return arg.message.includes('signal is aborted') || arg.message.includes('abort');
+    }
+    return false;
+  });
+};
+
+const sanitizeValue = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    return value
+      .replace(
+        /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,
+        "[redacted-email]"
+      )
+      .replace(/(eyJ[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?\.[a-zA-Z0-9_-]+?)/g, "[redacted-jwt]")
+      .replace(/(sb_publishable_[a-zA-Z0-9._-]+)/g, "[redacted-supabase-key]");
+  }
+  if (value && typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized) {
+        return sanitizeValue(serialized);
       }
+    } catch {
+      return "[redacted-object]";
     }
-    return value;
-  };
+  }
+  return value;
+};
 
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-  const originalConsoleInfo = console.info;
-  const originalConsoleDebug = console.debug;
-  console.error = (...args: unknown[]) => {
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+const originalConsoleInfo = console.info;
+const originalConsoleDebug = console.debug;
+
+console.error = (...args: unknown[]) => {
+  if (isAbortSignalError(args)) return;
+  if (__DEV__) {
+    originalConsoleError(...args);
+  } else {
     originalConsoleError(...args.map(sanitizeValue));
-  };
-  console.warn = (...args: unknown[]) => {
-    originalConsoleWarn(...args.map(sanitizeValue));
-  };
-  console.info = (...args: unknown[]) => {
-    originalConsoleInfo(...args.map(sanitizeValue));
-  };
-  console.debug = (...args: unknown[]) => {
-    originalConsoleDebug(...args.map(sanitizeValue));
-  };
+  }
+};
+
+console.warn = (...args: unknown[]) => {
+  if (isAbortSignalError(args)) return;
+  if (!__DEV__) originalConsoleWarn(...args.map(sanitizeValue));
+};
+
+console.info = (...args: unknown[]) => {
+  if (isAbortSignalError(args)) return;
+  if (!__DEV__) originalConsoleInfo(...args.map(sanitizeValue));
+};
+
+console.debug = (...args: unknown[]) => {
+  if (isAbortSignalError(args)) return;
+  if (!__DEV__) originalConsoleDebug(...args.map(sanitizeValue));
+};
+
+if (!__DEV__) {
+  console.log = () => {};
 }
 
 const queryClient = new QueryClient({

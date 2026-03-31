@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TextInput } from 'react-native';
+import { View, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ListRenderItem } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,32 +12,7 @@ import type { SocialStackParamList } from '@/lib/navigation';
 
 type Nav = NativeStackNavigationProp<SocialStackParamList, 'SocialMain'>;
 
-const MOCK_MESSAGES: ChannelMessage[] = [
-  {
-    id: '1',
-    userId: 'u1',
-    userName: 'Alex',
-    userAvatar: 'https://example.com/a1.png',
-    text: 'Hello everyone! Ready to study neuroanatomy?',
-    createdAt: '12:03',
-  },
-  {
-    id: '2',
-    userId: 'u2',
-    userName: 'Maria',
-    userAvatar: 'https://example.com/a2.png',
-    text: 'Yes! I am reviewing cranial nerves today.',
-    createdAt: '12:05',
-  },
-  {
-    id: '3',
-    userId: 'u3',
-    userName: 'John',
-    userAvatar: 'https://example.com/a3.png',
-    text: 'Anyone want to quiz each other on the brachial plexus?',
-    createdAt: '12:08',
-  },
-];
+const MOCK_MESSAGES: ChannelMessage[] = [];
 
 interface AllChannelViewProps {
   onSendMessage?: (message: string) => void;
@@ -45,6 +20,7 @@ interface AllChannelViewProps {
 
 export function AllChannelView({ onSendMessage }: AllChannelViewProps) {
   const [input, setInput] = useState('');
+  const [messages] = useState<ChannelMessage[]>(MOCK_MESSAGES);
   const navigation = useNavigation<Nav>();
   const { colors } = useTheme();
 
@@ -63,12 +39,20 @@ export function AllChannelView({ onSendMessage }: AllChannelViewProps) {
     });
   };
 
-  const renderMessage = ({ item }: { item: ChannelMessage }) => (
-    <View style={styles.messageRow}>
-      <AvatarImage size={32} uri={item.userAvatar} />
+  const renderMessage: ListRenderItem<ChannelMessage> = ({ item }) => (
+    <View 
+      style={styles.messageRow}
+      accessibilityLabel={`${item.userName} said: ${item.text}`}
+    >
+      <AvatarImage 
+        size={32} 
+        uri={item.userAvatar}
+        seed={item.userId}
+        accessibilityLabel={`${item.userName}'s avatar`}
+      />
       <View style={styles.messageTextContainer}>
         <View style={styles.messageHeaderRow}>
-          <Text variant="labelLarge" style={{ color: colors.text }}>
+          <Text variant="labelLarge" style={{ color: colors.text }} accessibilityLabel={`Sent by ${item.userName}`}>
             {item.userName}
           </Text>
           <Text variant="labelSmall" style={[styles.timeText, { color: colors.textMuted }]}>
@@ -90,6 +74,17 @@ export function AllChannelView({ onSendMessage }: AllChannelViewProps) {
     </View>
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text variant="bodyLarge" style={[styles.emptyTitle, { color: colors.textMuted }]}>
+        No messages yet
+      </Text>
+      <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+        Be the first to say hello to the community
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -97,16 +92,17 @@ export function AllChannelView({ onSendMessage }: AllChannelViewProps) {
           All channel
         </Text>
         <Text variant="labelMedium" style={[styles.onlineCount, { color: colors.textMuted }]}>
-          23 online
+          0 online
         </Text>
       </View>
 
       <FlatList
-        data={MOCK_MESSAGES}
+        data={messages}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, messages.length === 0 && styles.emptyListContent]}
         renderItem={renderMessage}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyState}
       />
 
       {/* Input bar */}
@@ -126,6 +122,7 @@ export function AllChannelView({ onSendMessage }: AllChannelViewProps) {
             placeholder="Write a message to everyone..."
             placeholderTextColor={colors.textMuted}
             multiline
+            accessibilityLabel="Channel message input"
           />
         </View>
         <Button
@@ -148,6 +145,21 @@ const styles = StyleSheet.create({
   },
   onlineCount: { opacity: 0.7 },
   listContent: { paddingBottom: spacing.xl },
+  emptyListContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    opacity: 0.7,
+    textAlign: 'center',
+  },
   messageRow: {
     flexDirection: 'row',
     marginBottom: spacing.lg,
@@ -169,15 +181,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: spacing.md,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   inputFieldWrapper: {
     flex: 1,
     marginRight: spacing.md,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: spacing.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: spacing.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     minHeight: 44,

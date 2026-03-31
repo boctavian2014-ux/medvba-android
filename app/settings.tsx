@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   X,
   Shield,
@@ -98,7 +99,8 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, signOut, refreshProfile } = useAuth();
+  const { user, signOut, refreshProfile, applyServerProfilePatch } = useAuth();
+  const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage, t } = useLanguage();
   const { colors, preference: themePreference } = useTheme();
   const { isPremium, isPaywallEnabled } = useSubscription();
@@ -167,22 +169,28 @@ export default function SettingsScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
 
-      let photoUrl: string | undefined = profile?.profile_photo_url ?? (typeof photoUri === 'string' && (photoUri.startsWith('http://') || photoUri.startsWith('https://')) ? photoUri : undefined);
+      const isRemotePhotoUri = (u: string) => /^https?:\/\//i.test(u);
+      let photoUrl: string | undefined =
+        profile?.profile_photo_url ??
+        (typeof photoUri === 'string' && isRemotePhotoUri(photoUri) ? photoUri : undefined);
 
-      const isLocalPhotoUri = typeof photoUri === 'string' && (photoUri.startsWith('file://') || photoUri.startsWith('content://') || photoUri.startsWith('ph://'));
-      if (isLocalPhotoUri && photoUri) {
+      // Any non-http(s) URI from the picker needs upload (file, content, ph, assets-library, etc.)
+      const needsPhotoUpload =
+        typeof photoUri === 'string' && photoUri.length > 0 && !isRemotePhotoUri(photoUri);
+      if (needsPhotoUpload && photoUri) {
         setIsUploading(true);
         try {
           photoUrl = await uploadProfilePhoto(user.id, photoUri);
         } catch (error) {
           console.error('Error uploading photo:', error);
           Alert.alert(t('settings.uploadErrorTitle'), t('settings.uploadErrorMsg'));
+          return;
         } finally {
           setIsUploading(false);
         }
       }
 
-      await updateProfileMutation.mutateAsync({
+      const updated = await updateProfileMutation.mutateAsync({
         userId: user.id,
         name: name.trim(),
         city: city.trim() || undefined,
@@ -194,6 +202,14 @@ export default function SettingsScreen() {
       });
 
       await refreshProfile();
+      applyServerProfilePatch({
+        profile_photo_url: updated?.profile_photo_url,
+        avatar: updated?.avatar,
+        name: updated?.name,
+      });
+      await queryClient.refetchQueries({ queryKey: ['userProfile', user.id] });
+      const savedPhotoDisplay = updated?.profile_photo_url || updated?.avatar;
+      if (savedPhotoDisplay) setPhotoUri(savedPhotoDisplay);
 
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -228,7 +244,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]} testID="settingsScreen">
       <LinearGradient
         colors={[colors.background, colors.backgroundLight, colors.background]}
         style={StyleSheet.absoluteFill}
@@ -236,7 +252,11 @@ export default function SettingsScreen() {
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <Appbar.Header style={[styles.appbar, { backgroundColor: colors.background }]}>
-          <Appbar.BackAction onPress={() => router.back()} />
+          <Appbar.BackAction
+            onPress={() => router.back()}
+            accessibilityLabel="settings-go-back"
+            testID="settingsBack"
+          />
           <Appbar.Content title={t('settings.title')} />
         </Appbar.Header>
 
@@ -266,7 +286,7 @@ export default function SettingsScreen() {
                 <PhotoPicker
                   currentPhotoUrl={photoUri}
                   onPhotoSelected={setPhotoUri}
-                  onPhotoRemoved={() => setPhotoUri(profile?.avatar)}
+                  onPhotoRemoved={() => setPhotoUri(profile?.profile_photo_url || profile?.avatar)}
                   size={80}
                 />
               </View>

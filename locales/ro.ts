@@ -62,11 +62,13 @@ export const ro: Record<string, string> = {
   'auth.passwordsDontMatch': 'Parolele nu se potrivesc',
   'auth.loginFailed': 'Autentificare eșuată. Te rog încearcă din nou.',
   'auth.invalidCredentials': 'Email sau parolă greșită. Te rog încearcă din nou.',
-  'auth.emailNotConfirmed': 'Credențiale invalide. Verifică email-ul și parola.',
+  'auth.emailNotConfirmed':
+    'Confirmă adresa de email înainte de autentificare. Deschide linkul din mesajul primit la înregistrare, apoi încearcă din nou.',
   'auth.signUpFailed': 'Înregistrare eșuată. Te rog încearcă din nou.',
   'auth.emailAlreadyRegistered': 'Acest email este deja înregistrat. Te rog autentifică-te.',
   'auth.accountCreated': 'Cont creat',
-  'auth.verifyEmailMessage': 'Poți să te autentifici acum cu email-ul și parola.',
+  'auth.verifyEmailMessage':
+    'Ți-am trimis un link de confirmare pe email. Deschide-l pentru a activa contul, apoi autentifică-te aici.',
   'auth.ok': 'OK',
   'auth.unexpectedError': 'A apărut o eroare neașteptată. Te rog încearcă din nou.',
   'auth.supabaseNotConfigured': 'Autentificarea nu este disponibilă: Supabase nu este configurat. Setează EXPO_PUBLIC_SUPABASE_URL și EXPO_PUBLIC_SUPABASE_ANON_KEY în .env',

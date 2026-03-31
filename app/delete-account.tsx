@@ -87,19 +87,11 @@ export default function DeleteAccountScreen() {
     try {
       console.log('[DeleteAccount] Calling deleteAccountMutation...');
       console.log('[DeleteAccount] Backend URL:', process.env.EXPO_PUBLIC_RORK_API_BASE_URL);
-      
-      let backendSuccess = false;
-      try {
-        const result = await deleteAccountMutation.mutateAsync();
-        console.log('[DeleteAccount] Backend deletion result:', result);
-        backendSuccess = true;
-      } catch (backendError: any) {
-        console.error('[DeleteAccount] Backend deletion failed:', backendError?.message);
-        // If backend fails, try direct Supabase deletion as fallback
-        console.log('[DeleteAccount] Trying direct Supabase deletion...');
-      }
-      
-      // If backend succeeded or we're trying fallback, clear local data and sign out
+
+      const result = await deleteAccountMutation.mutateAsync();
+      console.log('[DeleteAccount] Backend deletion result:', result);
+
+      // Continue only after backend confirms permanent deletion
       await clearLocalData();
       console.log('[DeleteAccount] Local data cleared');
       
@@ -133,10 +125,6 @@ export default function DeleteAccountScreen() {
       setStep('success');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       console.log('[DeleteAccount] Account deletion process completed');
-      
-      if (!backendSuccess) {
-        console.log('[DeleteAccount] Note: Backend deletion may have failed, but local data was cleared');
-      }
     } catch (error: any) {
       console.error('[DeleteAccount] Deletion failed:', error);
       console.error('[DeleteAccount] Error message:', error?.message);

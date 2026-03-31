@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
+import { readAsStringAsync, EncodingType } from 'expo-file-system/legacy';
 import { queryKeys } from './query-keys';
 import { supabase } from './supabase';
 import type { UserAccount } from '@/types/user';
@@ -9,6 +11,49 @@ const EXT_MIME_MAP: Record<string, string> = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
   webp: 'image/webp', gif: 'image/gif', heic: 'image/jpeg', heif: 'image/jpeg',
 };
+
+function isHttpUri(uri: string): boolean {
+  return /^https?:\/\//i.test(uri);
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const bin = globalThis.atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function mimeFromUri(uri: string): string {
+  const ext = uri.split('?')[0].split('.').pop()?.toLowerCase();
+  return (ext && EXT_MIME_MAP[ext]) ? EXT_MIME_MAP[ext] : 'image/jpeg';
+}
+
+/** Read image bytes for upload. RN fetch() often fails on file:// / content://; use native read there. */
+async function profilePhotoUriToArrayBuffer(uri: string): Promise<{ arrayBuffer: ArrayBuffer; mimeType: string }> {
+  if (isHttpUri(uri)) {
+    const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
+    const blob = await response.blob();
+    let mimeType = blob.type && blob.type !== 'application/octet-stream' ? blob.type : '';
+    if (!mimeType) mimeType = mimeFromUri(uri);
+    return { arrayBuffer: await blob.arrayBuffer(), mimeType };
+  }
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
+    const blob = await response.blob();
+    let mimeType = blob.type && blob.type !== 'application/octet-stream' ? blob.type : mimeFromUri(uri);
+    return { arrayBuffer: await blob.arrayBuffer(), mimeType };
+  }
+
+  const base64 = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
+  return { arrayBuffer: base64ToArrayBuffer(base64), mimeType: mimeFromUri(uri) };
+}
 
 export interface StudyRoom {
   id: string;
@@ -636,7 +681,11 @@ export function useUpdateUserProfile() {
       if (input.year_of_study !== undefined) updateData.year_of_study = input.year_of_study;
       if (input.bio !== undefined) updateData.bio = input.bio;
       if (input.is_public !== undefined) updateData.is_public = input.is_public;
-      if (input.profile_photo_url !== undefined) updateData.profile_photo_url = input.profile_photo_url;
+      if (input.profile_photo_url !== undefined) {
+        updateData.profile_photo_url = input.profile_photo_url;
+        // Keep legacy `avatar` in sync so Home tab and older queries show the same photo URL.
+        updateData.avatar = input.profile_photo_url;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -664,39 +713,32 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
   try {
     console.log('[Supabase] Uploading profile photo for user:', userId);
 
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-
-    // Detect MIME type from blob first (works for blob: and data: URIs on web),
-    // then fall back to extension parsing from the URI.
-    let mimeType = blob.type && blob.type !== 'application/octet-stream' ? blob.type : '';
-    if (!mimeType) {
-      const extFromUri = uri.split('?')[0].split('.').pop()?.toLowerCase();
-      mimeType = (extFromUri && EXT_MIME_MAP[extFromUri]) ? EXT_MIME_MAP[extFromUri] : 'image/jpeg';
-    }
+    const { arrayBuffer, mimeType: rawMime } = await profilePhotoUriToArrayBuffer(uri);
+    let mimeType = rawMime;
     const extFromMime = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
     const fileName = `${userId}-${Date.now()}.${extFromMime}`;
     const filePath = `${userId}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('profile-photos')
       .upload(filePath, arrayBuffer, {
         contentType: mimeType,
-        upsert: true, // allows retry without unique-constraint error; filename includes Date.now() to avoid collisions
+        upsert: true,
       });
 
     if (uploadError) {
-      console.error('[Supabase] Error uploading photo:', JSON.stringify({ message: uploadError.message }));
-      throw uploadError;
+      console.error('[Supabase] Error uploading photo:', JSON.stringify({ message: uploadError.message, code: uploadError.statusCode }));
+      throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
+    console.log('[Supabase] Photo uploaded, path:', uploadData.path);
     const { data: urlData } = supabase.storage
       .from('profile-photos')
       .getPublicUrl(filePath);
 
-    console.log('[Supabase] Photo uploaded successfully:', urlData.publicUrl);
-    return urlData.publicUrl;
+    const publicUrl = urlData.publicUrl.split('?')[0];
+    console.log('[Supabase] Photo uploaded successfully:', publicUrl);
+    return publicUrl;
   } catch (error: any) {
     console.error('[Supabase] Error in uploadProfilePhoto:', JSON.stringify({ message: error?.message, stack: error?.stack }));
     throw error;

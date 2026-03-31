@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Modal, TextInput, FlatList } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,6 +28,8 @@ export function SocialScreen({
   isOnline = true,
 }: SocialScreenProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation<Nav>();
   const { colors } = useTheme();
 
@@ -36,7 +38,12 @@ export function SocialScreen({
   };
 
   const handleSearch = () => {
-    // TODO: Open search modal
+    setIsSearchOpen(true);
+  };
+
+  const handleCloseSearch = () => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
   };
 
   const handleSettings = () => {
@@ -101,6 +108,51 @@ export function SocialScreen({
         {activeTab === 'online' && <OnlineListView />}
         {activeTab === 'private' && <PrivateChatsView />}
       </View>
+
+      {/* Search Modal */}
+      <Modal
+        visible={isSearchOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={handleCloseSearch}
+      >
+        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={styles.modalHeader}>
+              <Text variant="titleLarge" style={{ color: colors.text }}>
+                Search
+              </Text>
+              <IconButton
+                icon="close"
+                onPress={handleCloseSearch}
+                iconColor={colors.text}
+                accessibilityLabel="Close search"
+              />
+            </View>
+            <TextInput
+              style={[
+                styles.searchInput,
+                {
+                  backgroundColor: colors.backgroundLight,
+                  color: colors.text,
+                  borderColor: colors.glassBorder,
+                },
+              ]}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search users or conversations..."
+              placeholderTextColor={colors.textMuted}
+              autoFocus
+              accessibilityLabel="Search input"
+            />
+            <View style={styles.searchHint}>
+              <Text variant="bodyMedium" style={{ color: colors.textMuted }}>
+                Search by name or username
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -144,6 +196,36 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: spacing.xxl,
     padding: spacing.lg,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: spacing.xl,
+    padding: spacing.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  searchInput: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    fontSize: 16,
+    minHeight: 48,
+  },
+  searchHint: {
+    marginTop: spacing.md,
+    alignItems: 'center',
   },
 });
 

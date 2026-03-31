@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, ListRenderItem } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,36 +13,7 @@ import type { SocialStackParamList } from '@/lib/navigation';
 
 type Nav = NativeStackNavigationProp<SocialStackParamList, 'SocialMain'>;
 
-const MOCK_ONLINE_USERS: OnlineUser[] = [
-  {
-    userId: 'u1',
-    name: 'Alex',
-    avatar: 'https://example.com/a1.png',
-    status: 'Studying anatomy',
-    isOnline: true,
-  },
-  {
-    userId: 'u2',
-    name: 'Maria',
-    avatar: 'https://example.com/a2.png',
-    status: 'Ready to chat',
-    isOnline: true,
-  },
-  {
-    userId: 'u3',
-    name: 'John',
-    avatar: 'https://example.com/a3.png',
-    status: 'Taking a break',
-    isOnline: true,
-  },
-  {
-    userId: 'u4',
-    name: 'Emma',
-    avatar: 'https://example.com/a4.png',
-    status: 'Reviewing flashcards',
-    isOnline: true,
-  },
-];
+const MOCK_ONLINE_USERS: OnlineUser[] = [];
 
 interface OnlineListViewProps {
   onOpenChat?: (userId: string) => void;
@@ -61,13 +32,21 @@ export function OnlineListView({ onOpenChat }: OnlineListViewProps) {
     });
   };
 
-  const renderUser = ({ item }: { item: OnlineUser }) => (
-    <View style={[styles.row, { borderBottomColor: colors.glassBorder }]}>
+  const renderUser: ListRenderItem<OnlineUser> = ({ item }) => (
+    <View 
+      style={[styles.row, { borderBottomColor: colors.glassBorder }]}
+      accessibilityLabel={`${item.name}, ${item.status || 'available'}`}
+    >
       <View style={styles.left}>
-        <AvatarImage size={40} uri={item.avatar} />
+        <AvatarImage 
+          size={40} 
+          uri={item.avatar}
+          seed={item.userId}
+          accessibilityLabel={`${item.name}'s avatar`}
+        />
         <OnlineIndicator isOnline={item.isOnline} size={12} style={styles.onlineDot} />
         <View style={styles.texts}>
-          <Text variant="bodyMedium" style={{ color: colors.text }}>
+          <Text variant="bodyMedium" style={{ color: colors.text }} accessibilityLabel={item.name}>
             {item.name}
           </Text>
           {item.status ? (
@@ -86,6 +65,17 @@ export function OnlineListView({ onOpenChat }: OnlineListViewProps) {
     </View>
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text variant="bodyLarge" style={[styles.emptyTitle, { color: colors.textMuted }]}>
+        No users online
+      </Text>
+      <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+        Check back later to find study partners
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Text variant="titleMedium" style={[styles.title, { color: colors.text }]}>
@@ -98,7 +88,8 @@ export function OnlineListView({ onOpenChat }: OnlineListViewProps) {
         renderItem={renderUser}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, MOCK_ONLINE_USERS.length === 0 && styles.emptyListContent]}
+        ListEmptyComponent={renderEmptyState}
       />
     </View>
   );
@@ -109,6 +100,21 @@ const styles = StyleSheet.create({
   title: { marginBottom: spacing.md },
   listContent: {
     paddingBottom: spacing.lg,
+  },
+  emptyListContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    opacity: 0.7,
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',

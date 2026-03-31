@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, TextInput } from 'react-native';
+import { View, FlatList, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ListRenderItem } from 'react-native';
 import { Text } from 'react-native-paper';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { spacing } from '@/constants/design';
@@ -19,19 +19,21 @@ const MOCK_MESSAGES: ChatMessage[] = [
 export function PrivateChatScreen({ route }: Props) {
   const { peerId, peerName, peerAvatar } = route.params;
   const [input, setInput] = useState('');
+  const [messages] = useState<ChatMessage[]>(MOCK_MESSAGES);
   const { colors } = useTheme();
 
   const handleSend = () => {
     if (input.trim()) {
-      // TODO: send message to backend
       setInput('');
     }
   };
 
-  const renderItem = ({ item }: { item: ChatMessage }) => {
+  const renderItem: ListRenderItem<ChatMessage> = ({ item }) => {
     const isMe = item.fromUserId === 'me';
     return (
       <View
+        accessibilityLabel={`${isMe ? 'You' : peerName} said: ${item.text}`}
+        accessibilityRole="text"
         style={[
           styles.bubble,
           isMe ? styles.bubbleMe : styles.bubbleThem,
@@ -41,21 +43,50 @@ export function PrivateChatScreen({ route }: Props) {
           },
         ]}
       >
-        <Text variant="bodyMedium" style={[styles.bubbleText, { color: isMe ? '#FFFFFF' : colors.text }]}>
+        <Text 
+          variant="bodyMedium" 
+          style={[styles.bubbleText, { color: isMe ? colors.inverse : colors.text }]}
+        >
           {item.text}
         </Text>
-        <Text variant="labelSmall" style={[styles.bubbleTime, { color: isMe ? 'rgba(255,255,255,0.7)' : colors.textMuted }]}>
+        <Text 
+          variant="labelSmall" 
+          style={[styles.bubbleTime, { color: isMe ? colors.inverse : colors.textMuted }]}
+        >
           {item.createdAt}
         </Text>
       </View>
     );
   };
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text variant="bodyLarge" style={[styles.emptyTitle, { color: colors.textMuted }]}>
+        No messages yet
+      </Text>
+      <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+        Start the conversation with {peerName}
+      </Text>
+    </View>
+  );
+
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       {/* Chat Header */}
-      <View style={[styles.header, { borderBottomColor: colors.glassBorder }]}>
-        <AvatarImage size={36} uri={peerAvatar} />
+      <View 
+        style={[styles.header, { borderBottomColor: colors.glassBorder }]}
+        accessibilityLabel={`Chatting with ${peerName}`}
+      >
+        <AvatarImage 
+          size={36} 
+          uri={peerAvatar}
+          seed={peerId}
+          accessibilityLabel={`${peerName}'s avatar`}
+        />
         <Text variant="titleMedium" style={[styles.headerTitle, { color: colors.text }]}>
           {peerName}
         </Text>
@@ -63,11 +94,13 @@ export function PrivateChatScreen({ route }: Props) {
 
       {/* Messages List */}
       <FlatList
-        data={MOCK_MESSAGES}
+        data={messages}
         keyExtractor={(m) => m.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, messages.length === 0 && styles.emptyListContent]}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyState}
+        keyboardShouldPersistTaps="handled"
       />
 
       {/* Input Bar */}
@@ -87,6 +120,7 @@ export function PrivateChatScreen({ route }: Props) {
             placeholder="Type a message..."
             placeholderTextColor={colors.textMuted}
             multiline
+            accessibilityLabel="Message input"
           />
         </View>
         <Button
@@ -96,7 +130,7 @@ export function PrivateChatScreen({ route }: Props) {
           style={styles.sendButton}
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -121,6 +155,21 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     flexGrow: 1,
   },
+  emptyListContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    opacity: 0.7,
+    textAlign: 'center',
+  },
   bubble: {
     maxWidth: '75%',
     marginBottom: spacing.md,
@@ -142,6 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: spacing.xs,
     textAlign: 'right',
+    opacity: 0.7,
   },
   inputBar: {
     flexDirection: 'row',
@@ -154,8 +204,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: spacing.xxl,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: spacing.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     minHeight: 44,

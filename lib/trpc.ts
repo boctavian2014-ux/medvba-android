@@ -12,16 +12,18 @@ const extraConfig =
   Constants.expoConfig?.extra ?? (Constants as any)?.manifest?.extra ?? {};
 
 const getBaseUrl = () => {
-  const url =
+  const raw =
     process.env.EXPO_PUBLIC_RORK_API_BASE_URL ||
     extraConfig.EXPO_PUBLIC_RORK_API_BASE_URL ||
     extraConfig.rorkApiBaseUrl;
 
-  if (!url) {
+  if (!raw) {
     throw new Error(
       "EXPO_PUBLIC_RORK_API_BASE_URL not set. Add it to .env and restart.",
     );
   }
+
+  const url = String(raw).trim().replace(/\/+$/, "");
 
   if (!__DEV__ && url.startsWith("http://")) {
     throw new Error(

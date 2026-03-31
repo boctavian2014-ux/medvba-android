@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -22,6 +22,8 @@ export default function PhotoPicker({
   showRemoveButton = true,
 }: PhotoPickerProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const pickInProgress = useRef(false);
+  const lastSelectedUri = useRef<string | null>(null);
 
   const requestPermissions = async () => {
     if (Platform.OS !== 'web') {
@@ -39,9 +41,15 @@ export default function PhotoPicker({
     return true;
   };
 
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
+    if (pickInProgress.current) return;
+    pickInProgress.current = true;
+
     const hasPermissions = await requestPermissions();
-    if (!hasPermissions) return;
+    if (!hasPermissions) {
+      pickInProgress.current = false;
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -54,8 +62,20 @@ export default function PhotoPicker({
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        onPhotoSelected(result.assets[0].uri);
+      if (!result.canceled && result.assets[0] && result.assets[0].uri) {
+        const selectedUri = result.assets[0].uri;
+        
+        // Prevent duplicate selections
+        if (lastSelectedUri.current === selectedUri) {
+          console.log('[PhotoPicker] Duplicate selection detected, ignoring');
+          pickInProgress.current = false;
+          setIsLoading(false);
+          return;
+        }
+        
+        lastSelectedUri.current = selectedUri;
+        console.log('[PhotoPicker] Photo selected, URI length:', selectedUri.length);
+        onPhotoSelected(selectedUri);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch (error) {
@@ -63,10 +83,17 @@ export default function PhotoPicker({
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     } finally {
       setIsLoading(false);
+      pickInProgress.current = false;
     }
-  };
+  }, [onPhotoSelected]);
 
-  const handlePhotoOptions = () => {
+  useEffect(() => {
+    return () => {
+      lastSelectedUri.current = null;
+    };
+  }, []);
+
+  const handlePhotoOptions = useCallback(() => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -90,7 +117,7 @@ export default function PhotoPicker({
                   if (Platform.OS !== 'web') {
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                   }
-                  onPhotoRemoved();
+                  onPhotoRemoved?.();
                 },
               },
             ]
@@ -101,7 +128,7 @@ export default function PhotoPicker({
         },
       ]
     );
-  };
+  }, [currentPhotoUrl, showRemoveButton, onPhotoRemoved, pickImage]);
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>

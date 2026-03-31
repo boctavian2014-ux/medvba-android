@@ -25,6 +25,18 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    const isAbortSignalError = 
+      error.message?.includes('signal is aborted') ||
+      error.message?.includes('abort');
+    
+    if (isAbortSignalError) {
+      return {
+        hasError: false,
+        error: null,
+        errorInfo: null,
+      };
+    }
+    
     return {
       hasError: true,
       error,
@@ -33,6 +45,15 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    const isAbortSignalError = 
+      error.message?.includes('signal is aborted') ||
+      error.message?.includes('abort');
+    
+    if (isAbortSignalError) {
+      console.log('[ErrorBoundary] Ignoring abort signal error (component unmounted)');
+      return;
+    }
+    
     console.error('[ErrorBoundary] Caught error:', error, errorInfo);
 
     this.setState({

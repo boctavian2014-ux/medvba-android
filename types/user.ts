@@ -2,6 +2,8 @@ export interface UserProfile {
   id: string;
   name: string;
   avatar: string;
+  /** Supabase custom photo URL when set; mirrors profiles.profile_photo_url for screens that read it directly. */
+  profile_photo_url?: string;
   rank: number;
   points: number;
   streak: number;

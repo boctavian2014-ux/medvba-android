@@ -64,11 +64,13 @@ export const en: Record<string, string> = {
   'auth.passwordsDontMatch': 'Passwords do not match',
   'auth.loginFailed': 'Login failed. Please try again.',
   'auth.invalidCredentials': 'Invalid email or password. Please try again.',
-  'auth.emailNotConfirmed': 'Invalid credentials. Please check your email and password.',
+  'auth.emailNotConfirmed':
+    'Confirm your email address before signing in. Open the link we sent you when you registered, then try again.',
   'auth.signUpFailed': 'Sign up failed. Please try again.',
   'auth.emailAlreadyRegistered': 'This email is already registered. Please sign in instead.',
   'auth.accountCreated': 'Account Created',
-  'auth.verifyEmailMessage': 'You can sign in now with your email and password.',
+  'auth.verifyEmailMessage':
+    'We sent a confirmation link to your email. Open it to activate your account, then sign in here.',
   'auth.ok': 'OK',
   'auth.unexpectedError': 'An unexpected error occurred. Please try again.',
   'auth.supabaseNotConfigured': 'Login is not available: Supabase is not configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env',

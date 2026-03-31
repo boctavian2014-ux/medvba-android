@@ -18,6 +18,7 @@ export const darkColors = {
   text: '#FFFFFF',
   textSecondary: '#A0B4C8',
   textMuted: '#5A7A96',
+  inverse: '#0A1628',
   
   gradientStart: '#00B4D8',
   gradientEnd: '#023E8A',
@@ -53,6 +54,7 @@ export const lightColors = {
   text: '#0F172A',
   textSecondary: '#475569',
   textMuted: '#94A3B8',
+  inverse: '#FFFFFF',
   
   gradientStart: '#00B4D8',
   gradientEnd: '#023E8A',

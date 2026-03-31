@@ -122,12 +122,16 @@ export default function HomeScreen() {
                       })()
                     )}
                   </Text>
-                  {profile?.isPublic === false && (
-                    <View style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}>
-                      <EyeOff size={12} color={colors.textMuted} />
-                      <Text style={[styles.privacyBadgeText, { color: colors.textMuted }]}>Private</Text>
-                    </View>
-                  )}
+                  <TouchableOpacity 
+                    style={[styles.privacyBadge, { backgroundColor: colors.textMuted + '20' }]}
+                    onPress={() => router.push('/settings')}
+                    activeOpacity={0.7}
+                  >
+                    <EyeOff size={12} color={colors.textMuted} />
+                    <Text style={[styles.privacyBadgeText, { color: colors.textMuted }]}>
+                      {profile?.isPublic === false ? 'Private' : 'Public'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
                   {profile?.name?.split(' ')[0] || profile?.email || 'Student'}
@@ -136,7 +140,16 @@ export default function HomeScreen() {
             </View>
             <View style={styles.headerRight}>
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-                <Image source={{ uri: profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default' }} style={styles.avatar} />
+                <Image
+                  key={profile?.profile_photo_url || profile?.avatar || profile?.id}
+                  source={{
+                    uri:
+                      profile?.profile_photo_url ||
+                      profile?.avatar ||
+                      'https://api.dicebear.com/7.x/avataaars/png?seed=default',
+                  }}
+                  style={styles.avatar}
+                />
               </TouchableOpacity>
             </View>
           </View>

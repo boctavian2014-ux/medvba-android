@@ -64,16 +64,26 @@ app.get("/", (c) => {
 
 // Health check endpoint for debugging
 app.get("/health", (c) => {
+  const ai = process.env.AI_API_KEY?.trim();
+  const openai = process.env.OPENAI_API_KEY?.trim();
+  const expoAiLeak = !!process.env.EXPO_PUBLIC_AI_API_KEY?.trim();
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     env: {
       hasSupabaseUrl: !!process.env.SUPABASE_URL,
       hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      hasAiApiKey: !!process.env.EXPO_PUBLIC_AI_API_KEY,
-      aiProvider: process.env.EXPO_PUBLIC_AI_PROVIDER || '(not set, defaults to openai)',
-      hasAiBaseUrl: !!process.env.EXPO_PUBLIC_AI_BASE_URL,
-      aiModel: process.env.EXPO_PUBLIC_AI_MODEL || '(not set, defaults to gpt-4o-mini)',
+      hasAiApiKey: !!(ai || openai),
+      /** Which server AI key vars are set (no values). */
+      aiKeyHints: {
+        AI_API_KEY: !!ai,
+        OPENAI_API_KEY: !!openai,
+      },
+      /** True if EXPO_PUBLIC_AI_API_KEY is still in .env — remove it; use AI_API_KEY / OPENAI_API_KEY for backend only. */
+      legacyExpoPublicAiKeyPresent: expoAiLeak,
+      aiProvider: process.env.AI_PROVIDER || process.env.EXPO_PUBLIC_AI_PROVIDER || '(not set, defaults to openai)',
+      hasAiBaseUrl: !!(process.env.AI_BASE_URL || process.env.EXPO_PUBLIC_AI_BASE_URL),
+      aiModel: process.env.AI_MODEL || process.env.EXPO_PUBLIC_AI_MODEL || '(not set, defaults to gpt-4o-mini)',
       hasCorsOrigins: !!process.env.CORS_ALLOWED_ORIGINS,
     }
   });

@@ -30,7 +30,19 @@ import GlassCard from '@/components/GlassCard';
 import { log } from '@/lib/log';
 import { useSubscription } from '@/providers/SubscriptionProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
+import { TRPCClientError } from '@trpc/client';
 import { trpc } from '@/lib/trpc';
+
+function getMutationErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof TRPCClientError) {
+    const msg = error.message?.trim();
+    if (msg) return msg;
+  }
+  if (error instanceof Error && error.message?.trim()) {
+    return error.message.trim();
+  }
+  return fallback;
+}
 
 interface Message {
   id: string;
@@ -163,7 +175,7 @@ export default function TutorScreen() {
         const networkErrorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: 'Eroare de rețea. Verifică conexiunea la internet sau încearcă mai târziu.',
+          content: t('tutor.errorMessage'),
           timestamp: new Date(),
           isError: true,
         };
@@ -174,7 +186,7 @@ export default function TutorScreen() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: t('tutor.errorMessage'),
+        content: getMutationErrorMessage(error, t('tutor.errorMessage')),
         timestamp: new Date(),
         isError: true,
       };
@@ -215,7 +227,7 @@ export default function TutorScreen() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: t('tutor.errorMessage'),
+        content: getMutationErrorMessage(error, t('tutor.errorMessage')),
         timestamp: new Date(),
         isError: true,
       };
@@ -392,13 +404,18 @@ export default function TutorScreen() {
                 multiline
                 maxLength={500}
               />
-              <TouchableOpacity
-                style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
-                onPress={handleSend}
-                disabled={!inputText.trim()}
-              >
-                <Send color={inputText.trim() ? colors.text : colors.textMuted} size={20} />
-              </TouchableOpacity>
+              <View style={styles.inputFooter}>
+                <Text style={[styles.charCount, inputText.length > 450 && { color: colors.error }]}>
+                  {inputText.length}/500
+                </Text>
+                <TouchableOpacity
+                  style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                  onPress={handleSend}
+                  disabled={!inputText.trim()}
+                >
+                  <Send color={inputText.trim() ? colors.text : colors.textMuted} size={20} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -607,6 +624,15 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     color: colors.text,
     maxHeight: 100,
     paddingVertical: 8,
+  },
+  inputFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  charCount: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
   sendButton: {
     width: 40,

@@ -15,6 +15,7 @@ export type UITextFieldProps = {
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   right?: React.ReactNode;
+  testID?: string;
 };
 
 /**
@@ -33,6 +34,7 @@ export function UITextField({
   disabled,
   style,
   right,
+  testID,
 }: UITextFieldProps) {
   const initialValue = value ?? defaultValue ?? '';
   return (
@@ -49,6 +51,7 @@ export function UITextField({
       disabled={disabled}
       style={style}
       right={right}
+      testID={testID}
     />
   );
 }

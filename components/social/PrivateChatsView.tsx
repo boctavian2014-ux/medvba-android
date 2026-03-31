@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, ListRenderItem } from 'react-native';
 import { Text, Badge } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,38 +12,7 @@ import type { SocialStackParamList } from '@/lib/navigation';
 
 type Nav = NativeStackNavigationProp<SocialStackParamList, 'SocialMain'>;
 
-const MOCK_CONVERSATIONS: ConversationSummary[] = [
-  {
-    id: 'c1',
-    peerId: 'u1',
-    peerName: 'Alex',
-    peerAvatar: 'https://example.com/a1.png',
-    lastMessage: "Let's review cranial nerves.",
-    lastAt: '11:54',
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    id: 'c2',
-    peerId: 'u2',
-    peerName: 'Maria',
-    peerAvatar: 'https://example.com/a2.png',
-    lastMessage: 'Thanks for the study tips!',
-    lastAt: 'Yesterday',
-    unreadCount: 0,
-    isOnline: true,
-  },
-  {
-    id: 'c3',
-    peerId: 'u3',
-    peerName: 'John',
-    peerAvatar: 'https://example.com/a3.png',
-    lastMessage: 'See you at the study group tomorrow.',
-    lastAt: 'Mon',
-    unreadCount: 0,
-    isOnline: false,
-  },
-];
+const MOCK_CONVERSATIONS: ConversationSummary[] = [];
 
 interface PrivateChatsViewProps {
   onOpenChat?: (conversationId: string, peerId: string) => void;
@@ -63,14 +32,21 @@ export function PrivateChatsView({ onOpenChat }: PrivateChatsViewProps) {
     });
   };
 
-  const renderConversation = ({ item }: { item: ConversationSummary }) => (
+  const renderConversation: ListRenderItem<ConversationSummary> = ({ item }) => (
     <TouchableOpacity
       style={[styles.row, { borderBottomColor: colors.glassBorder }]}
       onPress={() => handleOpenChat(item)}
       activeOpacity={0.7}
+      accessibilityLabel={`Chat with ${item.peerName}: ${item.lastMessage}`}
+      accessibilityRole="button"
     >
       <View style={styles.avatarContainer}>
-        <AvatarImage size={44} uri={item.peerAvatar} />
+        <AvatarImage 
+          size={44} 
+          uri={item.peerAvatar}
+          seed={item.peerId}
+          accessibilityLabel={`${item.peerName}'s avatar`}
+        />
         <OnlineIndicator isOnline={item.isOnline} size={12} style={styles.onlineDot} />
       </View>
       <View style={styles.center}>
@@ -78,6 +54,11 @@ export function PrivateChatsView({ onOpenChat }: PrivateChatsViewProps) {
           <Text variant="bodyMedium" style={{ color: colors.text }}>
             {item.peerName}
           </Text>
+          {item.unreadCount > 0 && (
+            <Badge style={[styles.badge, { backgroundColor: colors.primary }]}>
+              {item.unreadCount}
+            </Badge>
+          )}
         </View>
         <Text
           variant="bodySmall"
@@ -91,13 +72,19 @@ export function PrivateChatsView({ onOpenChat }: PrivateChatsViewProps) {
         <Text variant="labelSmall" style={[styles.time, { color: colors.textMuted }]}>
           {item.lastAt}
         </Text>
-        {item.unreadCount > 0 && (
-          <Badge style={[styles.badge, { backgroundColor: colors.primary }]}>
-            {item.unreadCount}
-          </Badge>
-        )}
       </View>
     </TouchableOpacity>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text variant="bodyLarge" style={[styles.emptyTitle, { color: colors.textMuted }]}>
+        No conversations yet
+      </Text>
+      <Text variant="bodyMedium" style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+        Start chatting with other medical students
+      </Text>
+    </View>
   );
 
   return (
@@ -112,7 +99,8 @@ export function PrivateChatsView({ onOpenChat }: PrivateChatsViewProps) {
         renderItem={renderConversation}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, MOCK_CONVERSATIONS.length === 0 && styles.emptyListContent]}
+        ListEmptyComponent={renderEmptyState}
       />
     </View>
   );
@@ -123,6 +111,21 @@ const styles = StyleSheet.create({
   title: { marginBottom: spacing.md },
   listContent: {
     paddingBottom: spacing.lg,
+  },
+  emptyListContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    opacity: 0.7,
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',
@@ -148,10 +151,11 @@ const styles = StyleSheet.create({
   },
   time: { opacity: 0.6, marginBottom: spacing.xs },
   badge: {
+    marginLeft: spacing.sm,
     minWidth: 20,
     height: 20,
-    lineHeight: 20,
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   onlineDot: {
     position: 'absolute',

@@ -117,6 +117,7 @@ Check that:
 3. Auth is enabled in Supabase Dashboard → Authentication → Settings
 
 ### AI Tutor not working
-The AI tutor requires:
+The AI tutor runs on the **Hono/tRPC backend** (`lib/ai-provider.ts`). It requires:
 1. Supabase auth to be configured
-2. Environment variable `EXPO_PUBLIC_AI_API_KEY` to be set with your OpenAI API key
+2. On **Railway** (or local backend): `AI_API_KEY` or `OPENAI_API_KEY` — **not** `EXPO_PUBLIC_*` OpenAI keys
+3. Client: `EXPO_PUBLIC_RORK_API_BASE_URL` pointing at that backend for tRPC

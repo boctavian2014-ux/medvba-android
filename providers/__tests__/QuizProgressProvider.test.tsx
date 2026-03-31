@@ -4,6 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuizProgressProvider, useQuizProgress } from '../QuizProgressProvider';
 import type { Question } from '@/mocks/questions';
 
+jest.mock('../AuthProvider', () => ({
+  useAuth: () => ({ user: null }),
+}));
+
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QuizProgressProvider>{children}</QuizProgressProvider>
 );
@@ -121,12 +125,6 @@ describe('QuizProgressProvider', () => {
     });
 
     it('should format questions count correctly', async () => {
-      const { result } = renderHook(() => useQuizProgress(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
       const storedStats = JSON.stringify({
         totalQuestionsAnswered: 1500,
         totalCorrectAnswers: 1200,
@@ -140,14 +138,14 @@ describe('QuizProgressProvider', () => {
         return Promise.resolve(null);
       });
 
-      const { result: result2 } = renderHook(() => useQuizProgress(), { wrapper });
+      const { result } = renderHook(() => useQuizProgress(), { wrapper });
 
       await waitFor(() => {
-        expect(result2.current.isLoading).toBe(false);
+        expect(result.current.isLoading).toBe(false);
       });
 
       await waitFor(() => {
-        expect(result2.current.formattedQuestionsCount).toBe('1.5k');
+        expect(result.current.formattedQuestionsCount).toBe('1.5k');
       });
     });
   });
