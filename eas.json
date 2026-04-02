@@ -4,18 +4,35 @@
     "appVersionSource": "local"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "installCommand": "npm ci",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "channel": "production",
+      "installCommand": "npm ci",
       "android": {
         "buildType": "app-bundle",
-        "buildArtifactPaths": ["android/app/build/outputs/mapping/release/mapping.txt"]
+        "buildArtifactPaths": [
+          "android/app/build/outputs/mapping/release/mapping.txt",
+          "android/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip"
+        ]
       }
     },
     "internal": {
       "channel": "internal",
+      "installCommand": "npm ci",
       "android": {
         "buildType": "app-bundle",
-        "buildArtifactPaths": ["android/app/build/outputs/mapping/release/mapping.txt"]
+        "buildArtifactPaths": [
+          "android/app/build/outputs/mapping/release/mapping.txt",
+          "android/app/build/outputs/native-debug-symbols/release/native-debug-symbols.zip"
+        ]
       }
     }
   },
