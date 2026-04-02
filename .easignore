@@ -1,2 +1,5 @@
 # EAS picks Bun when bun.lock is present; exclude it so builds use npm + package-lock.json.
 bun.lock
+
+# Use CNG/Prebuild on EAS even though android/ is versioned locally.
+/android
