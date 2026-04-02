@@ -8,14 +8,12 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "installCommand": "npm ci",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
       "channel": "production",
-      "installCommand": "npm ci",
       "android": {
         "buildType": "app-bundle",
         "buildArtifactPaths": [
@@ -26,7 +24,6 @@
     },
     "internal": {
       "channel": "internal",
-      "installCommand": "npm ci",
       "android": {
         "buildType": "app-bundle",
         "buildArtifactPaths": [

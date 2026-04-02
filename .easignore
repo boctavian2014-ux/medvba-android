@@ -1,0 +1,2 @@
+# EAS picks Bun when bun.lock is present; exclude it so builds use npm + package-lock.json.
+bun.lock
