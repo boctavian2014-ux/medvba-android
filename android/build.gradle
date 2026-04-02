@@ -1,7 +1,5 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 buildscript {
   repositories {
     google()
@@ -25,13 +23,3 @@ allprojects {
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
 
-// Deprecation / API warnings in node_modules (e.g. @react-native-google-signin, Apple Auth) are not app bugs.
-subprojects { subproject ->
-  subproject.afterEvaluate {
-    subproject.tasks.withType(KotlinCompile).configureEach {
-      compilerOptions {
-        suppressWarnings.set(true)
-      }
-    }
-  }
-}
