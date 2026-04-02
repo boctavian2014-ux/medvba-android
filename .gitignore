@@ -11,9 +11,8 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native (iOS generated locally / CI; Android is versioned for bare workflow)
 ios/
-android/
 *.orig.*
 *.jks
 *.p8
