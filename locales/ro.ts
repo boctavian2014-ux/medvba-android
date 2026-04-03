@@ -331,6 +331,9 @@ export const ro: Record<string, string> = {
   'tutor.suggestion2': 'Care sunt cauzele diabetului zaharat?',
    'tutor.suggestion3': 'Mecanismul de acțiune al beta-blocantelor',
    'tutor.errorMessage': 'Eroare de conexiune. Verifică internetul și încearcă din nou.',
+   'tutor.serverConfigError':
+     'Tutorul AI nu este disponibil momentan (configurare server). Dacă persistă, contactează suportul.',
+   'tutor.emptyResponse': 'Nu s-a primit niciun răspuns. Reformulează întrebarea sau încearcă din nou în câteva momente.',
    'tutor.retry': 'Reîncearcă',
 
    // Social Accounts
@@ -516,6 +519,10 @@ export const ro: Record<string, string> = {
   'settings.support': 'Asistență',
   'settings.helpCenter': 'Centru de ajutor',
   'settings.helpCenterSubtitle': 'Întrebări frecvente și tutoriale',
+  'settings.showIntroAgain': 'Arată din nou introducerea',
+  'settings.showIntroAgainSubtitle': 'Revizuiește ecranele de bun venit',
+  'settings.showIntroAgainConfirm': 'Vei vedea din nou ecranele de la început. Continui?',
+  'settings.showIntroAgainButton': 'Arată introducerea',
   'settings.contactSupport': 'Contactează asistența',
   'settings.contactSupportSubtitle': 'contact@devaieood.com',
   'settings.manageSubscription': 'Gestionează Abonamentul',

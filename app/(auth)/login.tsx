@@ -22,6 +22,7 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import { log } from '@/lib/log';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthError } from '@supabase/supabase-js';
+import { validateLoginForm, clearError, hasErrors, type FormErrors } from '@/lib/validation';
 
 const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
@@ -40,23 +41,18 @@ function LoginScreen() {
    } = useAuth();
   const { t } = useLanguage();
 
-  const validateForm = useCallback(() => {
-    const newErrors: { email?: string; password?: string } = {};
+  const validateForm = useCallback((): boolean => {
+    const validationErrors = validateLoginForm({ email, password });
+    const translatedErrors: FormErrors = {};
+    
+    Object.entries(validationErrors).forEach(([key, errorKey]) => {
+      if (errorKey) {
+        translatedErrors[key] = t(errorKey);
+      }
+    });
 
-    if (!email.trim()) {
-      newErrors.email = t('auth.emailRequired');
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = t('auth.emailInvalid');
-    }
-
-    if (!password) {
-      newErrors.password = t('auth.passwordRequired');
-    } else if (password.length < 6) {
-      newErrors.password = t('auth.passwordTooShort');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(translatedErrors);
+    return !hasErrors(translatedErrors);
   }, [email, password, t]);
 
   const handleLogin = useCallback(async () => {

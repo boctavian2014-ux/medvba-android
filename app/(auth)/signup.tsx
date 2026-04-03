@@ -7,18 +7,22 @@ import {
   ScrollView,
   Alert,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Appbar, Text, Card, useTheme } from 'react-native-paper';
 import { UIButton, UITextField } from '@/ui';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, AUTH_SIGN_IN_CANCELLED } from '@/providers/AuthProvider';
+import { AuthError } from '@supabase/supabase-js';
+import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '@/providers/LanguageProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SPACING } from '@/theme/paperTheme';
 import { log } from '@/lib/log';
+import { validateSignUpForm, clearError, hasErrors, type FormErrors } from '@/lib/validation';
 
 const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 
@@ -37,39 +41,21 @@ export default function SignUpScreen() {
     password?: string;
     confirmPassword?: string;
   }>({});
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth();
   const { t } = useLanguage();
 
-  const validateForm = useCallback(() => {
-    const newErrors: typeof errors = {};
+  const validateForm = useCallback((): boolean => {
+    const validationErrors = validateSignUpForm({ name, email, password, confirmPassword });
+    const translatedErrors: FormErrors = {};
+    
+    Object.entries(validationErrors).forEach(([key, errorKey]) => {
+      if (errorKey) {
+        translatedErrors[key] = t(errorKey);
+      }
+    });
 
-    if (!name.trim()) {
-      newErrors.name = t('auth.nameRequired');
-    } else if (name.trim().length < 2) {
-      newErrors.name = t('auth.nameTooShort');
-    }
-
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail) {
-      newErrors.email = t('auth.emailRequired');
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(trimmedEmail)) {
-      newErrors.email = t('auth.emailInvalid');
-    }
-
-    if (!password) {
-      newErrors.password = t('auth.passwordRequired');
-    } else if (password.length < 6) {
-      newErrors.password = t('auth.passwordTooShort');
-    }
-
-    if (!confirmPassword) {
-      newErrors.confirmPassword = t('auth.confirmPasswordRequired');
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = t('auth.passwordsDontMatch');
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(translatedErrors);
+    return !hasErrors(translatedErrors);
   }, [name, email, password, confirmPassword, t]);
 
   const handleSignUp = useCallback(async () => {
@@ -149,6 +135,52 @@ export default function SignUpScreen() {
     router.replace('/(auth)/login');
   }, []);
 
+  const handleSocialSignUp = useCallback(
+    async (provider: 'google' | 'facebook' | 'apple') => {
+      if (!isSupabaseConfigured) {
+        Alert.alert(t('auth.signUpFailed'), t('auth.supabaseNotConfigured'));
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        let result: { error: AuthError | null };
+        switch (provider) {
+          case 'google':
+            result = await signInWithGoogle();
+            break;
+          case 'facebook':
+            result = await signInWithFacebook();
+            break;
+          case 'apple':
+            result = await signInWithApple();
+            break;
+        }
+
+        if (result.error) {
+          if (result.error.message === AUTH_SIGN_IN_CANCELLED) return;
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          Alert.alert(t('auth.signUpFailed'), result.error.message);
+        } else {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY);
+          const isOnboardingCompleted = completed === 'true';
+          router.replace(isOnboardingCompleted ? '/(tabs)' : '/(auth)/onboarding');
+        }
+      } catch (error) {
+        log.error('[SignUp] Social sign-up error:', error);
+        Alert.alert('Error', t('auth.unexpectedError'));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [signInWithGoogle, signInWithFacebook, signInWithApple, t]
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
@@ -195,6 +227,49 @@ export default function SignUpScreen() {
 
             <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} mode="elevated">
               <Card.Content style={styles.cardContent}>
+                {Platform.OS !== 'web' ? (
+                  <>
+                    <View style={styles.socialButtonsRow}>
+                      <TouchableOpacity
+                        style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                        onPress={() => handleSocialSignUp('google')}
+                        disabled={isLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithGoogle')}
+                      >
+                        <Ionicons name="logo-google" size={24} color={theme.colors.onSurface} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                        onPress={() => handleSocialSignUp('facebook')}
+                        disabled={isLoading}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithFacebook')}
+                      >
+                        <Ionicons name="logo-facebook" size={24} color={theme.colors.onSurface} />
+                      </TouchableOpacity>
+                      {Platform.OS === 'ios' ? (
+                        <TouchableOpacity
+                          style={[styles.socialButton, { backgroundColor: theme.colors.surfaceVariant }]}
+                          onPress={() => handleSocialSignUp('apple')}
+                          disabled={isLoading}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('auth.signInWithApple')}
+                        >
+                          <Ionicons name="logo-apple" size={24} color={theme.colors.onSurface} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                    <View style={styles.dividerRow}>
+                      <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                      <Text variant="bodySmall" style={[styles.dividerText, { color: theme.colors.onSurfaceVariant }]}>
+                        {t('auth.orContinueWithEmail')}
+                      </Text>
+                      <View style={[styles.dividerLine, { backgroundColor: theme.colors.outlineVariant }]} />
+                    </View>
+                  </>
+                ) : null}
+
                 <View style={[styles.inputWrap, { marginBottom: SPACING.x2 }]}>
                   <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: SPACING.x1 }}>
                     {t('auth.fullName')}
@@ -358,6 +433,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.x2,
     paddingTop: SPACING.x2,
     paddingBottom: SPACING.x3,
+  },
+  socialButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: SPACING.x3,
+    marginBottom: SPACING.x3,
+  },
+  socialButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.x3,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    paddingHorizontal: SPACING.x2,
   },
   inputWrap: {},
   input: {

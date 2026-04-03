@@ -333,6 +333,9 @@ export const en: Record<string, string> = {
   'tutor.suggestion2': 'What causes diabetes mellitus?',
   'tutor.suggestion3': 'Mechanism of beta-blockers',
    'tutor.errorMessage': 'Connection error. Please check your internet connection and try again',
+   'tutor.serverConfigError':
+     'The AI tutor is not available right now (server configuration). If this persists, contact support.',
+   'tutor.emptyResponse': 'No answer was returned. Please try rephrasing your question or try again in a moment.',
    'tutor.retry': 'Retry',
 
    // Social Accounts
@@ -518,6 +521,10 @@ export const en: Record<string, string> = {
   'settings.support': 'Support',
   'settings.helpCenter': 'Help Center',
   'settings.helpCenterSubtitle': 'FAQs and tutorials',
+  'settings.showIntroAgain': 'Show intro again',
+  'settings.showIntroAgainSubtitle': 'Replay the welcome slides before login',
+  'settings.showIntroAgainConfirm': 'You will see the welcome screens again. Continue?',
+  'settings.showIntroAgainButton': 'Show intro',
   'settings.contactSupport': 'Contact Support',
   'settings.contactSupportSubtitle': 'contact@devaieood.com',
   'settings.manageSubscription': 'Manage Subscription',
@@ -810,6 +817,7 @@ export const en: Record<string, string> = {
   'paywall.subtitle': 'Access all premium features and accelerate your progress',
   'paywall.loading': 'Loading options...',
   'paywall.choosePlan': 'Choose Your Plan',
+  'paywall.errorMessage': 'Subscriptions are temporarily unavailable. Please try again later.',
   'paywall.yearly': 'Yearly',
   'paywall.monthly': 'Monthly',
   'paywall.recommended': 'Recommended',

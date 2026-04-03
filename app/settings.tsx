@@ -45,6 +45,7 @@ import {
   Save,
   Crown,
   CreditCard,
+  BookOpen,
 } from 'lucide-react-native';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
@@ -99,7 +100,7 @@ const languages: { code: Language; label: string; flag: string }[] = [
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, signOut, refreshProfile, applyServerProfilePatch } = useAuth();
+  const { user, signOut, refreshProfile, applyServerProfilePatch, resetOnboarding } = useAuth();
   const queryClient = useQueryClient();
   const { currentLanguage, changeLanguage, t } = useLanguage();
   const { colors, preference: themePreference } = useTheme();
@@ -549,6 +550,23 @@ export default function SettingsScreen() {
                 title={t('settings.helpCenter')}
                 subtitle={t('settings.helpCenterSubtitle')}
                 onPress={() => router.push('/support/help-center')}
+              />
+              <SettingsItem
+                icon={<BookOpen color={colors.accent} size={22} />}
+                title={t('settings.showIntroAgain')}
+                subtitle={t('settings.showIntroAgainSubtitle')}
+                onPress={() =>
+                  Alert.alert(t('settings.showIntroAgain'), t('settings.showIntroAgainConfirm'), [
+                    { text: t('settings.cancel'), style: 'cancel' },
+                    {
+                      text: t('settings.showIntroAgainButton'),
+                      onPress: async () => {
+                        await resetOnboarding();
+                        router.replace('/(auth)/onboarding');
+                      },
+                    },
+                  ])
+                }
               />
               <SettingsItem
                 icon={<Mail color={colors.accentPink} size={22} />}

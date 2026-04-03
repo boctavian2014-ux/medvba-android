@@ -141,7 +141,7 @@ export default function HomeScreen() {
             <View style={styles.headerRight}>
               <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
                 <Image
-                  key={profile?.profile_photo_url || profile?.avatar || profile?.id}
+                  key={`avatar:${profile?.id ?? 'anon'}:${profile?.profile_photo_url ?? profile?.avatar ?? 'default'}`}
                   source={{
                     uri:
                       profile?.profile_photo_url ||

@@ -311,6 +311,10 @@ export const pt: Record<string, string> = {
   'tutor.suggestion2': 'Quais são as causas da diabetes mellitus?',
   'tutor.suggestion3': 'Mecanismo de ação dos betabloqueadores',
   'tutor.errorMessage': 'Erro de conexão. Verifique a sua ligação à internet e tente novamente.',
+  'tutor.serverConfigError':
+    'O tutor IA não está disponível de momento (configuração do servidor). Se persistir, contacte o suporte.',
+  'tutor.emptyResponse':
+    'Não foi recebida nenhuma resposta. Reformule a pergunta ou tente novamente dentro de momentos.',
   'tutor.retry': 'Tentar novamente',
 
   // Social / Study Rooms
@@ -482,6 +486,10 @@ export const pt: Record<string, string> = {
   'settings.support': 'Suporte',
   'settings.helpCenter': 'Centro de ajuda',
   'settings.helpCenterSubtitle': 'Perguntas frequentes e tutoriais',
+  'settings.showIntroAgain': 'Ver introdução novamente',
+  'settings.showIntroAgainSubtitle': 'Rever os ecrãs de boas-vindas',
+  'settings.showIntroAgainConfirm': 'Voltará a ver os ecrãs iniciais. Continuar?',
+  'settings.showIntroAgainButton': 'Ver introdução',
   'settings.contactSupport': 'Contactar suporte',
   'settings.contactSupportSubtitle': 'contact@devaieood.com',
   'settings.manageSubscription': 'Gerir subscrição',

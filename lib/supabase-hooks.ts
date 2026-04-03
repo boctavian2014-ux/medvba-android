@@ -727,7 +727,7 @@ export async function uploadProfilePhoto(userId: string, uri: string): Promise<s
       });
 
     if (uploadError) {
-      console.error('[Supabase] Error uploading photo:', JSON.stringify({ message: uploadError.message, code: uploadError.statusCode }));
+      console.error('[Supabase] Error uploading photo:', JSON.stringify({ message: uploadError.message, code: (uploadError as any).statusCode }));
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 

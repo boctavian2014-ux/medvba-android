@@ -21,7 +21,7 @@ const required = [
 
 const optional = [
   'EXPO_PUBLIC_REVENUECAT_API_KEY_IOS',
-  'EXPO_PUBLIC_RORK_API_BASE_URL',
+  'EXPO_PUBLIC_API_BASE_URL',
   'EXPO_PUBLIC_SENTRY_DSN',
 ];
 

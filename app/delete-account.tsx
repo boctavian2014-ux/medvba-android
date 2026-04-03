@@ -25,7 +25,6 @@ import {
   CheckCircle,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 import { trpc } from '@/lib/trpc';
 
@@ -44,7 +43,7 @@ type DeletionStep = 'confirm' | 'deleting' | 'success';
 
 export default function DeleteAccountScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [confirmText, setConfirmText] = useState('');
   const [step, setStep] = useState<DeletionStep>('confirm');
   const deleteAccountMutation = trpc.account.deleteSelf.useMutation();
@@ -86,7 +85,7 @@ export default function DeleteAccountScreen() {
 
     try {
       console.log('[DeleteAccount] Calling deleteAccountMutation...');
-      console.log('[DeleteAccount] Backend URL:', process.env.EXPO_PUBLIC_RORK_API_BASE_URL);
+      console.log('[DeleteAccount] Backend URL:', process.env.EXPO_PUBLIC_API_BASE_URL);
 
       const result = await deleteAccountMutation.mutateAsync();
       console.log('[DeleteAccount] Backend deletion result:', result);
@@ -95,14 +94,8 @@ export default function DeleteAccountScreen() {
       await clearLocalData();
       console.log('[DeleteAccount] Local data cleared');
       
-      // Sign out from Supabase (this will also clear the session)
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      if (error) {
-        console.error('[DeleteAccount] Sign out error:', error);
-        // Continue even if sign out fails - we already cleared local data
-      } else {
-        console.log('[DeleteAccount] Signed out successfully');
-      }
+      await signOut();
+      console.log('[DeleteAccount] Session cleared via AuthProvider');
       
       // Clear any remaining AsyncStorage items
       try {
@@ -137,11 +130,11 @@ export default function DeleteAccountScreen() {
         [{ text: 'OK' }]
       );
     }
-  }, [confirmText, user?.id, deleteAccountMutation]);
+  }, [confirmText, user?.id, deleteAccountMutation, signOut]);
 
   const handleFinish = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('/(tabs)');
+    router.replace('/(auth)/login');
   }, [router]);
 
   const isDeleteEnabled = confirmText.toUpperCase() === 'DELETE';

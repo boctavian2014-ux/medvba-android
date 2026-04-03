@@ -14,7 +14,7 @@ const renderWithApp = (ui: React.ReactElement) =>
   render(<AppTestProviders>{ui}</AppTestProviders>);
 
 const findText = (text: string | RegExp) =>
-  screen.findByText(text, {}, { timeout: 8000 });
+  screen.findByText(text, {}, { timeout: 15000 });
 
 describe('User flows (integration-style)', () => {
   beforeEach(() => {

@@ -17,6 +17,8 @@ export interface UserProfile {
   googleId?: string;
   facebookId?: string;
   appleId?: string;
+  // Email from auth
+  email?: string;
 }
 
 export interface UserAccount {

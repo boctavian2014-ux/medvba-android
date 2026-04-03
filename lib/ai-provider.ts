@@ -1,12 +1,11 @@
 /**
  * AI Provider abstraction layer
- * Supports multiple AI providers: openai, rork
+ * MEDVBA backend AI client (OpenAI-compatible).
  */
 
-export type AIProvider = 'openai' | 'rork';
+export type AIProvider = 'openai';
 
 export interface AIProviderConfig {
-  provider: AIProvider;
   apiKey?: string;
   baseUrl?: string;
   model?: string;
@@ -24,14 +23,11 @@ export interface GenerateTextOptions {
   maxTokens?: number;
 }
 
-// Get provider from environment
 function getProviderConfig(): AIProviderConfig {
-  const provider = (process.env.AI_PROVIDER || process.env.EXPO_PUBLIC_AI_PROVIDER || 'openai') as AIProvider;
   return {
-    provider,
     apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY,
-    baseUrl: process.env.AI_BASE_URL || process.env.EXPO_PUBLIC_AI_BASE_URL,
-    model: process.env.AI_MODEL || process.env.EXPO_PUBLIC_AI_MODEL || 'gpt-4o-mini',
+    baseUrl: process.env.AI_BASE_URL,
+    model: process.env.AI_MODEL || 'gpt-4o-mini',
   };
 }
 
@@ -69,48 +65,10 @@ async function callOpenAI(options: GenerateTextOptions, config: AIProviderConfig
   return data.choices[0]?.message?.content || '';
 }
 
-// Rork API call
-async function callRork(options: GenerateTextOptions, config: AIProviderConfig): Promise<string> {
-  const baseUrl = config.baseUrl || process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  
-  if (!baseUrl) {
-    throw new Error('Rork API base URL not configured. Set EXPO_PUBLIC_RORK_API_BASE_URL in .env');
-  }
-  
-  try {
-    // Dynamic import for @rork-ai/toolkit-sdk
-    const { generateText } = await import('@rork-ai/toolkit-sdk');
-    
-    // Convert messages to Rork format (filter out system messages)
-    const rorkMessages = options.messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      }));
-    
-    const response = await generateText({
-      messages: rorkMessages as any,
-    });
-    
-    return response;
-  } catch (error) {
-    throw new Error(`Rork API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
-// Main generateText function that routes to the configured provider
+// Main generateText function (OpenAI-compatible provider).
 export async function generateText(options: GenerateTextOptions): Promise<string> {
   const config = getProviderConfig();
-  
-  switch (config.provider) {
-    case 'openai':
-      return callOpenAI(options, config);
-    case 'rork':
-      return callRork(options, config);
-    default:
-      throw new Error(`Unknown AI provider: ${config.provider}`);
-  }
+  return callOpenAI(options, config);
 }
 
 export const SYSTEM_PROMPT = `You are an expert AI tutor helping students prepare for medical exams (USMLE, MBBS, anatomy exams, etc.).

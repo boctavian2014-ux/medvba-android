@@ -20,7 +20,9 @@ export default function PaywallScreen() {
   const { colors } = useThemeSafe();
   const { isPaywallEnabled } = useSubscription();
   const { t } = useLanguage();
-  const [status, setStatus] = useState<'loading' | 'presented' | 'fallback'>('loading');
+  const [status, setStatus] = useState<
+    'loading' | 'fallback' | 'error' | 'cancelled' | 'purchased' | 'restored'
+  >('loading');
 
   // Memoize to prevent update loop - new object ref each render was causing Stack to re-update
   const headerOptions = useMemo(
@@ -34,7 +36,7 @@ export default function PaywallScreen() {
 
   useEffect(() => {
     if (!isPaywallEnabled) {
-      router.replace('/(tabs)/index');
+      router.replace('/(tabs)/index' as any);
       return;
     }
 
@@ -49,14 +51,30 @@ export default function PaywallScreen() {
     const showPaywall = async () => {
       try {
         const result = await presentPaywall();
-        if (mounted) {
-          setStatus('presented');
+        if (!mounted) return;
+
+        if (result === PAYWALL_RESULT.PURCHASED) {
+          setStatus('purchased');
           router.back();
+          return;
         }
+        if (result === PAYWALL_RESULT.RESTORED) {
+          setStatus('restored');
+          router.back();
+          return;
+        }
+        if (result === PAYWALL_RESULT.CANCELLED) {
+          setStatus('cancelled');
+          router.back();
+          return;
+        }
+
+        // ERROR / NOT_PRESENTED should show a message instead of silently closing.
+        setStatus(result === PAYWALL_RESULT.NOT_PRESENTED ? 'fallback' : 'error');
       } catch (error) {
         console.error('[Paywall] Error:', error);
         if (mounted) {
-          setStatus('fallback');
+          setStatus('error');
         }
       }
     };
@@ -71,13 +89,15 @@ export default function PaywallScreen() {
     return null;
   }
 
-  if (status === 'fallback') {
+  if (status === 'fallback' || status === 'error') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Stack.Screen options={headerOptions} />
         <SafeAreaView style={styles.content} edges={['bottom']}>
           <Text style={[styles.webMessage, { color: colors.text }]}>
-            {IS_EXPO_GO
+            {status === 'error'
+              ? (t('paywall.errorMessage') || 'Subscriptions are temporarily unavailable. Please try again later.')
+              : IS_EXPO_GO
               ? (t('paywall.expoGoMessage') || 'Subscriptions require a development build. Build with EAS to test purchases.')
               : (t('paywall.webMessage') || 'Subscriptions are available in the iOS and Android app. Download the app to upgrade to Pro.')}
           </Text>

@@ -32,7 +32,12 @@ jest.mock('expo-splash-screen', () => ({
 }));
 
 jest.mock('expo-constants', () => ({
-  expoConfig: { extra: {} },
+  expoConfig: { 
+    extra: { 
+      EXPO_PUBLIC_API_BASE_URL: 'http://localhost:3000',
+      apiBaseUrl: 'http://localhost:3000',
+    } 
+  },
   executionEnvironment: 'storeClient',
 }));
 
@@ -52,12 +57,19 @@ jest.mock('expo-haptics', () => ({
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy', Rigid: 'rigid', Soft: 'soft' },
 }));
 
+jest.mock('expo-web-browser', () => ({
+  openAuthSessionAsync: jest.fn().mockResolvedValue({ type: 'dismiss' }),
+}));
+
 jest.mock('@react-native-google-signin/google-signin', () => ({
   GoogleSignin: {
     configure: jest.fn(),
     hasPlayServices: jest.fn().mockResolvedValue(true),
     signIn: jest.fn(),
+    signOut: jest.fn().mockResolvedValue(undefined),
+    getTokens: jest.fn().mockResolvedValue({ idToken: null }),
   },
+  statusCodes: { SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED' },
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () => {
@@ -163,6 +175,18 @@ jest.mock('@/lib/supabase', () => ({
       onAuthStateChange: jest.fn(() => ({
         data: { subscription: { unsubscribe: jest.fn() } },
       })),
+    },
+  },
+}));
+
+jest.mock('@/lib/trpc', () => ({
+  trpc: {
+    subscription: {
+      validateAiQuestion: {
+        useMutation: jest.fn(() => ({
+          mutateAsync: jest.fn().mockResolvedValue({ allowed: true, remaining: 5, isPremium: false }),
+        })),
+      },
     },
   },
 }));

@@ -13,13 +13,15 @@ const extraConfig =
 
 const getBaseUrl = () => {
   const raw =
+    process.env.EXPO_PUBLIC_API_BASE_URL ||
     process.env.EXPO_PUBLIC_RORK_API_BASE_URL ||
+    extraConfig.EXPO_PUBLIC_API_BASE_URL ||
     extraConfig.EXPO_PUBLIC_RORK_API_BASE_URL ||
-    extraConfig.rorkApiBaseUrl;
+    extraConfig.apiBaseUrl;
 
   if (!raw) {
     throw new Error(
-      "EXPO_PUBLIC_RORK_API_BASE_URL not set. Add it to .env and restart.",
+      "Set EXPO_PUBLIC_API_BASE_URL (or EXPO_PUBLIC_RORK_API_BASE_URL) in .env and restart.",
     );
   }
 
@@ -27,7 +29,7 @@ const getBaseUrl = () => {
 
   if (!__DEV__ && url.startsWith("http://")) {
     throw new Error(
-      "In production, EXPO_PUBLIC_RORK_API_BASE_URL must use HTTPS.",
+      "In production, EXPO_PUBLIC_API_BASE_URL must use HTTPS.",
     );
   }
 

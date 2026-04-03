@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "./create-context";
 import { generateText, SYSTEM_PROMPT } from "../../lib/ai-provider";
+import { tutorRateLimiter } from "./rate-limiter";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -13,15 +14,17 @@ function isAiMissingConfigError(message: string): boolean {
   return (
     m.includes("api key not configured") ||
     m.includes("openai api key") ||
-    m.includes("base url not configured") ||
-    m.includes("rork api base url")
+    m.includes("base url not configured")
   );
 }
 
 export const tutorRouter = createTRPCRouter({
   chat: protectedProcedure
     .input(z.object({ messages: z.array(messageSchema) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      // Apply rate limiting per user
+      tutorRateLimiter(ctx.token);
+
       const fullMessages = [
         { role: "system" as const, content: SYSTEM_PROMPT },
         {
@@ -45,7 +48,7 @@ export const tutorRouter = createTRPCRouter({
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
             message:
-              "AI tutor is not configured on the server. On Railway, set AI_API_KEY or OPENAI_API_KEY (see docs/RAILWAY_ENV_VARIABLES.md).",
+              "AI tutor is not configured. Please contact support.",
           });
         }
 

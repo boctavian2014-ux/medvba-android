@@ -22,7 +22,7 @@ import { useLanguage } from '@/providers/LanguageProvider';
 
 const { width } = Dimensions.get('window');
 
-const APP_ICON_URL = 'https://r2-pub.rork.com/generated-images/49dc2754-fc49-4f1e-85a9-2fa8abdb4260.png';
+const APP_ICON = require('@/assets/images/icon.png');
 
 interface OnboardingSlide {
   id: string;
@@ -48,7 +48,7 @@ const slidesData: SlideData[] = [
     titleKey: 'onboarding.slide1.title',
     subtitleKey: 'onboarding.slide1.subtitle',
     descriptionKey: 'onboarding.slide1.description',
-    icon: <Image source={{ uri: APP_ICON_URL }} style={{ width: 120, height: 120, borderRadius: 60 }} />,
+    icon: <Image source={APP_ICON} style={{ width: 120, height: 120, borderRadius: 60 }} />,
     gradient: [colors.primary, colors.primaryDark],
   },
   {

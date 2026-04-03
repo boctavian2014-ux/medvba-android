@@ -44,6 +44,20 @@ function getMutationErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+/** tRPC PRECONDITION_FAILED → HTTP 412 (e.g. AI keys missing on server). */
+function isTrpcPreconditionFailed(error: unknown): boolean {
+  if (!(error instanceof TRPCClientError)) return false;
+  const httpStatus = (error.data as { httpStatus?: number } | undefined)?.httpStatus;
+  return httpStatus === 412;
+}
+
+function getTutorErrorContent(error: unknown, t: (key: string) => string): string {
+  if (isTrpcPreconditionFailed(error)) {
+    return t('tutor.serverConfigError');
+  }
+  return getMutationErrorMessage(error, t('tutor.errorMessage'));
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -105,6 +119,22 @@ export default function TutorScreen() {
     return result.response;
   }, [chatMutation]);
 
+  const openPaywallWithFallback = useCallback(() => {
+    try {
+      router.push('/paywall');
+    } catch (error) {
+      log.error('[Tutor] Failed to open paywall route:', error);
+      const paywallRouteErrorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: t('tutor.errorMessage'),
+        timestamp: new Date(),
+        isError: true,
+      };
+      setMessages((prev) => [...prev, paywallRouteErrorMessage]);
+    }
+  }, [router, t]);
+
   const handleSend = async () => {
     if (!inputText.trim() || isTyping) return;
     
@@ -112,15 +142,21 @@ export default function TutorScreen() {
 
     // Check if free user can ask AI question
     if (isPaywallEnabled && !canAskAiQuestion()) {
-      router.push('/paywall');
+      openPaywallWithFallback();
       return;
     }
 
     // Increment AI question count for free users
-    const success = await incrementAiQuestionCount();
-    if (isPaywallEnabled && !success && !isPremium) {
-      router.push('/paywall');
+    const aiQuestionValidation = await incrementAiQuestionCount();
+    if (isPaywallEnabled && !aiQuestionValidation.allowed && !isPremium) {
+      openPaywallWithFallback();
       return;
+    }
+
+    if (aiQuestionValidation.reason === 'network_error') {
+      log.warn('[Tutor] AI limit validation skipped because of network issue; continuing send.');
+    } else if (aiQuestionValidation.reason === 'server_validation_error') {
+      log.warn('[Tutor] AI limit validation skipped because of server error; continuing send.');
     }
     
     const userMessage: Message = {
@@ -142,11 +178,13 @@ export default function TutorScreen() {
     
     try {
       const aiResponseText = await generateAIResponse(updatedMessages);
-      
+      const trimmed = (aiResponseText ?? '').trim();
+      const content = trimmed.length > 0 ? trimmed : t('tutor.emptyResponse');
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: aiResponseText,
+        content,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
@@ -186,7 +224,7 @@ export default function TutorScreen() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: getMutationErrorMessage(error, t('tutor.errorMessage')),
+        content: getTutorErrorContent(error, t),
         timestamp: new Date(),
         isError: true,
       };
@@ -215,10 +253,12 @@ export default function TutorScreen() {
     try {
       const messagesForRetry = messages.filter(m => !m.isError);
       const aiResponseText = await generateAIResponse(messagesForRetry);
+      const trimmed = (aiResponseText ?? '').trim();
+      const content = trimmed.length > 0 ? trimmed : t('tutor.emptyResponse');
       const aiResponse: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: aiResponseText,
+        content,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
@@ -227,7 +267,7 @@ export default function TutorScreen() {
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: getMutationErrorMessage(error, t('tutor.errorMessage')),
+        content: getTutorErrorContent(error, t),
         timestamp: new Date(),
         isError: true,
       };
@@ -250,6 +290,7 @@ export default function TutorScreen() {
       <LinearGradient
         colors={[colors.background, colors.backgroundLight]}
         style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
@@ -285,11 +326,13 @@ export default function TutorScreen() {
             ) : null}
           </View>
 
-          <ScrollView 
+          <ScrollView
             ref={scrollViewRef}
             style={styles.messagesContainer}
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             {isPaywallEnabled && !isPremium && (
               <View style={styles.freeLimitBanner}>
@@ -391,10 +434,15 @@ export default function TutorScreen() {
           </ScrollView>
 
           <View style={styles.inputContainer}>
-            <View style={[styles.inputWrapper, {
-              backgroundColor: colors.cardBgLight,
-              borderColor: colors.glassBorder,
-            }]}>
+            <View
+              style={[
+                styles.inputWrapper,
+                {
+                  backgroundColor: colors.cardBgLight,
+                  borderColor: colors.glassBorder,
+                },
+              ]}
+            >
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder={t('tutor.inputPlaceholder')}
@@ -403,17 +451,23 @@ export default function TutorScreen() {
                 onChangeText={setInputText}
                 multiline
                 maxLength={500}
+                editable={!isTyping}
+                textAlignVertical="top"
+                autoCorrect
+                autoCapitalize="sentences"
+                returnKeyType="default"
+                blurOnSubmit={false}
               />
               <View style={styles.inputFooter}>
                 <Text style={[styles.charCount, inputText.length > 450 && { color: colors.error }]}>
                   {inputText.length}/500
                 </Text>
                 <TouchableOpacity
-                  style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+                  style={[styles.sendButton, (!inputText.trim() || isTyping) && styles.sendButtonDisabled]}
                   onPress={handleSend}
-                  disabled={!inputText.trim()}
+                  disabled={!inputText.trim() || isTyping}
                 >
-                  <Send color={inputText.trim() ? colors.text : colors.textMuted} size={20} />
+                  <Send color={inputText.trim() && !isTyping ? colors.text : colors.textMuted} size={20} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -611,28 +665,31 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     paddingTop: 10,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: 'column',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 24,
     borderWidth: 1,
   },
   input: {
-    flex: 1,
+    width: '100%',
+    minHeight: 44,
     fontSize: 16,
     color: colors.text,
-    maxHeight: 100,
+    maxHeight: 120,
     paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   inputFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 4,
   },
   charCount: {
     fontSize: 12,
     color: colors.textMuted,
+    flex: 1,
   },
   sendButton: {
     width: 40,
@@ -641,7 +698,6 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
   },
   sendButtonDisabled: {
     backgroundColor: colors.cardBgLight,

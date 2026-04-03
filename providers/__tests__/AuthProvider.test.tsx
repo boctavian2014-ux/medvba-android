@@ -198,7 +198,7 @@ describe('AuthProvider', () => {
 
   describe('Sign Out', () => {
     it('should successfully sign out a user', async () => {
-      (supabase.auth.signOut as jest.Mock).mockResolvedValue({});
+      (supabase.auth.signOut as jest.Mock).mockResolvedValue({ error: null });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -208,8 +208,10 @@ describe('AuthProvider', () => {
 
       await result.current.signOut();
 
-      expect(supabase.auth.signOut).toHaveBeenCalled();
+      expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: 'global' });
       expect(result.current.profile).toBeNull();
+      expect(result.current.session).toBeNull();
+      expect(result.current.user).toBeNull();
     });
   });
 
@@ -249,6 +251,29 @@ describe('AuthProvider', () => {
         'true'
       );
       expect(result.current.hasCompletedOnboarding).toBe(true);
+    });
+
+    it('should reset onboarding', async () => {
+      (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
+      (AsyncStorage.removeItem as jest.Mock).mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.completeOnboarding();
+      });
+      expect(result.current.hasCompletedOnboarding).toBe(true);
+
+      await act(async () => {
+        await result.current.resetOnboarding();
+      });
+
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@medvba_onboarding_complete');
+      expect(result.current.hasCompletedOnboarding).toBe(false);
     });
   });
 

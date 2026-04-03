@@ -247,11 +247,11 @@ export default function QuizScreen() {
                     accessibilityState={{ selected: isSelected }}
                   >
                     <GlassCard 
-                      style={[
+                      style={StyleSheet.flatten([
                         styles.categoryCard,
-                        isSelected && styles.categoryCardSelected,
-                        isSelected && { borderColor: category.color }
-                      ]}
+                        isSelected ? styles.categoryCardSelected : null,
+                        isSelected ? { borderColor: category.color } : null
+                      ])}
                       variant={isSelected ? 'light' : 'default'}
                     >
                       <View style={[styles.categoryIconContainer, { backgroundColor: category.color + '25' }]}>

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQueryClient } from '@tanstack/react-query';
 import createContextHook from '@nkzw/create-context-hook';
 import { supabase } from '@/lib/supabase';
 import { useUserProfile } from '@/lib/supabase-hooks';
@@ -8,6 +9,14 @@ import { AppState, Platform } from 'react-native';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 import { appleAuth } from '@/lib/appleAuth';
+import * as WebBrowser from 'expo-web-browser';
+import {
+  authenticateWithBiometric,
+  isBiometricAvailable,
+  getBiometricCapabilities,
+  getBiometricTypeName,
+  type BiometricCapabilities,
+} from '@/lib/biometric';
 
 let fbsdk: any = null;
 if (Platform.OS !== 'web') {
@@ -27,9 +36,12 @@ const ONBOARDING_COMPLETE_KEY = '@medvba_onboarding_complete';
 /** Return in `AuthError.message` when user closes OAuth; callers should not alert or treat as success. */
 export const AUTH_SIGN_IN_CANCELLED = 'SIGN_IN_CANCELLED';
 
+/** Shown when Google returns no ID token (wrong Web client ID or Android OAuth SHA-1 mismatch). */
+const GOOGLE_NO_ID_TOKEN_MESSAGE =
+  'Google Sign-In failed. Please try again or use email login.';
+
 const extraConfig = Constants.expoConfig?.extra ?? {};
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
-const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '';
 const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || extraConfig.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || googleIosClientId || '';
 const facebookAppId = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || extraConfig.EXPO_PUBLIC_FACEBOOK_APP_ID || '';
 const appleClientId = process.env.EXPO_PUBLIC_APPLE_CLIENT_ID || extraConfig.EXPO_PUBLIC_APPLE_CLIENT_ID || '';
@@ -47,6 +59,24 @@ const isAbortError = (error: unknown): boolean => {
   return false;
 };
 
+/** Deep link return for Supabase OAuth (Facebook login + link) — add to Supabase Auth redirect URLs. */
+const SUPABASE_OAUTH_REDIRECT = 'medvba://auth/callback';
+
+function getQueryParam(url: string, key: string): string | null {
+  const qIndex = url.indexOf('?');
+  const hIndex = url.indexOf('#');
+  const start = qIndex >= 0 ? qIndex + 1 : hIndex >= 0 ? hIndex + 1 : -1;
+  if (start < 0) return null;
+  const end = hIndex >= 0 && hIndex > start ? hIndex : url.length;
+  const qs = url.slice(start, end);
+  for (const part of qs.split('&')) {
+    if (!part) continue;
+    const [k, v = ''] = part.split('=');
+    if (decodeURIComponent(k) === key) return decodeURIComponent(v);
+  }
+  return null;
+}
+
 interface AuthState {
   session: Session | null;
   user: User | null;
@@ -54,6 +84,8 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
+  biometricCapabilities: BiometricCapabilities | null;
+  isBiometricEnabled: boolean;
 }
 
 interface AuthActions {
@@ -63,9 +95,13 @@ interface AuthActions {
     name: string
   ) => Promise<{ error: AuthError | null; session: Session | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signInWithBiometric: () => Promise<{ error: AuthError | null; requiresPassword?: boolean }>;
+  enableBiometric: (enable: boolean) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   completeOnboarding: () => Promise<void>;
+  /** Clears onboarding flag so intro slides show again on next launch / navigation. */
+  resetOnboarding: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   /** Merge fields from a profiles row (e.g. Supabase update response) so UI matches DB without waiting on a second fetch. */
   applyServerProfilePatch: (row: {
@@ -87,15 +123,22 @@ interface AuthActions {
 
 type AuthContextValue = AuthState & AuthActions;
 
+const BIOMETRIC_ENABLED_KEY = '@medvba_biometric_enabled';
+
 export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() => {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [biometricCapabilities, setBiometricCapabilities] = useState<BiometricCapabilities | null>(null);
+  const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
   const { data: userProfile } = useUserProfile(user?.id);
   const lastPresenceAtRef = useRef(0);
   const lastIsPublicRef = useRef<boolean | null>(null);
+  /** Prevents overlapping @react-native-google-signin calls ("Sign-in in progress" / promise overwrite). */
+  const googleNativeSignInBusyRef = useRef(false);
 
   const ensureUserExists = useCallback(async (userId: string, email: string | undefined, name: string | undefined, mounted?: { current: boolean }) => {
     try {
@@ -218,6 +261,19 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         await checkOnboardingStatus();
 
         if (!mountedRef.current) return;
+
+        // Initialize biometric capabilities
+        if (Platform.OS !== 'web') {
+          const capabilities = await getBiometricCapabilities();
+          if (mountedRef.current) {
+            setBiometricCapabilities(capabilities);
+          }
+          
+          const biometricEnabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+          if (mountedRef.current) {
+            setIsBiometricEnabled(biometricEnabled === 'true' && capabilities.hasHardware && capabilities.isEnrolled);
+          }
+        }
 
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) => {
@@ -383,15 +439,79 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     }
   }, []);
 
-  const signOut = useCallback(async () => {
+  const signInWithBiometric = useCallback(async () => {
+    if (Platform.OS === 'web') {
+      return { error: { message: 'Biometric authentication not available on web' } as AuthError };
+    }
+
+    if (!biometricCapabilities?.hasHardware || !biometricCapabilities?.isEnrolled) {
+      return { error: { message: 'Biometric authentication not available' } as AuthError };
+    }
+
     try {
-      await supabase.auth.signOut();
-      setProfile(null);
-      log.info('[Auth] Signed out');
+      const result = await authenticateWithBiometric('Authenticate to access MEDVBA');
+      
+      if (!result.success) {
+        if (result.error === 'user_fallback') {
+          return { error: null, requiresPassword: true };
+        }
+        return { error: { message: result.error } as AuthError };
+      }
+
+      // Biometric success - in a real app, you'd retrieve stored credentials here
+      // For now, we just return success and let the user use the last logged in method
+      log.info('[Auth] Biometric authentication successful');
+      return { error: null };
     } catch (error) {
-      log.error('[Auth] Sign out error:', error);
+      log.error('[Auth] Biometric authentication error:', error);
+      return { error: error as AuthError };
+    }
+  }, [biometricCapabilities]);
+
+  const enableBiometric = useCallback(async (enable: boolean) => {
+    try {
+      await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enable ? 'true' : 'false');
+      setIsBiometricEnabled(enable);
+      log.info('[Auth] Biometric authentication', enable ? 'enabled' : 'disabled');
+    } catch (error) {
+      log.error('[Auth] Error setting biometric preference:', error);
     }
   }, []);
+
+  const signOut = useCallback(async () => {
+    try {
+      const { error: globalErr } = await supabase.auth.signOut({ scope: 'global' });
+      if (globalErr) {
+        log.warn('[Auth] Global sign-out failed, trying local:', globalErr.message);
+        const { error: localErr } = await supabase.auth.signOut({ scope: 'local' });
+        if (localErr) {
+          log.error('[Auth] Local sign-out failed:', localErr.message);
+        }
+      }
+    } catch (error) {
+      log.error('[Auth] Sign out error:', error);
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    }
+
+    if (Platform.OS !== 'web') {
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        /* not signed in with Google */
+      }
+      try {
+        fbsdk?.LoginManager?.logOut?.();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    queryClient.clear();
+    log.info('[Auth] Signed out (session cleared)');
+  }, [queryClient]);
 
   const resetPassword = useCallback(async (email: string) => {
     try {
@@ -419,6 +539,16 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
       log.info('[Auth] Onboarding completed');
     } catch (error) {
       log.error('[Auth] Error completing onboarding:', error);
+    }
+  }, []);
+
+  const resetOnboarding = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(ONBOARDING_COMPLETE_KEY);
+      setHasCompletedOnboarding(false);
+      log.info('[Auth] Onboarding reset');
+    } catch (error) {
+      log.error('[Auth] Error resetting onboarding:', error);
     }
   }, []);
 
@@ -466,30 +596,55 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         };
       }
 
+      if (googleNativeSignInBusyRef.current) {
+        return {
+          error: {
+            message:
+              'Another Google sign-in is already in progress. Please wait a moment.',
+          } as AuthError,
+        };
+      }
+      googleNativeSignInBusyRef.current = true;
+
       try {
+        // Android native only uses webClientId for idToken (requestIdToken). iosClientId on iOS.
+        // Do not pass androidClientId — it is not a valid Android configure param in current SDK.
         GoogleSignin.configure({
           webClientId: googleWebClientId,
-          ...(Platform.OS === 'android' && googleAndroidClientId ? { androidClientId: googleAndroidClientId } : {}),
           ...(Platform.OS === 'ios' && googleIosClientId ? { iosClientId: googleIosClientId } : {}),
         });
-        
+
         // Check if play services are available (Android)
         if (Platform.OS === 'android') {
-          const hasPlayServices = await GoogleSignin.hasPlayServices();
+          const hasPlayServices = await GoogleSignin.hasPlayServices({
+            showPlayServicesUpdateDialog: true,
+          });
           if (!hasPlayServices) {
             return { error: { message: 'Google Play Services not available' } as AuthError };
           }
         }
-        
+
         const result = await GoogleSignin.signIn();
-        
-        // In v16+, the result has data property
+        if ((result as any).type === 'cancelled') {
+          return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
+        }
+
         const userInfo = (result as any).data ?? result;
-        const idToken = userInfo.idToken ?? (result as any).idToken;
-        
+        let idToken: string | null | undefined =
+          userInfo.idToken ?? (result as any).idToken;
+
+        if (!idToken && Platform.OS === 'android') {
+          try {
+            const tokens = await GoogleSignin.getTokens();
+            idToken = tokens.idToken ?? null;
+          } catch (e) {
+            log.error('[Auth] GoogleSignin.getTokens after signIn:', e);
+          }
+        }
+
         if (!idToken) {
-          log.error('[Auth] Google Sign-In failed: no idToken returned');
-          return { error: { message: 'Google Sign-In failed: no idToken returned. Check your Google OAuth client IDs.' } as AuthError };
+          log.error('[Auth] Google Sign-In failed: no idToken (check Web client ID + Android OAuth SHA-1)');
+          return { error: { message: GOOGLE_NO_ID_TOKEN_MESSAGE } as AuthError };
         }
         
         const googleUser = userInfo.user ?? (result as any).user;
@@ -530,72 +685,83 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
         ) {
           return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
         }
-        log.error('[Auth] Google Sign-In error:', error?.message || error);
-        return { error: { message: error?.message || 'Google Sign-In failed' } as AuthError };
-      }
-    }, [ensureUserExists, googleWebClientId, googleAndroidClientId, googleIosClientId]);
-
-    const signInWithFacebook = useCallback(async () => {
-      try {
-        if (!fbsdk) {
-          return { error: { message: 'Facebook Sign-In is not available on this platform' } as AuthError };
-        }
-        const { LoginManager, AccessToken } = fbsdk;
-        const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
-        if (result.isCancelled) {
-          return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
-        }
-
-        const data = await AccessToken.getCurrentAccessToken();
-        const accessToken = data?.accessToken;
-
-        if (!accessToken) {
-          return {
-            error: { message: 'Facebook login did not return an access token' } as AuthError,
-          };
-        }
-        
-        // Get Facebook user info
-        const facebookResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
-        const facebookUser = await facebookResponse.json();
-
-        if (facebookUser.error) {
+        const msg = typeof error?.message === 'string' ? error.message : String(error?.message ?? error ?? '');
+        if (
+          /sign-?in in progress|previous promise did not settle|called .*signIn.*while .*signIn/i.test(msg)
+        ) {
+          log.warn('[Auth] Google Sign-In overlapping call:', msg);
           return {
             error: {
-              message: facebookUser.error.message || 'Failed to get Facebook user info',
+              message:
+                'Please finish or cancel the Google sign-in window before trying again.',
             } as AuthError,
           };
         }
-
-        if (!facebookUser.id) {
-          return { error: { message: 'Facebook Sign-In did not return a user ID' } as AuthError };
+        log.error('[Auth] Google Sign-In error:', error?.message || error);
+        const codeStr = String(error?.code ?? '');
+        if (
+          /error\s*23|issue with your configuration|DEVELOPER_ERROR|configuration/i.test(msg) ||
+          codeStr === '10'
+        ) {
+          return { error: { message: GOOGLE_NO_ID_TOKEN_MESSAGE } as AuthError };
         }
+        return { error: { message: msg || 'Google Sign-In failed' } as AuthError };
+      } finally {
+        googleNativeSignInBusyRef.current = false;
+      }
+    }, [ensureUserExists, googleWebClientId, googleIosClientId]);
 
-        const { data: { user: supabaseUser }, error } = await supabase.auth.signInWithIdToken({
+    const signInWithFacebook = useCallback(async () => {
+      try {
+        // Prefer Supabase OAuth for Facebook. Facebook does not provide an OIDC idToken, so signInWithIdToken is unreliable.
+        const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'facebook',
-          token: accessToken,
+          options: { redirectTo: SUPABASE_OAUTH_REDIRECT },
         });
-        if (error) {
-          return { error };
+        if (error) return { error };
+        const authUrl = data?.url;
+        if (!authUrl) return { error: { message: 'Facebook OAuth did not return an authorization URL' } as AuthError };
+
+        const res = await WebBrowser.openAuthSessionAsync(authUrl, SUPABASE_OAUTH_REDIRECT);
+        if (res.type !== 'success' || !res.url) {
+          return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
         }
-        
-        if (!supabaseUser) {
-          return { error: { message: 'Facebook Sign-In succeeded but Supabase did not return a user.' } as AuthError };
+
+        const code = getQueryParam(res.url, 'code');
+        if (!code) {
+          const errDesc = getQueryParam(res.url, 'error_description') || getQueryParam(res.url, 'error');
+          return { error: { message: errDesc || 'Facebook OAuth did not return a code' } as AuthError };
         }
-        
-        // Ensure profile exists and update with Facebook ID
+
+        const exchanged = await supabase.auth.exchangeCodeForSession(code);
+        if (exchanged.error) return { error: exchanged.error as AuthError };
+
+        const sessionUser = exchanged.data.session?.user;
+        if (!sessionUser) {
+          return { error: { message: 'Facebook login succeeded but no user session was created.' } as AuthError };
+        }
+
+        const fbIdentity = sessionUser.identities?.find((i) => i.provider === 'facebook');
+        const idData = fbIdentity?.identity_data as Record<string, unknown> | undefined;
+        const facebookUserId =
+          (typeof idData?.sub === 'string' && idData.sub) ||
+          (typeof idData?.provider_id === 'string' && idData.provider_id) ||
+          (typeof idData?.user_id === 'string' && idData.user_id) ||
+          null;
+
         await ensureUserExists(
-          supabaseUser.id,
-          supabaseUser.email ?? facebookUser.email,
-          supabaseUser.user_metadata?.name ?? facebookUser.name ?? 'User'
+          sessionUser.id,
+          sessionUser.email ?? undefined,
+          (sessionUser.user_metadata?.name as string | undefined) ??
+            (sessionUser.user_metadata?.full_name as string | undefined) ??
+            'User'
         );
-        
-        // Update profile with Facebook ID
-        await supabase
-          .from('profiles')
-          .update({ facebookId: facebookUser.id })
-          .eq('id', supabaseUser.id);
-        
+
+        if (facebookUserId) {
+          await supabase.auth.updateUser({ data: { facebookId: facebookUserId } });
+          await supabase.from('profiles').update({ facebookId: facebookUserId }).eq('id', sessionUser.id);
+        }
+
         return { error: null };
       } catch (error) {
         log.error('[Auth] Facebook sign in error:', error);
@@ -661,61 +827,87 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
 
     // Social account linking methods
     const linkGoogleAccount = useCallback(async () => {
+      if (!user) return { error: { message: 'No authenticated user' } as AuthError };
+      if (!googleWebClientId?.trim()) {
+        return {
+          error: {
+            message:
+              'Google Sign-In is not configured. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env or EAS secrets.',
+          } as AuthError,
+        };
+      }
+      if (googleNativeSignInBusyRef.current) {
+        return {
+          error: {
+            message:
+              'Another Google sign-in is already in progress. Please wait a moment.',
+          } as AuthError,
+        };
+      }
+      googleNativeSignInBusyRef.current = true;
+
       try {
-        if (!user) return { error: { message: 'No authenticated user' } as AuthError };
-        
-        // Initiate Google Sign-In to get the actual user ID
         GoogleSignin.configure({
           webClientId: googleWebClientId,
-          ...(Platform.OS === 'android' && googleAndroidClientId ? { androidClientId: googleAndroidClientId } : {}),
           ...(Platform.OS === 'ios' && googleIosClientId ? { iosClientId: googleIosClientId } : {}),
         });
-        
-        // Check if play services are available (Android)
+
         if (Platform.OS === 'android') {
-          const hasPlayServices = await GoogleSignin.hasPlayServices();
+          const hasPlayServices = await GoogleSignin.hasPlayServices({
+            showPlayServicesUpdateDialog: true,
+          });
           if (!hasPlayServices) {
             return { error: { message: 'Google Play Services not available' } as AuthError };
           }
         }
-        
+
         const result = await GoogleSignin.signIn();
-        
-        // In v16+, the result has data property
+        if ((result as any).type === 'cancelled') {
+          return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
+        }
+
         const userInfo = (result as any).data ?? result;
         const googleUser = userInfo.user ?? (result as any).user;
-        
+
         if (!googleUser?.id) {
           return { error: { message: 'Google Sign-In did not return a user ID' } as AuthError };
         }
-        
+
         const { error } = await supabase.auth.updateUser({
           data: {
-            googleId: googleUser.id
-          }
+            googleId: googleUser.id,
+          },
         });
-        
+
         if (error) return { error };
-        
-        // Update profile with Google ID
-        await supabase
-          .from('profiles')
-          .update({ googleId: googleUser.id })
-          .eq('id', user.id);
-        
-        // Refresh profile to update UI
+
+        await supabase.from('profiles').update({ googleId: googleUser.id }).eq('id', user.id);
+
         await refreshProfile();
-          
+
         return { error: null };
       } catch (error: any) {
-        // Check if user cancelled the sign-in
         if (error?.code === '12501' || error?.message?.includes('cancelled')) {
           return { error: { message: AUTH_SIGN_IN_CANCELLED } as AuthError };
         }
+        const msg = typeof error?.message === 'string' ? error.message : String(error?.message ?? error ?? '');
+        if (
+          /sign-?in in progress|previous promise did not settle|called .*signIn.*while .*signIn/i.test(msg)
+        ) {
+          log.warn('[Auth] Link Google: overlapping sign-in:', msg);
+          return {
+            error: {
+              message:
+                'Please finish or cancel the Google sign-in window before trying again.',
+            } as AuthError,
+          };
+        }
         log.error('[Auth] Link Google account error:', error);
         return { error: { message: error?.message || 'Failed to link Google account' } as AuthError };
+      } finally {
+        googleNativeSignInBusyRef.current = false;
       }
-    }, [user, refreshProfile, googleWebClientId, googleAndroidClientId, googleIosClientId]);
+    }, [user, refreshProfile, googleWebClientId, googleIosClientId]);
 
     const linkFacebookAccount = useCallback(async () => {
       try {
@@ -739,8 +931,21 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
           return { error: { message: 'Failed to get Facebook access token' } as AuthError };
         }
 
-        // Get Facebook user info
-        const facebookResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
+        // Get Facebook user info - using Authorization header to avoid token exposure in URL
+        const facebookResponse = await fetch('https://graph.facebook.com/me?fields=id,name,email', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/json',
+          },
+        });
+        
+        if (!facebookResponse.ok) {
+          const errorText = await facebookResponse.text().catch(() => 'Unknown error');
+          log.error('[Auth] Facebook Graph API error:', errorText);
+          return { error: { message: 'Failed to verify Facebook account' } as AuthError };
+        }
+        
         const facebookUser = await facebookResponse.json();
         
         if (facebookUser.error) {
@@ -964,30 +1169,35 @@ export const [AuthProvider, useAuth] = createContextHook<AuthContextValue>(() =>
     };
   }, [user?.id, userProfile?.is_public]);
 
-   return {
-     session,
-     user,
-     profile,
-     isLoading,
-     isAuthenticated: !!session,
-     hasCompletedOnboarding,
-     signUp,
-     signIn,
-     signOut,
-     resetPassword,
-     completeOnboarding,
-     refreshProfile,
-     applyServerProfilePatch,
-     signInWithGoogle,
-     signInWithFacebook,
-     signInWithApple,
-     // Social account linking
-     linkGoogleAccount,
-     linkFacebookAccount,
-     linkAppleAccount,
-     unlinkGoogleAccount,
-     unlinkFacebookAccount,
-     unlinkAppleAccount,
-   };
+     return {
+      session,
+      user,
+      profile,
+      isLoading,
+      isAuthenticated: !!session,
+      hasCompletedOnboarding,
+      biometricCapabilities,
+      isBiometricEnabled,
+      signUp,
+      signIn,
+      signInWithBiometric,
+      enableBiometric,
+      signOut,
+      resetPassword,
+      completeOnboarding,
+      resetOnboarding,
+      refreshProfile,
+      applyServerProfilePatch,
+      signInWithGoogle,
+      signInWithFacebook,
+      signInWithApple,
+      // Social account linking
+      linkGoogleAccount,
+      linkFacebookAccount,
+      linkAppleAccount,
+      unlinkGoogleAccount,
+      unlinkFacebookAccount,
+      unlinkAppleAccount,
+    };
 });
 

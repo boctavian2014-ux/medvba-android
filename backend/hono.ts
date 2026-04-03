@@ -8,7 +8,6 @@ import { createContext } from "./trpc/create-context";
 const app = new Hono();
 
 const defaultAllowedOrigins = new Set([
-  "https://rork.com",
   "http://localhost:3000",
   "http://localhost:19000",
   "http://localhost:19001",

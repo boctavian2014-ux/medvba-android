@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { TextInput as PaperTextInput, IconButton } from 'react-native-paper';
 
 export type UITextFieldProps = {
@@ -13,7 +13,7 @@ export type UITextFieldProps = {
   numberOfLines?: number;
   autocorrection?: boolean;
   disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<TextStyle | ViewStyle>;
   right?: React.ReactNode;
   testID?: string;
 };
@@ -49,7 +49,7 @@ export function UITextField({
       numberOfLines={numberOfLines}
       autoCorrect={autocorrection}
       disabled={disabled}
-      style={style}
+      style={style as StyleProp<TextStyle>}
       right={right}
       testID={testID}
     />

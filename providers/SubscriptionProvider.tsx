@@ -9,6 +9,8 @@ import { ENTITLEMENT_ID, FREE_DAILY_QUIZ_LIMIT } from '@/constants/subscription'
 import { useAuth } from '@/providers/AuthProvider';
 import { useUpdateSubscription } from '@/lib/supabase-hooks';
 import { log } from '@/lib/log';
+import { trpc } from '@/lib/trpc';
+import { TRPCClientError } from '@trpc/client';
 
 const FREE_AI_LIMIT = 1;
 
@@ -34,6 +36,11 @@ type Offerings = {
   availablePackages: OfferingPackage[];
 } | null;
 
+type IncrementAiQuestionResult = {
+  allowed: boolean;
+  reason: 'allowed' | 'limit_reached' | 'network_error' | 'server_validation_error';
+};
+
 function getTodayKey(): string {
   const today = new Date();
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -53,6 +60,17 @@ function isPremiumFromCustomerInfo(info: CustomerInfo | null): boolean {
   return Boolean(info.entitlements.active[ENTITLEMENT_ID]);
 }
 
+function isRevenueCatConfigurationError(error: unknown): boolean {
+  const message = String((error as any)?.message ?? error ?? '');
+  const code = String((error as any)?.code ?? '');
+  return (
+    code.includes('ConfigurationError') ||
+    message.includes('ConfigurationError') ||
+    message.includes('There\'s a problem with your configuration') ||
+    message.includes('could be fetched from the Play Store')
+  );
+}
+
 export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   const { paywallEnabled: PAYWALL_ENABLED, apiKey: REVENUECAT_API_KEY, isNative: IS_NATIVE } = useMemo(getPaywallConfig, []);
   const { user } = useAuth();
@@ -68,6 +86,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
   });
 
   const currentOfferingRef = useRef<any>(null);
+  const didLogRevenueCatConfigErrorRef = useRef(false);
 
   const todayKey = getTodayKey();
 
@@ -117,7 +136,13 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     const initRevenueCat = async () => {
       try {
         Purchases.configure({ apiKey: REVENUECAT_API_KEY });
-        if (user?.id) {
+        if (!user?.id) {
+          try {
+            await Purchases.logOut();
+          } catch {
+            /* already anonymous or SDK not ready */
+          }
+        } else {
           const { customerInfo } = await Purchases.logIn(user.id);
           setState((prev) => ({ ...prev, isPremium: isPremiumFromCustomerInfo(customerInfo) }));
         }
@@ -143,7 +168,17 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
         };
         Purchases.addCustomerInfoUpdateListener(listener);
       } catch (error) {
-        log.error('[Subscription] RevenueCat init error:', error);
+        if (isRevenueCatConfigurationError(error)) {
+          // Common on new installs until Play products / RevenueCat offerings are fully wired.
+          if (!didLogRevenueCatConfigErrorRef.current) {
+            didLogRevenueCatConfigErrorRef.current = true;
+            log.warn(
+              '[Subscription] RevenueCat configuration incomplete. Purchases disabled until Play products/offerings are ready.',
+            );
+          }
+        } else {
+          log.error('[Subscription] RevenueCat init error:', error);
+        }
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
@@ -216,32 +251,77 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     }
   }, [PAYWALL_ENABLED, state.isPremium, state.freeQuestionsAnsweredToday, todayKey]);
 
-  const incrementAiQuestionCount = useCallback(async (): Promise<boolean> => {
+  const validateAiQuestionMutation = trpc.subscription.validateAiQuestion.useMutation();
+
+  const incrementAiQuestionCount = useCallback(async (): Promise<IncrementAiQuestionResult> => {
     if (!PAYWALL_ENABLED) {
       log.debug('[Subscription] Paywall disabled - skipping AI limit');
-      return true;
+      return { allowed: true, reason: 'allowed' };
     }
     if (state.isPremium) {
       log.debug('[Subscription] Premium user - no AI limit');
-      return true;
+      return { allowed: true, reason: 'allowed' };
     }
 
+    // First check client-side limit
     if (state.freeAiQuestionsToday >= FREE_AI_LIMIT) {
-      log.debug('[Subscription] AI question limit reached');
-      return false;
+      log.debug('[Subscription] Client-side AI question limit reached');
+      return { allowed: false, reason: 'limit_reached' };
     }
 
-    const newCount = state.freeAiQuestionsToday + 1;
     try {
+      // Server-side validation - this is the secure check
+      await validateAiQuestionMutation.mutateAsync({ increment: true });
+      
+      // Update local state to match server
+      const newCount = state.freeAiQuestionsToday + 1;
       await AsyncStorage.setItem(`free_ai_questions_${todayKey}`, String(newCount));
       setState((prev) => ({ ...prev, freeAiQuestionsToday: newCount }));
-      log.debug('[Subscription] AI question count incremented to', newCount);
-      return true;
+      
+      log.debug('[Subscription] AI question count incremented (server validated) to', newCount);
+      return { allowed: true, reason: 'allowed' };
     } catch (error) {
-      log.error('[Subscription] Error incrementing AI question count:', error);
-      return false;
+      // If server rejects due to limit, update local state
+      if (error instanceof TRPCClientError) {
+        const isLimitError = error.message?.includes('limit reached') || 
+                            error.message?.includes('AI question limit');
+        if (isLimitError) {
+          log.debug('[Subscription] Server rejected: AI question limit reached');
+          // Update local state to reflect server-side limit
+          await AsyncStorage.setItem(`free_ai_questions_${todayKey}`, String(FREE_AI_LIMIT));
+          setState((prev) => ({ ...prev, freeAiQuestionsToday: FREE_AI_LIMIT }));
+          return { allowed: false, reason: 'limit_reached' };
+        }
+      }
+
+      const message = String((error as any)?.message ?? error ?? '').toLowerCase();
+      const isNetworkError =
+        message.includes('fetch') ||
+        message.includes('network') ||
+        message.includes('connection') ||
+        message.includes('timed out');
+
+      const isProcedureMissing =
+        error instanceof TRPCClientError &&
+        (error.data?.code === 'NOT_FOUND' || message.includes('no procedure found'));
+
+      // If backend validation is temporarily unavailable, don't silently block sending.
+      if (isNetworkError) {
+        log.warn('[Subscription] Network issue during AI limit validation; allowing send.');
+        return { allowed: true, reason: 'network_error' };
+      }
+
+      if (isProcedureMissing) {
+        log.warn(
+          '[Subscription] API is missing subscription.validateAiQuestion (redeploy backend with latest tRPC router). Allowing send until then.'
+        );
+        return { allowed: true, reason: 'server_validation_error' };
+      }
+
+      log.error('[Subscription] Server validation error during AI limit check; allowing send:', error);
+      return { allowed: true, reason: 'server_validation_error' };
     }
-  }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday, todayKey]);
+  }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday, todayKey, validateAiQuestionMutation]);
 
   const getRemainingQuizzes = useCallback((): number => {
     if (!PAYWALL_ENABLED) return Infinity;
@@ -254,6 +334,23 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
     if (state.isPremium) return Infinity;
     return Math.max(0, FREE_AI_LIMIT - state.freeAiQuestionsToday);
   }, [PAYWALL_ENABLED, state.isPremium, state.freeAiQuestionsToday]);
+
+  const syncAiQuestionCountFromServer = useCallback(async (): Promise<void> => {
+    if (!PAYWALL_ENABLED || state.isPremium) return;
+
+    try {
+      const result = await validateAiQuestionMutation.mutateAsync({ increment: false });
+      const serverCount = FREE_AI_LIMIT - result.remaining;
+      
+      // Update local state to match server
+      await AsyncStorage.setItem(`free_ai_questions_${todayKey}`, String(serverCount));
+      setState((prev) => ({ ...prev, freeAiQuestionsToday: serverCount }));
+      log.debug('[Subscription] Synced AI count from server:', serverCount);
+    } catch (error) {
+      // Silently fail - we'll use local state as fallback
+      log.debug('[Subscription] Could not sync AI count from server');
+    }
+  }, [PAYWALL_ENABLED, state.isPremium, todayKey, validateAiQuestionMutation]);
 
   const syncPremiumToSupabase = useCallback(
     (type: 'yearly' | 'monthly') => {
@@ -343,6 +440,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       getRemainingAiQuestions,
       purchasePackage,
       restorePurchases,
+      syncAiQuestionCountFromServer,
       FREE_QUIZ_LIMIT: FREE_DAILY_QUIZ_LIMIT,
       FREE_AI_LIMIT,
     }),
@@ -363,6 +461,7 @@ export const [SubscriptionProvider, useSubscription] = createContextHook(() => {
       getRemainingAiQuestions,
       purchasePackage,
       restorePurchases,
+      syncAiQuestionCountFromServer,
     ]
   );
 });

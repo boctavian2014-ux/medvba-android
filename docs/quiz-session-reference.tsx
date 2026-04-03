@@ -882,12 +882,12 @@ export default function QuizSessionScreen() {
                     disabled={showResult}
                   >
                     <GlassCard
-                      style={[
+                      style={StyleSheet.flatten([
                         styles.optionCard,
-                        isSelected && styles.optionSelected,
-                        showCorrect && styles.optionCorrect,
-                        showWrong && styles.optionWrong,
-                      ]}
+                        isSelected ? styles.optionSelected : null,
+                        showCorrect ? styles.optionCorrect : null,
+                        showWrong ? styles.optionWrong : null,
+                      ])}
                       variant={isSelected ? 'light' : 'default'}
                     >
                       <View style={[

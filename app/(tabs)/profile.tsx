@@ -9,9 +9,7 @@ import {
   Image,
   Animated,
   Dimensions,
-  Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -41,10 +39,9 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { useLanguage } from '@/providers/LanguageProvider';
 import ProgressRing from '@/components/ProgressRing';
 import { useQuizProgress } from '@/providers/QuizProgressProvider';
-import { useAuth, AUTH_SIGN_IN_CANCELLED } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers/AuthProvider';
 import { useLeaderboard, useZoomRequests } from '@/lib/supabase-hooks';
 import { useSubscription } from '@/providers/SubscriptionProvider';
-import { log } from '@/lib/log';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -83,7 +80,7 @@ function getLast7Days(): string[] {
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { user, profile, signInWithGoogle, signInWithFacebook, signInWithApple, unlinkGoogleAccount, unlinkFacebookAccount, unlinkAppleAccount } = useAuth();
+  const { user, profile } = useAuth();
   const { colors } = useTheme();
   const { isPremium, isPaywallEnabled } = useSubscription();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -243,69 +240,6 @@ export default function ProfileScreen() {
     return t('profile.motivational.getStarted');
   }, [weeklyGoalProgress, t]);
 
-  const handleConnectGoogle = useCallback(async () => {
-    try {
-      const { error } = await signInWithGoogle();
-      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error linking Google account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialLinkFailed'));
-    }
-  }, [signInWithGoogle, t]);
-
-  const handleConnectFacebook = useCallback(async () => {
-    try {
-      const { error } = await signInWithFacebook();
-      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error linking Facebook account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialLinkFailed'));
-    }
-  }, [signInWithFacebook, t]);
-
-  const handleConnectApple = useCallback(async () => {
-    try {
-      const { error } = await signInWithApple();
-      if (error?.message === AUTH_SIGN_IN_CANCELLED) return;
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error linking Apple account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialLinkFailed'));
-    }
-  }, [signInWithApple, t]);
-
-  const handleDisconnectGoogle = useCallback(async () => {
-    try {
-      const { error } = await unlinkGoogleAccount();
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error unlinking Google account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialUnlinkFailed'));
-    }
-  }, [unlinkGoogleAccount]);
-
-  const handleDisconnectFacebook = useCallback(async () => {
-    try {
-      const { error } = await unlinkFacebookAccount();
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error unlinking Facebook account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialUnlinkFailed'));
-    }
-  }, [unlinkFacebookAccount]);
-
-  const handleDisconnectApple = useCallback(async () => {
-    try {
-      const { error } = await unlinkAppleAccount();
-      if (error) throw error;
-    } catch (error) {
-      log.error('Error unlinking Apple account:', error);
-      Alert.alert(t('profile.error'), t('profile.socialUnlinkFailed'));
-    }
-  }, [unlinkAppleAccount]);
-
   const periods: { key: LeaderboardPeriod; label: string }[] = [
     { key: 'daily', label: t('profile.daily') },
     { key: 'weekly', label: t('profile.weekly') },
@@ -381,7 +315,7 @@ export default function ProfileScreen() {
                   end={{ x: 1, y: 1 }}
                 >
                   <Image
-                    key={profile?.profile_photo_url || profile?.avatar || profile?.id}
+                    key={`avatar:${profile?.id ?? 'anon'}:${profile?.profile_photo_url ?? profile?.avatar ?? 'default'}`}
                     source={{
                       uri: profile?.profile_photo_url || profile?.avatar || 'https://api.dicebear.com/7.x/avataaars/png?seed=default',
                     }}
@@ -506,110 +440,7 @@ export default function ProfileScreen() {
               </LinearGradient>
             </TouchableOpacity>
            )}
-           
-           {/* Social Accounts Section */}
-           <View style={styles.section}>
-             <View style={styles.sectionHeader}>
-               <Zap color={colors.accent} size={22} />
-               <Text style={styles.sectionTitleInline}>{t('profile.socialAccounts')}</Text>
-             </View>
-             <View style={styles.socialAccountsContainer}>
-               {profile?.googleId && (
-                 <View style={styles.socialAccountItem}>
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-google" size={24} color={colors.primary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Google</Text>
-                     <Text style={styles.socialAccountSubtitle}>Connected</Text>
-                   </View>
-                   <TouchableOpacity
-                     style={styles.socialAccountDisconnect}
-                     onPress={handleDisconnectGoogle}
-                   >
-                     <Text style={styles.socialAccountDisconnectText}>{t('profile.disconnect')}</Text>
-                   </TouchableOpacity>
-                 </View>
-               )}
-               {!profile?.googleId && (
-                 <TouchableOpacity
-                   style={styles.socialAccountItem}
-                   onPress={handleConnectGoogle}
-                 >
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-google" size={24} color={colors.textSecondary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Google</Text>
-                     <Text style={styles.socialAccountSubtitle}>{t('profile.connect')}</Text>
-                   </View>
-                 </TouchableOpacity>
-               )}
-               {profile?.facebookId && (
-                 <View style={styles.socialAccountItem}>
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-facebook" size={24} color={colors.primary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Facebook</Text>
-                     <Text style={styles.socialAccountSubtitle}>Connected</Text>
-                   </View>
-                   <TouchableOpacity
-                     style={styles.socialAccountDisconnect}
-                     onPress={handleDisconnectFacebook}
-                   >
-                     <Text style={styles.socialAccountDisconnectText}>{t('profile.disconnect')}</Text>
-                   </TouchableOpacity>
-                 </View>
-               )}
-               {!profile?.facebookId && (
-                 <TouchableOpacity
-                   style={styles.socialAccountItem}
-                   onPress={handleConnectFacebook}
-                 >
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-facebook" size={24} color={colors.textSecondary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Facebook</Text>
-                     <Text style={styles.socialAccountSubtitle}>{t('profile.connect')}</Text>
-                   </View>
-                 </TouchableOpacity>
-               )}
-               {profile?.appleId && (
-                 <View style={styles.socialAccountItem}>
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-apple" size={24} color={colors.primary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Apple</Text>
-                     <Text style={styles.socialAccountSubtitle}>Connected</Text>
-                   </View>
-                   <TouchableOpacity
-                     style={styles.socialAccountDisconnect}
-                     onPress={handleDisconnectApple}
-                   >
-                     <Text style={styles.socialAccountDisconnectText}>{t('profile.disconnect')}</Text>
-                   </TouchableOpacity>
-                 </View>
-               )}
-               {!profile?.appleId && (
-                 <TouchableOpacity
-                   style={styles.socialAccountItem}
-                   onPress={handleConnectApple}
-                 >
-                   <View style={styles.socialAccountIcon}>
-                     <Ionicons name="logo-apple" size={24} color={colors.textSecondary} />
-                   </View>
-                   <View style={styles.socialAccountInfo}>
-                     <Text style={styles.socialAccountTitle}>Apple</Text>
-                     <Text style={styles.socialAccountSubtitle}>{t('profile.connect')}</Text>
-                   </View>
-                 </TouchableOpacity>
-               )}
-             </View>
-           </View>
-           
+
            <View style={styles.section}>
              <View style={styles.sectionHeader}>
                <Award color={colors.primary} size={22} />
@@ -1596,54 +1427,6 @@ const createStyles = (colors: typeof import('@/constants/colors').darkColors) =>
   zoomRequestDetailText: {
     fontSize: 13,
     color: colors.textSecondary,
-  },
-  // Social Accounts styles
-  socialAccountsContainer: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.glassBorder,
-    overflow: 'hidden',
-    backgroundColor: colors.cardBg,
-  },
-  socialAccountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.glassBorder,
-  },
-  socialAccountIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.cardBgLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialAccountInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  socialAccountTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: colors.text,
-  },
-  socialAccountSubtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  socialAccountDisconnect: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 71, 87, 0.15)',
-  },
-  socialAccountDisconnectText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: colors.error,
   },
 });
 
